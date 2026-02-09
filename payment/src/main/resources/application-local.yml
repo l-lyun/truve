@@ -3,9 +3,9 @@ server:
 
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/payment_db
-    username: root
-    password: 1234
+    url: ${PAYMENT_MYSQL_URL:jdbc:mysql://localhost:3306/payment_db}
+    username: ${PAYMENT_MYSQL_USERNAME:root}
+    password: ${PAYMENT_MYSQL_PASSWORD:1234}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:

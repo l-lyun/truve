@@ -8,17 +8,17 @@ spring:
         webflux:
           routes:
             - id: auth-jwt
-              uri: http://localhost:8081
+              uri: ${AUTH_SERVER_URI:http://localhost:8081}
               predicates:
                 - Path=/api/auth/logout
               filters:
                 - JwtAuthenticationFilter
             - id: auth
-              uri: http://localhost:8081
+              uri: ${AUTH_SERVER_URI:http://localhost:8081}
               predicates:
                 - Path=/api/auth/**
             - id: payment
-              uri: http://localhost:8082
+              uri: ${PAYMENT_SERVER_URI:http://localhost:8082}
               predicates:
                 - Path=/api/payment/**
 
