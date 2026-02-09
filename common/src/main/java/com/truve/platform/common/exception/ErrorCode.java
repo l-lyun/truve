@@ -11,7 +11,7 @@ public enum ErrorCode {
 
 	NOT_FOUND_USER(HttpStatus.NOT_FOUND, "존재하지 않는 회원입니다."),
 	ALREADY_EXISTS_EMAIL(HttpStatus.BAD_REQUEST, "중복된 이메일입니다."),
-	NOT_FOUND_EMAIL(HttpStatus.BAD_REQUEST, "이메일 전송에 실패했습니다."),
+	NOT_FOUND_EMAIL(HttpStatus.BAD_REQUEST, "이메일을 찾을 수 없습니다."),
 	NOT_CORRECT_EMAIL_CODE(HttpStatus.BAD_REQUEST, "이메일 인증 코드가 다릅니다."),
 	NOT_CORRECT_PASSWORD(HttpStatus.BAD_REQUEST, "비밀번호가 틀렸습니다."),
 	NOT_VERIFIED_EMAIL(HttpStatus.BAD_REQUEST, "인증되지 않은 이메일입니다."),

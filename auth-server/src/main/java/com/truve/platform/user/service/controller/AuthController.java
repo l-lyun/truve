@@ -11,6 +11,12 @@ import com.truve.platform.user.service.domain.dto.request.AuthRequest;
 import com.truve.platform.user.service.domain.dto.response.AuthResponse;
 import com.truve.platform.user.service.service.AuthService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -21,7 +27,7 @@ public class AuthController {
 
 	@PostMapping("/sign-up")
 	public ApiResult<Void> signUp(
-		@RequestBody  AuthRequest.SignUp request
+		@RequestBody  @Valid AuthRequest.SignUp request
 	) {
 		System.out.println(request.getEmail());
 		authService.signUp(request.getEmail(), request.getPassword());
@@ -29,13 +35,22 @@ public class AuthController {
 		return ApiResult.ok();
 	}
 
+	@Operation(summary = "로그인")
+	@ApiResponses({
+		@ApiResponse(
+			responseCode = "200",
+			content = @Content(
+				schema = @Schema(implementation = AuthResponse.Login.class)
+			)
+		),
+	})
 	@PostMapping("/login")
 	public ApiResult<AuthResponse.Login> login(
-		@RequestBody AuthRequest.Login request
+		@RequestBody @Valid AuthRequest.Login request
 	) {
 		Pair<String,String> tokens = authService.login(request.getEmail(), request.getPassword());
 
-		AuthResponse.Login res = new AuthResponse.Login(tokens);
+		AuthResponse.Login res = new AuthResponse.Login(tokens.getFirst(), tokens.getSecond());
 		return ApiResult.ok(res);
 	}
 

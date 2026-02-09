@@ -108,7 +108,13 @@ public class AuthService {
 
 		String encodedPassword = passwordEncoder.encode(password);
 
-		User user = User.create(email, encodedPassword, AuthProvider.LOCAL, UserRole.MEMBER);
+		// TODO: OAuth 및 Role 세분화 시 동적으로 변경 필요
+		User user = User.builder()
+			.email(email)
+			.password(encodedPassword)
+			.provider(AuthProvider.LOCAL)
+			.role(UserRole.MEMBER)
+			.build();
 		userRepository.save(user);
 		emailVerificationRepository.deleteByEmail(email);
 	}

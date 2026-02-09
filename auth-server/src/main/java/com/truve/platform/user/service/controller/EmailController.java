@@ -9,6 +9,7 @@ import com.truve.platform.common.response.ApiResult;
 import com.truve.platform.user.service.domain.dto.request.EmailRequest;
 import com.truve.platform.user.service.service.EmailService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -19,7 +20,7 @@ public class EmailController {
 
 	@PostMapping("/send-code")
 	public ApiResult<Void> sendMail(
-		@RequestBody EmailRequest.SendVerificationCode request
+		@RequestBody @Valid EmailRequest.SendVerificationCode request
 	) {
 		emailService.sendMail(request.getEmail());
 		return ApiResult.ok();
@@ -27,7 +28,7 @@ public class EmailController {
 
 	@PostMapping("/verify")
 	public ApiResult<Void> verifyEmail(
-		@RequestBody EmailRequest.VerifyCode request
+		@RequestBody @Valid EmailRequest.VerifyCode request
 	) {
 		emailService.verifyEmail(request.getEmail(), request.getCode());
 		return ApiResult.ok();
