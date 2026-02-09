@@ -1,5 +1,5 @@
 dependencies {
-	implementation project(':common')
+    implementation project(':common')
 
     // [Core]
     api 'org.springframework.boot:spring-boot-starter-web'
@@ -8,9 +8,9 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     // [Security]
-	implementation 'org.springframework.boot:spring-boot-starter-security'
-	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
-	testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
 
     implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
@@ -25,5 +25,8 @@ dependencies {
 
     // [Mail]
     implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    // [OpenApi]
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui'
 
 }

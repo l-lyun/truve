@@ -17,9 +17,23 @@ spring:
               uri: http://localhost:8081
               predicates:
                 - Path=/api/auth/**
+            - id: payment
+              uri: http://localhost:8082
+              predicates:
+                - Path=/api/payment/**
 
 
 jwt:
   secret: ${kt.jwt.secret:kt-cloud-tech-up-final-project-2026020201010101}
   access-token-expiration: ${kt.jwt.access-token-expiration:300000} # 5
   refresh-token-expiration: ${kt.jwt.refresh-token-expiration:43200000} # 12
+
+springdoc:
+  swagger-ui:
+    enabled: true
+    disable-swagger-default-url: true
+    urls:
+      - name: "01-Auth Service"
+        url: /api/auth/v3/api-docs
+      - name: "02-Payment Service"
+        url: /api/payment/v3/api-docs

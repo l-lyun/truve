@@ -38,3 +38,7 @@ jwt:
   secret: ${kt.jwt.secret:kt-cloud-tech-up-final-project-2026020201010101}
   access-token-expiration: ${kt.jwt.access-token-expiration:300000} # 5
   refresh-token-expiration: ${kt.jwt.refresh-token-expiration:43200000} # 12
+
+springdoc:
+  api-docs:
+    path: /api/auth/v3/api-docs

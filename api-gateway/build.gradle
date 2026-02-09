@@ -16,6 +16,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     testImplementation 'org.springframework.boot:spring-boot-starter-data-redis-test'
 
+    // [OpenApi]
+    implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui'
 }
 
 dependencyManagement {
