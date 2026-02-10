@@ -20,7 +20,7 @@ spring:
             - id: payment
               uri: ${PAYMENT_SERVER_URI:http://localhost:8082}
               predicates:
-                - Path=/api/payment/**
+                - Path=/api/payments/**
 
 
 jwt:
@@ -36,4 +36,4 @@ springdoc:
       - name: "01-Auth Service"
         url: /api/auth/v3/api-docs
       - name: "02-Payment Service"
-        url: /api/payment/v3/api-docs
+        url: /api/payments/v3/api-docs

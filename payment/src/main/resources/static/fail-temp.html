@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>결제 실패</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            padding-top: 50px;
+            background-color: #fffafa;
+        }
+
+        .card {
+            border: 1px solid #ffcccb;
+            padding: 20px;
+            display: inline-block;
+            border-radius: 10px;
+            background-color: white;
+        }
+
+        .punch {
+            color: #e74c3c;
+            font-size: 50px;
+            margin-bottom: 10px;
+        }
+
+        .error-info {
+            text-align: left;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .error-info p {
+            margin: 5px 0;
+            color: #333;
+        }
+
+        .highlight {
+            font-weight: bold;
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="punch">( ✋˙࿁˙ )</div>
+    <h1>결제에 실패했습니다!</h1>
+    <p>무언가 잘못된 것 같아요...</p>
+
+    <div class="error-info">
+        <p><strong>주문 번호:</strong> <span id="orderId"></span></p>
+        <p><strong>에러 코드:</strong> <span id="code" class="highlight"></span></p>
+        <p><strong>에러 메시지:</strong> <span id="message"></span></p>
+    </div>
+
+    <p style="margin-top: 20px; font-size: 13px; color: #888;">
+        프론트엔드 연동 전까지 사용되는 임시 페이지입니다.
+    </p>
+</div>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+
+    document.getElementById('orderId').innerText = urlParams.get('orderId') || '없음';
+    document.getElementById('code').innerText = urlParams.get('code') || 'UNKNOWN';
+    document.getElementById('message').innerText = urlParams.get('message') || '상세 사유가 전달되지 않았습니다.';
+</script>
+</body>
+</html>

@@ -88,6 +88,7 @@ services:
       - PAYMENT_MYSQL_USERNAME=root
       - PAYMENT_MYSQL_PASSWORD=1234
       - SPRING_PROFILES_ACTIVE=local
+      - TOSS_SECRET_KEY=${TOSS_SECRET_KEY}
     depends_on:
       db:
         condition: service_healthy

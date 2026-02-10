@@ -4,4 +4,9 @@ spring:
 
 springdoc:
   api-docs:
-    path: /api/payment/v3/api-docs
+    path: /api/payments/v3/api-docs
+
+toss:
+  payment:
+    secret-key: ${TOSS_SECRET_KEY:test_sk_tempKey}
+    base-url: https://api.tosspayments.com/v1/payments/

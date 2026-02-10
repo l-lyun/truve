@@ -3,6 +3,8 @@ package com.truve.platform.payment.service.domain.entity;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.time.LocalDateTime;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -41,7 +43,7 @@ class PaymentTest {
 
 	private Payment createCompletePayment() {
 		Payment payment = createDefaultPayment();
-		payment.complete(DEFAULT_PAYMENT_KEY);
+		payment.complete(DEFAULT_PAYMENT_KEY, LocalDateTime.now());
 		return payment;
 	}
 
@@ -147,7 +149,7 @@ class PaymentTest {
 				Payment payment = createDefaultPayment();
 
 				// when
-				payment.complete(DEFAULT_PAYMENT_KEY);
+				payment.complete(DEFAULT_PAYMENT_KEY, LocalDateTime.now());
 
 				// then
 				assertAll(
@@ -164,7 +166,7 @@ class PaymentTest {
 				payment.waitDeposit(DEFAULT_PAYMENT_KEY);
 
 				// when
-				payment.complete(DEFAULT_PAYMENT_KEY);
+				payment.complete(DEFAULT_PAYMENT_KEY, LocalDateTime.now());
 
 				// then
 				assertAll(
@@ -190,7 +192,7 @@ class PaymentTest {
 				Payment payment = createPaymentWithStatus(status);
 
 				// when & then
-				assertThatThrownBy(() -> payment.complete(DEFAULT_PAYMENT_KEY))
+				assertThatThrownBy(() -> payment.complete(DEFAULT_PAYMENT_KEY, LocalDateTime.now()))
 					.isInstanceOf(CustomException.class)
 					.hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_PAYMENT_STATUS);
 			}
@@ -203,7 +205,7 @@ class PaymentTest {
 				payment.waitDeposit(DEFAULT_PAYMENT_KEY);
 
 				// when & then
-				assertThatThrownBy(() -> payment.complete("임의의 결제 키"))
+				assertThatThrownBy(() -> payment.complete("임의의 결제 키", LocalDateTime.now()))
 					.isInstanceOf(CustomException.class)
 					.hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_PAYMENT_KEY);
 			}
@@ -248,7 +250,7 @@ class PaymentTest {
 			void 결제취소_성공_완료상태_전액환불() {
 				// given
 				Payment payment = createDefaultPayment();
-				payment.complete("테스트 결제 키");
+				payment.complete("테스트 결제 키", LocalDateTime.now());
 				Long cancelAmount = DEFAULT_AMOUNT;
 				String reason = "테스트 결제 사유";
 				CancelType type = CancelType.FULL;
@@ -273,7 +275,7 @@ class PaymentTest {
 			void 결제취소_성공_완료상태_부분환불() {
 				// given
 				Payment payment = createDefaultPayment();
-				payment.complete("테스트 결제 키");
+				payment.complete("테스트 결제 키", LocalDateTime.now());
 				Long cancelAmount = 6000L;
 				String reason = "테스트 결제 사유";
 				CancelType type = CancelType.PARTIAL;
@@ -298,7 +300,7 @@ class PaymentTest {
 			void 결제취소_성공_완료상태_부분환불_여러_번() {
 				// given
 				Payment payment = createDefaultPayment();
-				payment.complete("테스트 결제 키");
+				payment.complete("테스트 결제 키", LocalDateTime.now());
 				Long firstCancelAmount = 6000L;
 				Long secondCancelAmount = 3000L;
 				Long thirdCancelAmount = 1000L;
@@ -398,6 +400,33 @@ class PaymentTest {
 					.isInstanceOf(CustomException.class)
 					.hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_CANCEL_AMOUNT);
 			}
+		}
+	}
+
+	@Nested
+	@DisplayName("결제 금액 검증 테스트")
+	class ValidateAmountTest {
+
+		@Test
+		@DisplayName("기존 금액과 요청 금액이 다르면 INVALID_PAYMENT_AMOUNT 예외를 던진다")
+		void 결제금액_검증_예외() {
+			// given
+			Payment payment = createDefaultPayment();
+
+			// when & then
+			assertThatThrownBy(() -> payment.validateAmount(5000L))
+				.isInstanceOf(CustomException.class)
+				.hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_PAYMENT_AMOUNT);
+		}
+
+		@Test
+		@DisplayName("기존 금액과 요청 금액이 일치하면 예외를 던지지 않는다")
+		void it_does_not_throw_when_amount_matches() {
+			// given
+			Payment payment = createDefaultPayment();
+
+			// when & then
+			assertDoesNotThrow(() -> payment.validateAmount(DEFAULT_AMOUNT));
 		}
 	}
 }

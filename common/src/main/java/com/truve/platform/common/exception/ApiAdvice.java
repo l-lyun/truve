@@ -31,7 +31,7 @@ public class ApiAdvice {
 
 	@ExceptionHandler(CustomException.class)
 	public ResponseEntity<ErrorResponse.ErrorData> customException(CustomException e) {
-		return ErrorResponse.error(e.getErrorCode().getStatus(), e.getErrorCode().getMessage());
+		return ErrorResponse.error(e.getErrorCode().getStatus(), e.getMessage());
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
