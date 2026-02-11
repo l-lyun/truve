@@ -1,4 +1,4 @@
-package com.truve.platform.user.service.security;
+package com.truve.platform.user.service.security.properties;
 
 import java.util.Date;
 

@@ -65,6 +65,10 @@ services:
       - USER_REDIS_HOST=user-redis
       - USER_REDIS_PORT=6379
       - SPRING_PROFILES_ACTIVE=local
+      - KAKAO_CLIENT_SECRET=${KAKAO_CLIENT_SECRET}
+      - KAKAO_CLIENT_ID=${KAKAO_CLIENT_ID}
+      - KAKAO_REDIRECT_URI=${KAKAO_REDIRECT_URI}
+      - KAKAO_TOKEN_URL=${KAKAO_TOKEN_URL}
     depends_on:
       db:
         condition: service_healthy

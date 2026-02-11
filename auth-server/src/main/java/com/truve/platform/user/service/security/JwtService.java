@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 import com.truve.platform.common.constants.UserRole;
+import com.truve.platform.user.service.security.properties.JwtProperties;
 
 import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;

@@ -42,3 +42,10 @@ jwt:
 springdoc:
   api-docs:
     path: /api/auth/v3/api-docs
+
+oauth:
+  kakao:
+    client-id: ${KAKAO_CLIENT_ID:kakao_client_id}
+    redirect-uri: ${KAKAO_REDIRECT_URI:kakao_redirect_uri}
+    client-secret: ${KAKAO_CLIENT_SECRET:kakao_client_secret}
+    kakao-token-url: ${KAKAO_TOKEN_URL:kakao_token_url}

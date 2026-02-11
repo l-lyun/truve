@@ -1,4 +1,4 @@
-package com.truve.platform.user.service.security;
+package com.truve.platform.user.service.security.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
