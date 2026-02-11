@@ -46,7 +46,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory {
 				return exchange.getResponse().setComplete();
 			}
 
-			String userId = claims.getSubject();
+			Long userId = claims.get("user_id", Long.class);
 			String role = claims.get("role", String.class);
 			String tokenType = claims.get("token_type", String.class);
 
@@ -60,8 +60,9 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory {
 					.request(
 						exchange.getRequest()
 							.mutate()
-							.header("X-User-Id", userId)
+							.header("X-User-Id", userId.toString())
 							.header("X-User-Role", role)
+							.header("X-Token", token)
 							.build()
 					)
 					.build()

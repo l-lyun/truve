@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>OAuth Callback</title>
+</head>
+<body>
+
+<h2>OAuth Callback Success</h2>
+
+<p>Refresh Token은 HttpOnly 쿠키로 저장되었습니다.</p>
+
+<hr>
+
+<button onclick="reissue()">Access Token 재발급</button>
+<button onclick="logout()">로그아웃</button>
+
+<pre id="result"></pre>
+
+<script>
+    let accessToken = null;
+
+    async function reissue() {
+        try {
+            const res = await fetch("http://localhost:8080/api/auth/reissue", {
+                method: "POST",
+                credentials: "include" // 🔥 refresh 쿠키 자동 포함
+            });
+
+            const data = await res.json();
+
+            accessToken = data.data.accessToken;
+
+            document.getElementById("result").innerText =
+                "AccessToken 발급 성공\n\n" +
+                JSON.stringify(data, null, 2);
+
+        } catch (e) {
+            document.getElementById("result").innerText =
+                "재발급 실패";
+        }
+    }
+
+    async function logout() {
+
+        if (!accessToken) {
+            alert("먼저 reissue로 AccessToken을 발급받으세요.");
+            return;
+        }
+
+        try {
+            const res = await fetch("http://localhost:8080/api/auth/logout", {
+                method: "DELETE",
+                headers: {
+                    "Authorization": "Bearer " + accessToken
+                },
+                credentials: "include" // refresh 쿠키 포함
+            });
+
+            if (res.ok) {
+                accessToken = null;
+                document.getElementById("result").innerText =
+                    "로그아웃 성공 (refresh 쿠키 삭제 + access 블랙리스트 등록)";
+            } else {
+                document.getElementById("result").innerText =
+                    "로그아웃 실패: " + res.status;
+            }
+
+        } catch (e) {
+            document.getElementById("result").innerText =
+                "로그아웃 중 에러 발생";
+        }
+    }
+</script>
+
+</body>
+</html>

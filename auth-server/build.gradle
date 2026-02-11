@@ -29,4 +29,8 @@ dependencies {
     // [OpenApi]
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui'
 
+    // [Thymeleaf]
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+
 }

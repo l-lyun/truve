@@ -5,8 +5,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.truve.platform.common.constants.AuthProvider;
-import com.truve.platform.common.constants.UserRole;
 import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
 import com.truve.platform.common.support.Preconditions;
@@ -108,13 +106,7 @@ public class AuthService {
 
 		String encodedPassword = passwordEncoder.encode(password);
 
-		// TODO: OAuth 및 Role 세분화 시 동적으로 변경 필요
-		User user = User.builder()
-			.email(email)
-			.password(encodedPassword)
-			.provider(AuthProvider.LOCAL)
-			.role(UserRole.MEMBER)
-			.build();
+		User user = User.createLocalUser(email, encodedPassword);
 		userRepository.save(user);
 		emailVerificationRepository.deleteByEmail(email);
 	}

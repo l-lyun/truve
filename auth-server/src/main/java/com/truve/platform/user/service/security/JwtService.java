@@ -20,8 +20,8 @@ public class JwtService {
 	public String issue(Long userId, String email, UserRole role, Date expiration, String tokenType) {
 		return Jwts.builder()
 			.issuer("truve-api")
-			.subject(userId.toString())
-			.claim("email", email)
+			.subject(email)
+			.claim("user_id", userId)
 			.claim("role", role.name())
 			.claim("token_type", tokenType)
 			.id(UUID.randomUUID().toString())
