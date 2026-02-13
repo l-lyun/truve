@@ -30,6 +30,7 @@ public class OAuthDTO {
 
 		public String scope;
 	}
+
 	@Getter
 	@NoArgsConstructor
 	public static class KakaoUserInfo {
@@ -53,6 +54,53 @@ public class OAuthDTO {
 
 			@JsonProperty("is_email_verified")
 			private Boolean isEmailVerified;
+		}
+	}
+
+	@Getter
+	@NoArgsConstructor
+	public static class NaverLoginResponse {
+
+		@JsonProperty("refresh_token")
+		public String refreshToken;
+
+		@JsonProperty("access_token")
+		public String accessToken;
+
+		@JsonProperty("token_type")
+		public String tokenType;
+
+		@JsonProperty("expires_in")
+		public String error;
+
+		@JsonProperty("error_description")
+		public String errorDescription;
+
+	}
+
+	@Getter
+	@NoArgsConstructor
+	public static class NaverUserInfo {
+
+		private String resultcode;
+		private String message;
+		private Response response;
+
+		@Getter
+		@NoArgsConstructor
+		public static class Response {
+
+			private String id;
+			private String email;
+			private String name;
+			private String nickname;
+			private String gender;
+			private String age;
+			private String birthday;
+			@JsonProperty("profile_image")
+			private String profileImage;
+			private String birthyear;
+			private String mobile;
 		}
 	}
 

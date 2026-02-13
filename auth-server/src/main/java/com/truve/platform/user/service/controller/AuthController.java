@@ -1,7 +1,6 @@
 package com.truve.platform.user.service.controller;
 
 import org.springframework.data.util.Pair;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;

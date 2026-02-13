@@ -1,16 +1,14 @@
 server:
-  port: 8081
+  port: ${SERVER_PORT:8081}
 
 spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
   datasource:
     url: ${USER_MYSQL_URL:jdbc:mysql://localhost:3306/user_db}
     username: ${USER_MYSQL_USERNAME:root}
     password: ${USER_MYSQL_PASSWORD:1234}
     driver-class-name: com.mysql.cj.jdbc.Driver
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
 
   data:
     redis:
@@ -18,34 +16,27 @@ spring:
       port: ${USER_REDIS_PORT:6379}
 
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: kimdohyun032@gmail.com
-    password: bxsg aoia bgkw nkpv
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:example@test.com}
+    password: ${MAIL_PASSWORD:123}
     properties:
       mail:
         smtp:
-          auth: true
+          auth: ${MAIL_SMTP_AUTH:true}
           starttls:
-            enable: true
-            required: true
-          connectiontimeout: 5000
-          timeout: 5000
-          writetimeout: 5000
-    auth-code-expiration-millis: 1800000
+            enable: ${MAIL_STARTTLS_ENABLE:true}
+            required: ${MAIL_STARTTLS_REQUIRED:true}
+          connectiontimeout: ${MAIL_CONNECTION_TIMEOUT:5000}
+          timeout: ${MAIL_TIMEOUT:5000}
+          writetimeout: ${MAIL_WRITE_TIMEOUT:5000}
+    auth-code-expiration-millis: ${MAIL_AUTH_CODE_EXPIRATION_MILLIS:1800000}
 
 jwt:
-  secret: ${kt.jwt.secret:kt-cloud-tech-up-final-project-2026020201010101}
-  access-token-expiration: ${kt.jwt.access-token-expiration:300000} # 5
-  refresh-token-expiration: ${kt.jwt.refresh-token-expiration:43200000} # 12
+  secret: ${JWT_SECRET:kt-cloud-tech-up-final-project-2026020201010101}
+  access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:300000}
+  refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:43200000}
 
 springdoc:
   api-docs:
     path: /api/auth/v3/api-docs
-
-oauth:
-  kakao:
-    client-id: ${KAKAO_CLIENT_ID:kakao_client_id}
-    redirect-uri: ${KAKAO_REDIRECT_URI:kakao_redirect_uri}
-    client-secret: ${KAKAO_CLIENT_SECRET:kakao_client_secret}
-    kakao-token-url: ${KAKAO_TOKEN_URL:kakao_token_url}

@@ -1,9 +1,21 @@
 server:
   port: 8080
-
 spring:
   cloud:
     gateway:
+      globalcors:
+        corsConfigurations:
+          "[/**]":
+            allowedOrigins:
+              - "*"
+            allow-credentials: true
+            allowedHeaders: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
       server:
         webflux:
           routes:
@@ -17,6 +29,10 @@ spring:
               uri: ${AUTH_SERVER_URI:http://localhost:8081}
               predicates:
                 - Path=/api/auth/**
+            - id: auth
+              uri: ${AUTH_SERVER_URI:http://localhost:8081}
+              predicates:
+                - Path=/test/**
             - id: payment
               uri: ${PAYMENT_SERVER_URI:http://localhost:8082}
               predicates:

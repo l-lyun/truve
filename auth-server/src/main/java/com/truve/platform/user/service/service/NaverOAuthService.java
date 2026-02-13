@@ -17,43 +17,45 @@ import com.truve.platform.user.service.domain.entity.User;
 import com.truve.platform.user.service.repository.UserRepository;
 import com.truve.platform.user.service.security.JwtService;
 import com.truve.platform.user.service.security.TokenType;
-import com.truve.platform.user.service.security.properties.KakaoOAuthProperties;
+import com.truve.platform.user.service.security.properties.NaverOAuthProperties;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class KakaoOAuthService {
-	private final KakaoOAuthProperties kakaoOAuthProperties;
+public class NaverOAuthService {
+	
+	private final NaverOAuthProperties naverOAuthProperties;
+	private final RestClient naverOAuthRestClient;
+	private final RestClient naverApiRestClient;
+	private final UserRepository userRepository;
 	private final JwtService jwtService;
 	private final RefreshTokenService refreshTokenService;
-	private final RestClient kakaoOAuthRestClient;
-	private final RestClient kakaoApiRestClient;
-	private final UserRepository userRepository;
 
 
 	// TODO: 에러 코드에 따른 로직 처리
-	//  https://developers.kakao.com/docs/latest/ko/kakaologin/trouble-shooting
+	// https://developers.naver.com/docs/login/devguide/devguide.md#3-1-1-%EC%84%9C%EB%B9%84%EC%8A%A4-%ED%99%98%EA%B2%BD-%ED%99%95%EC%9D%B8
 	@Transactional
 	public Pair<String, String> login(String code, String error, String errorDescription, String state) {
 
-		KakaoLoginResponse kakaoDTO = requestToken(code);
+		NaverLoginResponse naverDTO = requestToken(code, state);
 
-		Preconditions.validate(!(kakaoDTO == null), ErrorCode.NOT_FOUND_EMAIL);
+		Preconditions.validate(!(naverDTO == null), ErrorCode.NOT_FOUND_EMAIL);
 
-		String kakaoAccessToken = kakaoDTO.getAccessToken();
-		String kakaoRefreshToken = kakaoDTO.getRefreshToken();
-		KakaoUserInfo info = requestUserInfo(kakaoAccessToken);
-		String kakaoEmail = info.getKakaoAccount().getEmail();
-		String kakaoUserId = info.getId();
+		String naverAccessToken = naverDTO.getAccessToken();
+		String naverRefreshToken = naverDTO.getRefreshToken();
+		NaverUserInfo info = requestUserInfo(naverAccessToken);
+		String naverEmail = info.getResponse().getEmail();
+		String naverUserId = info.getResponse().getId();
 		User user;
 
-		if (!userRepository.existsByEmail(kakaoEmail)) {
-			user = User.createOAuthUser(kakaoEmail,AuthProvider.KAKAO, kakaoUserId, kakaoAccessToken, kakaoRefreshToken);
+		if (!userRepository.existsByEmail(naverEmail)) {
+			user = User.createOAuthUser(naverEmail,
+				AuthProvider.NAVER, naverUserId, naverAccessToken, naverRefreshToken);
 			userRepository.save(user);
 		}
 		else {
-			user = userRepository.findByEmailOrThrow(kakaoEmail);
+			user = userRepository.findByEmailOrThrow(naverEmail);
 		}
 
 		var accessExp = jwtService.getAccessExpiration();
@@ -70,31 +72,27 @@ public class KakaoOAuthService {
 		return Pair.of(accessToken, refreshToken);
 	}
 
-
-	private KakaoLoginResponse requestToken(String code) {
+	private NaverLoginResponse requestToken(String code, String state) {
 		MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
 		form.add("grant_type", "authorization_code");
-		form.add("client_id", kakaoOAuthProperties.getClientId());
-		form.add("redirect_uri", kakaoOAuthProperties.getRedirectUri());
+		form.add("client_id", naverOAuthProperties.getClientId());
+		form.add("client_secret", naverOAuthProperties.getClientSecret());
 		form.add("code", code);
-		form.add("client_secret", kakaoOAuthProperties.getClientSecret());
+		form.add("state", state);
 
-		return kakaoOAuthRestClient.post()
+		return naverOAuthRestClient.post()
 			.uri("/token")
 			.contentType(MediaType.APPLICATION_FORM_URLENCODED)
 			.body(form)
 			.retrieve()
-			.body(KakaoLoginResponse.class);
+			.body(NaverLoginResponse.class);
 	}
 
-	private KakaoUserInfo requestUserInfo(String accessToken) {
-		return kakaoApiRestClient.post()
-			.uri("/user/me")
-			.contentType(MediaType.APPLICATION_FORM_URLENCODED)
+	private NaverUserInfo requestUserInfo(String accessToken) {
+		return naverApiRestClient.get()
+			.uri("/me")
 			.header("Authorization", "Bearer " + accessToken)
-			.body("property_keys=[\"kakao_account.email\"]")
 			.retrieve()
-			.body(KakaoUserInfo.class);
+			.body(NaverUserInfo.class);
 	}
-
 }

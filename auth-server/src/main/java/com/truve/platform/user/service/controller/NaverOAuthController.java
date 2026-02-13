@@ -1,6 +1,7 @@
 package com.truve.platform.user.service.controller;
 
 import java.net.URI;
+import java.util.UUID;
 
 import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
@@ -12,27 +13,28 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.truve.platform.user.service.security.AuthCookieManager;
 import com.truve.platform.user.service.security.properties.FrontOAuthProperties;
-import com.truve.platform.user.service.security.properties.KakaoOAuthProperties;
-import com.truve.platform.user.service.service.KakaoOAuthService;
+import com.truve.platform.user.service.security.properties.NaverOAuthProperties;
+import com.truve.platform.user.service.service.NaverOAuthService;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/auth/kakao")
 @RequiredArgsConstructor
-public class KakaoOAuthController {
+@RequestMapping("/api/auth/naver")
+public class NaverOAuthController {
 	private final FrontOAuthProperties frontOAuthProperties;
-	private final KakaoOAuthProperties kakaoOAuthProperties;
-	private final KakaoOAuthService kakaoOAuthService;
+	private final NaverOAuthProperties naverOAuthProperties;
+	private final NaverOAuthService naverOAuthService;
 	private final AuthCookieManager authCookieManager;
 
 	@GetMapping("/login")
 	public ResponseEntity<Void> login() {
-		String redirectUri =
-			kakaoOAuthProperties.getAuthorizationUrl()
-				+ "?response_type=code&client_id=" + kakaoOAuthProperties.getClientId()
-				+ "&redirect_uri=" + kakaoOAuthProperties.getRedirectUri();
+		String redirectUri = naverOAuthProperties.getAuthorizationUrl()
+			+ "?response_type=code&client_id=" + naverOAuthProperties.getClientId()
+				// TODO: 유저 별 랜덤 문자열 레디스 저장 후 CSRF 방지
+			+ "&state=" + UUID.randomUUID()
+			+ "&redirect_uri=" + naverOAuthProperties.getRedirectUrl();
 
 		return ResponseEntity
 			.status(HttpStatus.FOUND)
@@ -48,8 +50,7 @@ public class KakaoOAuthController {
 		@RequestParam(required = false) String state,
 		HttpServletResponse response
 	) {
-		Pair<String, String> tokens = kakaoOAuthService.login(code, error, error_description, state);
-
+		Pair<String, String> tokens = naverOAuthService.login(code, error, error_description, state);
 		String refreshToken = tokens.getSecond();
 
 		authCookieManager.setRefreshToken(
@@ -62,5 +63,4 @@ public class KakaoOAuthController {
 			.location(URI.create(frontOAuthProperties.getCallback()))
 			.build();
 	}
-
 }

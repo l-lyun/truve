@@ -2,6 +2,7 @@ package com.truve.platform.user.service.service;
 
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,8 +29,8 @@ public class EmailService {
 	private final JavaMailSender mailSender;
 	private final VerificationCodeGenerateUtils verificationCodeGenerateUtils;
 
-	// TODO: 환경변수 분리
-	private final static String SENDER_EMAIL = "kimdohyun032@gmail.com";
+	@Value("${spring.mail.username}")
+	private String senderEmail;
 
 	@Transactional
 	public void sendMail(String email) {
@@ -55,10 +56,10 @@ public class EmailService {
 
 		try {
 			MimeMessage message = mailSender.createMimeMessage();
-			message.setFrom(SENDER_EMAIL);
+			message.setFrom(senderEmail);
 			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-			helper.setFrom(SENDER_EMAIL);
+			helper.setFrom(senderEmail);
 			helper.setTo(email);
 			helper.setSubject(subject);
 			helper.setText(text, true);
