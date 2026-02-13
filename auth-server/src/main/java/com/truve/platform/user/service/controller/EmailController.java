@@ -9,12 +9,14 @@ import com.truve.platform.common.response.ApiResult;
 import com.truve.platform.user.service.domain.dto.request.EmailRequest;
 import com.truve.platform.user.service.service.EmailService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auth/email")
+@Tag(name = "Email", description = "회원가입 시 이메일 인증 API")
 public class EmailController {
 	private final EmailService emailService;
 

@@ -8,11 +8,9 @@ public class AuthResponse {
 
 	@Getter
 	@AllArgsConstructor
-	@Schema(description = "로그인 응답")
+	@Schema(description = "로그인 응답, 헤더 내 refreshToken set-cookie")
 	public static class Login {
 		@Schema(description = "AccessToken(Authorization 헤더에 Bearer 토큰 사용)")
 		public String accessToken;
-		@Schema(description = "RefreshToken(토큰 재발급 시 사용)")
-		public String refreshToken;
 	}
 }
