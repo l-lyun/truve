@@ -45,6 +45,7 @@ services:
     environment:
       - AUTH_SERVER_URI=http://auth-server:8081
       - PAYMENT_SERVER_URI=http://payment:8082
+      - QUEUE_SERVER_URI=http://queue:8083
     networks:
       - truve-network
 
@@ -102,6 +103,27 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - truve-network
+
+  # 6. Queue Server
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: queue
+    image: truve/queue:1.0.0
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_PROFILES_ACTIVE=local
+      - USER_REDIS_HOST=user-redis
+      - USER_REDIS_PORT=6379
+
+    depends_on:
+      user-redis:
+        condition: service_started
     networks:
       - truve-network
 

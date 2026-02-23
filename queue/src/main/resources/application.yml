@@ -1,0 +1,7 @@
+spring:
+  profiles:
+    default: local
+
+springdoc:
+  api-docs:
+    path: /api/payments/v3/api-docs
