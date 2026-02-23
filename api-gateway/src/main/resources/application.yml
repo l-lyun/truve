@@ -37,6 +37,11 @@ spring:
               uri: ${PAYMENT_SERVER_URI:http://localhost:8082}
               predicates:
                 - Path=/api/payments/**
+            - id: queue
+              uri: ${QUEUE_SERVER_URI:http://localhost:8083}
+              predicates:
+                - Path=/api/queue/**
+
 
 
 jwt:
@@ -53,3 +58,6 @@ springdoc:
         url: /api/auth/v3/api-docs
       - name: "02-Payment Service"
         url: /api/payments/v3/api-docs
+      - name: "03-Queue Service"
+        url: /api/queue/v3/api-docs
+

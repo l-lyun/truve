@@ -2,6 +2,12 @@ spring:
   profiles:
     default: local
 
+queue:
+  permit-per-tick: ${QUEUE_PERMIT_PER_TICK:100}
+  scheduler-delay-ms: ${QUEUE_SCHEDULER_DELAY_MS:500}
+  ready-ttl-sec: ${QUEUE_READY_TTL_SEC:120}
+  scheduler-enabled: ${QUEUE_SCHEDULER_ENABLED:true}
+
 springdoc:
   api-docs:
-    path: /api/payments/v3/api-docs
+    path: /api/queue/v3/api-docs

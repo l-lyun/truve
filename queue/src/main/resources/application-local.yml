@@ -10,3 +10,7 @@ spring:
     redis:
       host: ${USER_REDIS_HOST:localhost}
       port: ${USER_REDIS_PORT:6379}
+
+
+jwt:
+  secret: ${JWT_SECRET:kt-cloud-tech-up-final-queue-2026020201010101}
