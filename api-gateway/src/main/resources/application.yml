@@ -41,6 +41,10 @@ spring:
               uri: ${QUEUE_SERVER_URI:http://localhost:8083}
               predicates:
                 - Path=/api/queue/**
+            - id: ticketing
+              uri: ${QUEUE_SERVER_URI:http://localhost:8084}
+              predicates:
+                - Path=/api/ticketing/**
 
 
 
