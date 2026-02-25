@@ -15,5 +15,7 @@ public class QueueProperties {
 	private long schedulerDelayMs = 500;
 	private long readyTtlSec = 100;
 	private boolean schedulerEnabled = true;
+	private long activeWindowMs;
+	private long activeLimit;
 
 }

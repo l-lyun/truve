@@ -7,7 +7,10 @@ queue:
   scheduler-delay-ms: ${QUEUE_SCHEDULER_DELAY_MS:500}
   ready-ttl-sec: ${QUEUE_READY_TTL_SEC:120}
   scheduler-enabled: ${QUEUE_SCHEDULER_ENABLED:true}
+  active-window-ms: ${TICKETING_ACTIVE_WINDOW_MS:30000}
+  active-limit: ${TICKETING_ACTIVE_LIMIT:1000}
 
 springdoc:
   api-docs:
     path: /api/queue/v3/api-docs
+
