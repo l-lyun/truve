@@ -34,6 +34,8 @@ public enum ErrorCode {
 	INVALID_ADMISSION_TOKEN(HttpStatus.BAD_REQUEST, "입장 토큰이 유효하지 않습니다."),
 	EXPIRED_ADMISSION_TOKEN(HttpStatus.BAD_REQUEST, "입장 토큰이 만료되었습니다."),
 	ADMISSION_TOKEN_MISMATCH(HttpStatus.BAD_REQUEST, "입장 토큰 정보가 요청과 일치하지 않습니다."),
+	INVALID_SESSION_TOKEN(HttpStatus.BAD_REQUEST, "세션 토큰이 유효하지 않습니다."),
+	SESSION_TOKEN_MISMATCH(HttpStatus.BAD_REQUEST, "세션 토큰 정보가 요청과 일치하지 않습니다."),
 	;
 
 

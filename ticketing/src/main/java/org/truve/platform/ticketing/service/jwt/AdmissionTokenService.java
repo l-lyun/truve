@@ -35,10 +35,10 @@ public class AdmissionTokenService {
 		String userId = claims.getSubject();
 
 		Preconditions.validate(tokenType.equals(ADMISSION_TOKEN_TYPE), ErrorCode.INVALID_ADMISSION_TOKEN);
-		Preconditions.validate(userId.equals(expectedShowId), ErrorCode.INVALID_ADMISSION_TOKEN);
-		Preconditions.validate(showId.equals(expectedUserId), ErrorCode.INVALID_ADMISSION_TOKEN);
+		Preconditions.validate(userId.equals(expectedUserId), ErrorCode.INVALID_ADMISSION_TOKEN);
+		Preconditions.validate(showId.equals(expectedShowId), ErrorCode.INVALID_ADMISSION_TOKEN);
 
-		return AdmissionTokenClaimsDTO.of(tokenType, showId, userId);
+		return AdmissionTokenClaimsDTO.of(userId, showId, tokenType);
 	}
 
 	private Claims parseClaims(String token) {

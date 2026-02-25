@@ -20,6 +20,10 @@ springdoc:
     path: /api/auth/v3/api-docs
 
 jwt:
-  secret: ${JWT_SECRET:kt-cloud-tech-up-final-project-2026020201010101}
+  secret: ${JWT_SECRET:kt-cloud-tech-up-final-queue-2026020201010101}
   access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:300000}
   refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:43200000}
+
+ticketing:
+  active-window-ms: ${TICKETING_ACTIVE_WINDOW_MS:30000}
+  session-ttl-sec: ${TICKETING_SESSION_TTL_SEC:300}
