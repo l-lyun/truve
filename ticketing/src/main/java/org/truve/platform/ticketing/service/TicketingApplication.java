@@ -2,7 +2,9 @@ package org.truve.platform.ticketing.service;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
+@ConfigurationPropertiesScan
 @SpringBootApplication(scanBasePackages = "com.truve.platform")
 public class TicketingApplication {
 

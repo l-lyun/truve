@@ -18,3 +18,8 @@ spring:
 springdoc:
   api-docs:
     path: /api/auth/v3/api-docs
+
+jwt:
+  secret: ${JWT_SECRET:kt-cloud-tech-up-final-project-2026020201010101}
+  access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:300000}
+  refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:43200000}
