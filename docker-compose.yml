@@ -46,6 +46,8 @@ services:
       - AUTH_SERVER_URI=http://auth-server:8081
       - PAYMENT_SERVER_URI=http://payment:8082
       - QUEUE_SERVER_URI=http://queue:8083
+      - USER_REDIS_HOST=user-redis
+      - USER_REDIS_PORT=6379
       - TICKETING_SERVER_URI=http://ticketing:8084
     networks:
       - truve-network
