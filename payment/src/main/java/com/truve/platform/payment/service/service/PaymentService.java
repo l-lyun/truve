@@ -1,7 +1,7 @@
 package com.truve.platform.payment.service.service;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,7 +49,14 @@ public class PaymentService {
 		payment.processConfirm(response.getPaymentKey(), parseLocalDateTime(response.getApprovedAt()));
 	}
 
+	@Transactional
+	public void completeDeposit(String orderId, String time) {
+		Payment payment = paymentRepository.findByOrderIdOrThrow(orderId);
+
+		payment.complete(payment.getPaymentKey(), parseLocalDateTime(time));
+	}
+
 	private LocalDateTime parseLocalDateTime(String time) {
-		return !StringUtils.hasText(time) ? null : OffsetDateTime.parse(time).toLocalDateTime();
+		return !StringUtils.hasText(time) ? null : LocalDateTime.parse(time, DateTimeFormatter.ISO_DATE_TIME);
 	}
 }

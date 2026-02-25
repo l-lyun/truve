@@ -49,7 +49,6 @@ public class PaymentController {
 	@GetMapping("/confirm")
 	@ApiResponse(responseCode = "302")
 	public ResponseEntity<Void> confirm(
-		@RequestParam String paymentType,
 		@RequestParam String orderId,
 		@RequestParam String paymentKey,
 		@RequestParam Long amount

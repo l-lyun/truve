@@ -1,5 +1,6 @@
 server:
   port: 8080
+
 spring:
 
   data:
@@ -43,6 +44,10 @@ spring:
               uri: ${PAYMENT_SERVER_URI:http://localhost:8082}
               predicates:
                 - Path=/api/payments/**
+            - id: payment-webhook
+              uri: ${PAYMENT_SERVER_URI:http://localhost:8082}
+              predicates:
+                - Path=/api/webhooks/**
             - id: queue
               uri: ${QUEUE_SERVER_URI:http://localhost:8083}
               predicates:

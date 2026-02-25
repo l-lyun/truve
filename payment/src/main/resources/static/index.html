@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Toss Payments V2 Direct Test</title>
+    <script src="https://js.tosspayments.com/v2/standard"></script>
+    <style>
+        body {
+            font-family: 'Pretendard', sans-serif;
+            padding: 40px;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            border: 1px solid #eee;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        h2 {
+            color: #3182f6;
+            margin-top: 0;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: #3182f6;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 25px;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #1b64da;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>결제 테스트</h2>
+
+    <label>주문 ID</label>
+    <input type="text" id="orderId" value="ORDER_20260213_001">
+
+    <label>결제 금액 (원)</label>
+    <input type="number" id="amount" value="15000">
+
+    <label>결제 수단</label>
+    <select id="method">
+        <option value="CARD">카드</option>
+        <option value="VIRTUAL_ACCOUNT">무통장입금</option>
+    </select>
+
+    <button onclick="handlePayment()">결제하기</button>
+</div>
+
+<script>
+    const clientKey = "test_ck_jExPeJWYVQxDje9xG7Mj349R5gvN";
+    const tossPayments = TossPayments(clientKey);
+
+    async function handlePayment() {
+        const orderId = document.getElementById('orderId').value;
+        const amount = parseInt(document.getElementById('amount').value);
+        const method = document.getElementById('method').value;
+
+        try {
+            console.log("1. 서버에 주문 정보 저장 중...");
+            const response = await fetch('/api/payments', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    orderId: orderId,
+                    amount: amount,
+                    method: method
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.text();
+                throw new Error('서버 주문 저장 실패: ' + errorData);
+            }
+
+            console.log("2. 서버 저장 완료! 토스 결제창 호출...");
+
+            // B. 토스 결제창 띄우기 (V2 Standard 방식)
+            const payment = tossPayments.payment({
+                customerKey: "GUEST_" + Math.random().toString(36).substring(2, 11), // 비회원용 랜덤 키
+            });
+
+            await payment.requestPayment({
+                method: method,
+                amount: {
+                    currency: "KRW",
+                    value: amount,
+                },
+                orderId: orderId,
+                orderName: "테스트 상품 결제",
+                successUrl: window.location.origin + "/api/payments/confirm",
+                failUrl: window.location.origin + "/api/payments/fail",
+            });
+
+        } catch (error) {
+            console.error("오류 발생:", error);
+            alert("결제 준비 중 오류가 발생했습니다: " + error.message);
+        }
+    }
+</script>
+
+</body>
+</html>

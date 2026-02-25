@@ -79,7 +79,7 @@ public class Payment extends BaseEntity {
 	}
 
 	public void processConfirm(String paymentKey, LocalDateTime approvedAt) {
-		if (this.method == PaymentMethod.TRANSFER) {
+		if (this.method == PaymentMethod.VIRTUAL_ACCOUNT) {
 			waitDeposit(paymentKey);
 		} else {
 			complete(paymentKey, approvedAt);

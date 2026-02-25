@@ -4,5 +4,5 @@ import lombok.Getter;
 
 @Getter
 public enum PaymentMethod {
-	CARD, TOSS_PAY, TRANSFER;
+	CARD, TOSS_PAY, VIRTUAL_ACCOUNT;
 }
