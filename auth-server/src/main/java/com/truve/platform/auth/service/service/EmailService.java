@@ -10,7 +10,6 @@ import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
 import com.truve.platform.common.support.Preconditions;
 import com.truve.platform.common.support.VerificationCodeGenerateUtils;
-import com.truve.platform.auth.service.domain.entity.EmailVerificationToken;
 import com.truve.platform.auth.service.repository.EmailVerificationRepository;
 import com.truve.platform.auth.service.repository.UserRepository;
 
