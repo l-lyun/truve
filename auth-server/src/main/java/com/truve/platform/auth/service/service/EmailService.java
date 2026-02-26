@@ -37,13 +37,7 @@ public class EmailService {
 		Preconditions.validate(!userRepository.existsByEmail(email), ErrorCode.ALREADY_EXISTS_EMAIL);
 
 		String code = verificationCodeGenerateUtils.generateVerificationCode();
-
-		EmailVerificationToken emailVerificationToken = EmailVerificationToken.create(
-			email,
-			code
-		);
-
-		emailVerificationRepository.save(emailVerificationToken);
+		emailVerificationRepository.registerEmailVerificationCode(email, code);
 
 		String subject = "TRUVE 회원가입 인증 코드";
 		String text = String.format(
@@ -73,13 +67,9 @@ public class EmailService {
 
 	@Transactional
 	public void verifyEmail(String email, String code) {
-
-		EmailVerificationToken token = emailVerificationRepository.findByEmailOrThrow(email);
-
-		Preconditions.validate(!token.isVerified(), ErrorCode.ALREADY_EXISTS_EMAIL);
-
-		Preconditions.validate(token.getCode().equals(code), ErrorCode.NOT_CORRECT_EMAIL_CODE);
-
-		token.verifyEmail();
+		boolean isVerified = emailVerificationRepository.verifyEmailVerificationCode(email, code);
+		Preconditions.validate(isVerified, ErrorCode.NOT_CORRECT_EMAIL_CODE);
+		emailVerificationRepository.registerVerifiedEmail(email);
+		emailVerificationRepository.deleteEmailVerificationCode(email);
 	}
 }

@@ -1,26 +1,57 @@
 package com.truve.platform.auth.service.repository;
 
-import java.util.Optional;
+import java.time.Duration;
+import org.springframework.stereotype.Repository;
+import com.truve.platform.auth.service.support.RedisSupport;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import lombok.RequiredArgsConstructor;
 
-import com.truve.platform.common.exception.CustomException;
-import com.truve.platform.common.exception.ErrorCode;
-import com.truve.platform.auth.service.domain.entity.EmailVerificationToken;
+@Repository
+@RequiredArgsConstructor
+public class EmailVerificationRepository {
 
-public interface EmailVerificationRepository extends JpaRepository<EmailVerificationToken, Long> {
+	private static final String VERIFY_EMAIL_PREFIX = "email:";
+	private static final String VERIFIED_EMAIL_PREFIX = "email:verified:";
 
-	boolean existsByEmail(String email);
+	private final RedisSupport redisSupport;
 
-	Optional<EmailVerificationToken> findByEmail(String email);
-
-	boolean existsByEmailAndIsVerifiedTrue(String email);
-
-	default EmailVerificationToken findByEmailOrThrow(String email) {
-		return findByEmail(email).orElseThrow(
-			() -> new CustomException(ErrorCode.NOT_FOUND_EMAIL)
+	public void registerEmailVerificationCode(String email, String verificationCode) {
+		String key = VERIFY_EMAIL_PREFIX + email;
+		redisSupport.setValueWithTtl(
+			key, verificationCode,
+			Duration.ofMinutes(10)
 		);
 	}
 
-	void deleteByEmail(String email);
+	public boolean verifyEmailVerificationCode(String email, String verificationCode) {
+		String key =  VERIFY_EMAIL_PREFIX + email;
+		String savedVerificationCode = redisSupport.getValue(key);
+
+		if (savedVerificationCode == null || savedVerificationCode.isBlank()) {
+			return false;
+		}
+
+		return savedVerificationCode.equals(verificationCode);
+	}
+
+	public void registerVerifiedEmail(String email) {
+		String key = VERIFIED_EMAIL_PREFIX + email;
+		String verifiedAt = String.valueOf(System.currentTimeMillis());
+		redisSupport.setValueWithTtl(key, verifiedAt, Duration.ofMinutes(30));
+	}
+
+	public String isVerifiedEmail(String email) {
+		String key = VERIFIED_EMAIL_PREFIX + email;
+		return redisSupport.getValue(key);
+	}
+
+	public void deleteVerifiedEmail(String email) {
+		String key = VERIFIED_EMAIL_PREFIX + email;
+		redisSupport.delete(key);
+	}
+
+	public void  deleteEmailVerificationCode(String email) {
+		String key = VERIFY_EMAIL_PREFIX + email;
+		redisSupport.delete(key);
+	}
 }

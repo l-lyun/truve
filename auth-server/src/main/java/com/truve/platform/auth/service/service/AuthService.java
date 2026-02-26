@@ -94,10 +94,8 @@ public class AuthService {
 	@Transactional
 	public void signUp(String email, String password) {
 
-		Preconditions.validate(
-			emailVerificationRepository.existsByEmailAndIsVerifiedTrue(email),
-			ErrorCode.NOT_VERIFIED_EMAIL
-		);
+		String verifiedAt = emailVerificationRepository.isVerifiedEmail(email);
+		Preconditions.validate(!(verifiedAt == null || verifiedAt.isBlank()), ErrorCode.NOT_VERIFIED_EMAIL);
 
 		Preconditions.validate(
 			!userRepository.existsByEmail(email),
@@ -108,7 +106,8 @@ public class AuthService {
 
 		User user = User.createLocalUser(email, encodedPassword);
 		userRepository.save(user);
-		emailVerificationRepository.deleteByEmail(email);
+		emailVerificationRepository.deleteVerifiedEmail(email);
+
 	}
 
 }
