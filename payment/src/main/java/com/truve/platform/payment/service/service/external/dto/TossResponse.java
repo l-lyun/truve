@@ -1,5 +1,7 @@
 package com.truve.platform.payment.service.service.external.dto;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,10 +20,12 @@ public class TossResponse {
 		private Long totalAmount;
 		private String status;
 		private String approvedAt;
+		private String requestedAt;
 
 		private Receipt receipt;
 		private Card card;
 		private EasyPay easyPay;
+		private VirtualAccount virtualAccount;
 
 		@JsonAnySetter
 		private Map<String, Object> others = new HashMap<>();
@@ -46,6 +50,24 @@ public class TossResponse {
 	public static class EasyPay {
 		private String provider;
 		private Long amount;
+	}
+
+	@Getter
+	@NoArgsConstructor
+	public static class VirtualAccount {
+		private String accountNumber;
+		private String bankCode;
+		private String customerName;
+		private String dueDate;
+
+		public com.truve.platform.payment.service.domain.entity.VirtualAccount toEntity() {
+			return com.truve.platform.payment.service.domain.entity.VirtualAccount.builder()
+				.accountNumber(this.accountNumber)
+				.bankCode(this.bankCode)
+				.customerName(this.customerName)
+				.dueDate(LocalDateTime.parse(this.dueDate, DateTimeFormatter.ISO_DATE_TIME))
+				.build();
+		}
 	}
 
 	@Getter

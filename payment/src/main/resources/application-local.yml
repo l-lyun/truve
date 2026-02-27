@@ -10,7 +10,8 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      # TODO: 다음 PR에서 update로 변경 필요
+      ddl-auto: create
     properties:
       hibernate:
         format_sql: true
