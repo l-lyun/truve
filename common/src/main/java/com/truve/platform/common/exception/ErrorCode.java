@@ -42,6 +42,9 @@ public enum ErrorCode {
 	ADMISSION_TOKEN_MISMATCH(HttpStatus.BAD_REQUEST, "입장 토큰 정보가 요청과 일치하지 않습니다.", "T04"),
 	INVALID_SESSION_TOKEN(HttpStatus.BAD_REQUEST, "세션 토큰이 유효하지 않습니다.", "T05"),
 	SESSION_TOKEN_MISMATCH(HttpStatus.BAD_REQUEST, "세션 토큰 정보가 요청과 일치하지 않습니다.", "T06"),
+	ALREADY_SOLD_SEAT(HttpStatus.BAD_REQUEST, "판매된 좌석입니다.", "T07"),
+	ALREADY_HOLD_SEAT(HttpStatus.BAD_REQUEST, "이미 선점된 좌석입니다.", "T08"),
+	NOT_CORRECT_SEAT(HttpStatus.BAD_REQUEST, "잘못된 좌석 정보입니다.", "T08"),
 
 	NOT_FOUND_SHOW(HttpStatus.NOT_FOUND, "존재하지 않는 공연입니다.", "M01");
 	;
