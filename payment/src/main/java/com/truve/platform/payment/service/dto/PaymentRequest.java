@@ -1,7 +1,5 @@
 package com.truve.platform.payment.service.dto;
 
-import com.truve.platform.payment.service.domain.constant.PaymentMethod;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -18,7 +16,5 @@ public class PaymentRequest {
 		@NotNull
 		@Positive
 		private Long amount;
-		@NotNull
-		private PaymentMethod method;
 	}
 }

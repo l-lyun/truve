@@ -44,7 +44,7 @@ public class PaymentControllerTest {
 			.orderId(orderId)
 			.paymentKey("test-payment-key")
 			.amount(10000L)
-			.method(PaymentMethod.CARD)
+			.method(PaymentMethod.CARD.getDisplayName())
 			.status(PaymentStatus.DONE)
 			.build();
 
@@ -58,7 +58,7 @@ public class PaymentControllerTest {
 			.andExpect(jsonPath("$.data.orderId").value(orderId))
 			.andExpect(jsonPath("$.data.paymentKey").value("test-payment-key"))
 			.andExpect(jsonPath("$.data.amount").value(10000L))
-			.andExpect(jsonPath("$.data.method").value("CARD"))
+			.andExpect(jsonPath("$.data.method").value(PaymentMethod.CARD.getDisplayName()))
 			.andExpect(jsonPath("$.data.status").value("DONE"));
 		verify(paymentService).details(orderId);
 	}
@@ -67,7 +67,7 @@ public class PaymentControllerTest {
 	@DisplayName("결제 생성에 성공하면 200 OK와 생성된 paymentId를 응답한다.")
 	void 결제_생성() throws Exception {
 		// given
-		var request = new PaymentRequest.Create("orderId", 100L, PaymentMethod.CARD);
+		var request = new PaymentRequest.Create("orderId", 100L);
 		given(paymentService.create(any())).willReturn(1L);
 
 		// when
@@ -84,7 +84,7 @@ public class PaymentControllerTest {
 	@DisplayName("중복된 orderId로 요청한 경우, 400과 ALREADY_EXIST_PAYMENT를 응답한다. ")
 	void 결제_생성_중복_에러_테스트() throws Exception {
 		// given
-		var request = new PaymentRequest.Create("orderId", 100L, PaymentMethod.CARD);
+		var request = new PaymentRequest.Create("orderId", 100L);
 		given(paymentService.create(any()))
 			.willThrow(new CustomException(ErrorCode.ALREADY_EXIST_PAYMENT));
 
