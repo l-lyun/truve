@@ -74,7 +74,11 @@ public class TicketingService {
 		);
 
 		boolean tryHoldSeatResult = ticketingRedisRepository.tryHoldSeat(showScheduleId, seat.getSeatId(), sessionToken);
-		Preconditions.validate(tryHoldSeatResult, ErrorCode.ALREADY_HOLD_SEAT);
+
+		if (!tryHoldSeatResult) {
+			String savesSessionToken = ticketingRedisRepository.getHoldSeatSessionToken(showScheduleId, seat.getSeatId());
+			Preconditions.validate(sessionToken.equals(savesSessionToken), ErrorCode.ALREADY_HOLD_SEAT);
+		}
 	}
 
 	private void isCorrectSessionToken(Long showScheduleId, Long userId, String sessionToken) {

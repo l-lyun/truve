@@ -62,5 +62,10 @@ public class TicketingRedisRepository {
 		return redisSupport.setIfAbsent(key, sessionToken, Duration.ofMinutes(10));
 	}
 
+	public String getHoldSeatSessionToken(Long showScheduleId, Long seatId) {
+		String key = SEAT_HOLD_KEY_PREFIX + showScheduleId + ":" + seatId;
+		return redisSupport.getValue(key);
+	}
+
 
 }
