@@ -23,23 +23,34 @@ public class TicketingController {
 
 	private final TicketingService ticketingService;
 
-	@PostMapping("/{showId}/enter")
+	@PostMapping("/{showScheduleId}/enter")
 	public ApiResult<TicketingResponse.Enter> enter(
-		@PathVariable String showId,
-		@RequestHeader(value = USER_ID_HEADER) String userId,
+		@PathVariable Long showScheduleId,
+		@RequestHeader(value = USER_ID_HEADER) Long userId,
 		@RequestHeader(value = ADMISSION_HEADER, required = false) String admissionToken
 	) {
-		var response = ticketingService.enter(showId, userId, admissionToken);
+		var response = ticketingService.enter(showScheduleId, userId, admissionToken);
 		return ApiResult.ok(response);
 	}
 
-	@PostMapping("/{showId}/heartbeat")
+	@PostMapping("/{showScheduleId}/heartbeat")
 	public ApiResult<Void> heartbeat(
-		@PathVariable String showId,
-		@RequestHeader(value = USER_ID_HEADER) String userId,
+		@PathVariable Long showScheduleId,
+		@RequestHeader(value = USER_ID_HEADER) Long userId,
 		@RequestHeader(value = SESSION_HEADER) String sessionToken
 	) {
-		ticketingService.heartbeat(showId, userId, sessionToken);
+		ticketingService.heartbeat(showScheduleId, userId, sessionToken);
+		return ApiResult.ok();
+	}
+
+	@PostMapping("/{showScheduleId}/hold/seat/{seatId}")
+	public ApiResult<Void> holdSeat(
+		@PathVariable Long seatId,
+		@PathVariable Long showScheduleId,
+		@RequestHeader(value = USER_ID_HEADER) Long userId,
+		@RequestHeader(value = SESSION_HEADER) String sessionToken
+	) {
+		ticketingService.holdSeat(showScheduleId, userId, sessionToken, seatId);
 		return ApiResult.ok();
 	}
 

@@ -6,11 +6,11 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public class AdmissionTokenClaimsDTO {
-	private String userId;
-	private String showId;
+	private Long userId;
+	private Long showId;
 	private String tokenType;
 
-	public static AdmissionTokenClaimsDTO of(String userId, String showId, String tokenType) {
+	public static AdmissionTokenClaimsDTO of(Long userId, Long showId, String tokenType) {
 		return new  AdmissionTokenClaimsDTO(userId, showId, tokenType);
 	}
 }
