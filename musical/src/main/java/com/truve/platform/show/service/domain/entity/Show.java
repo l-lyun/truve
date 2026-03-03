@@ -20,10 +20,8 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "show")
-@AttributeOverrides({
-	@AttributeOverride(name = "id", column = @Column(name = "show_id"))
-})
+@Table(name = "shows")
+
 public class Show extends BaseEntity {
 
 	@ManyToOne(fetch = FetchType.LAZY)

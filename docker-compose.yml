@@ -141,6 +141,9 @@ services:
     ports:
       - "8084:8084"
     environment:
+      - TICKETING_MYSQL_URL=jdbc:mysql://db:3306/ticketing_db
+      - TICKETING_MYSQL_USERNAME=root
+      - TICKETING_MYSQL_PASSWORD=1234
       - SPRING_PROFILES_ACTIVE=local
       - USER_REDIS_HOST=user-redis
       - USER_REDIS_PORT=6379
@@ -165,6 +168,9 @@ services:
       - "8085:8085"
     environment:
       - SPRING_PROFILES_ACTIVE=local
+      - MUSICAL_MYSQL_URL=jdbc:mysql://db:3306/musical_db
+      - MUSICAL_MYSQL_USERNAME=root
+      - MUSICAL_MYSQL_PASSWORD=1234
     depends_on:
       db:
         condition: service_healthy

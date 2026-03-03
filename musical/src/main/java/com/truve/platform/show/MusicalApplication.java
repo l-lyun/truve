@@ -4,9 +4,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication(scanBasePackages = "com.truve.platform")
-public class ShowApplication {
+public class MusicalApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(ShowApplication.class, args);
+        SpringApplication.run(MusicalApplication.class, args);
     }
 }

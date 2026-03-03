@@ -26,12 +26,12 @@ public class ApiAdvice {
 			e.getMessage()
 		);
 
-		return ErrorResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "서버에러입니다. 백엔드팀에 문의하세요.");
+		return ErrorResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "서버에러입니다. 백엔드팀에 문의하세요.", "C01");
 	}
 
 	@ExceptionHandler(CustomException.class)
 	public ResponseEntity<ErrorResponse.ErrorData> customException(CustomException e) {
-		return ErrorResponse.error(e.getErrorCode().getStatus(), e.getMessage());
+		return ErrorResponse.error(e.getErrorCode().getStatus(), e.getMessage(), e.getErrorCode().getCode());
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
@@ -39,7 +39,7 @@ public class ApiAdvice {
 		var details = Arrays.toString(e.getDetailMessageArguments());
 		var message = details.split(",", 2)[1].replace("]", "").trim();
 
-		return ErrorResponse.error(HttpStatus.BAD_REQUEST, message);
+		return ErrorResponse.error(HttpStatus.BAD_REQUEST, message, "C02");
 	}
 
 }
