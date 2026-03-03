@@ -9,10 +9,9 @@ import org.springframework.util.StringUtils;
 
 import com.truve.platform.common.exception.ErrorCode;
 import com.truve.platform.common.support.Preconditions;
-import com.truve.platform.payment.service.domain.constant.PaymentMethod;
 import com.truve.platform.payment.service.domain.entity.Payment;
-import com.truve.platform.payment.service.domain.entity.VirtualAccount;
 import com.truve.platform.payment.service.dto.PaymentRequest;
+import com.truve.platform.payment.service.dto.PaymentResponse;
 import com.truve.platform.payment.service.repository.PaymentRepository;
 import com.truve.platform.payment.service.service.external.TossClient;
 import com.truve.platform.payment.service.service.external.dto.TossRequest;
@@ -27,6 +26,12 @@ public class PaymentService {
 	private final PaymentRepository paymentRepository;
 	private final TossClient tossClient;
 
+	@Transactional(readOnly = true)
+	public PaymentResponse.Details details(String orderId) {
+		Payment payment = paymentRepository.findByOrderIdOrThrow(orderId);
+		return PaymentResponse.Details.from(payment);
+	}
+
 	@Transactional
 	public Long create(PaymentRequest.Create request) {
 		// TODO: 이미 존재하는 결제여도 READY 상태면 찾아서 ID 반환 (결제창을 닫아서 재요청하는 경우)
@@ -35,7 +40,6 @@ public class PaymentService {
 		Payment payment = Payment.builder()
 			.orderId(request.getOrderId())
 			.amount(request.getAmount())
-			.method(request.getMethod())
 			.build();
 
 		return paymentRepository.save(payment).getId();
@@ -50,12 +54,12 @@ public class PaymentService {
 
 		TossResponse.Payment response = tossClient.confirm(new TossRequest.Confirm(orderId, amount, paymentKey));
 
-		if (payment.getMethod().equals(PaymentMethod.VIRTUAL_ACCOUNT)) {
-			VirtualAccount vEntity = response.getVirtualAccount().toEntity();
-			payment.waitDeposit(paymentKey, parseTime(response.getRequestedAt()), vEntity);
-		} else {
-			payment.complete(paymentKey, parseTime(response.getRequestedAt()), parseTime(response.getApprovedAt()));
-		}
+		payment.confirm(
+			response.getPaymentKey(),
+			response.getMethodDetailsEntity(),
+			parseTime(response.getRequestedAt()),
+			parseTime(response.getApprovedAt())
+		);
 	}
 
 	@Transactional

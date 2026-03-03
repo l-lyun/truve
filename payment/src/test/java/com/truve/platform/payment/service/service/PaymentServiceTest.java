@@ -38,7 +38,7 @@ class PaymentServiceTest {
 		@DisplayName("새로운 결제를 요청하면 전달받은 결제 정보를 저장한다.")
 		void 결제_생성_성공() {
 			// given
-			var savedPayment = new Payment(request.getOrderId(), request.getAmount(), request.getMethod());
+			var savedPayment = new Payment(request.getOrderId(), request.getAmount());
 			ReflectionTestUtils.setField(savedPayment, "id", 1L);
 
 			given(paymentRepository.save(any(Payment.class))).willReturn(savedPayment);

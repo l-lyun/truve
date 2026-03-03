@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.truve.platform.payment.service.domain.constant.PaymentMethod;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,6 +18,7 @@ public class TossResponse {
 	public static class Payment {
 		private String paymentKey;
 		private String orderId;
+		private String method;
 		private Long totalAmount;
 		private String status;
 		private String approvedAt;
@@ -29,6 +31,19 @@ public class TossResponse {
 
 		@JsonAnySetter
 		private Map<String, Object> others = new HashMap<>();
+
+		public Object getMethodDetailsEntity() {
+			return switch (getPaymentMethod()) {
+				case CARD -> card != null ? card.toEntity() : null;
+				case EASY_PAY -> easyPay != null ? easyPay.toEntity() : null;
+				case VIRTUAL_ACCOUNT -> virtualAccount != null ? virtualAccount.toEntity() : null;
+				default -> null;
+			};
+		}
+
+		private PaymentMethod getPaymentMethod() {
+			return PaymentMethod.of(method);
+		}
 	}
 
 	@Getter
@@ -43,13 +58,28 @@ public class TossResponse {
 		private String issuerCode;
 		private String number;
 		private Integer installmentPlanMonths;
+
+		public com.truve.platform.payment.service.domain.entity.Card toEntity() {
+			return com.truve.platform.payment.service.domain.entity.Card.builder()
+				.issuerCode(issuerCode)
+				.number(number)
+				.installmentPlanMonths(installmentPlanMonths)
+				.build();
+		}
 	}
 
 	@Getter
 	@NoArgsConstructor
 	public static class EasyPay {
 		private String provider;
-		private Long amount;
+		private Long discountAmount;
+
+		public com.truve.platform.payment.service.domain.entity.EasyPay toEntity() {
+			return com.truve.platform.payment.service.domain.entity.EasyPay.builder()
+				.provider(provider)
+				.discountAmount(discountAmount)
+				.build();
+		}
 	}
 
 	@Getter
@@ -84,5 +114,4 @@ public class TossResponse {
 		private String code;
 		private String message;
 	}
-
 }

@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.util.StringUtils;
 
+import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
 import com.truve.platform.common.support.BaseEntity;
 import com.truve.platform.common.support.Preconditions;
@@ -55,6 +56,12 @@ public class Payment extends BaseEntity {
 	@Embedded
 	private VirtualAccount virtualAccount;
 
+	@Embedded
+	private Card card;
+
+	@Embedded
+	private EasyPay easyPay;
+
 	private String failReason;
 
 	@OneToMany(mappedBy = "payment", cascade = CascadeType.ALL)
@@ -65,11 +72,11 @@ public class Payment extends BaseEntity {
 	private LocalDateTime approvedAt;
 
 	@Builder
-	public Payment(String orderId, Long amount, PaymentMethod method) {
+	public Payment(String orderId, Long amount) {
 		this.orderId = orderId;
 		this.amount = amount;
 		this.cancelableAmount = amount;
-		this.method = method;
+		this.method = PaymentMethod.UNCONFIRMED;
 		this.status = PaymentStatus.READY;
 	}
 
@@ -84,25 +91,45 @@ public class Payment extends BaseEntity {
 		Preconditions.validate(this.amount.equals(amount), ErrorCode.INVALID_PAYMENT_AMOUNT);
 	}
 
-	public void waitDeposit(String paymentKey, LocalDateTime requestedAt, VirtualAccount virtualAccount) {
-		validateWaitDepositStatus();
-
-		this.virtualAccount = virtualAccount;
-		this.paymentKey = paymentKey;
-		this.status = PaymentStatus.WAITING_FOR_DEPOSIT;
-		this.requestedAt = requestedAt;
-	}
-
 	public boolean isDone() {
 		return status.equals(PaymentStatus.DONE);
 	}
 
-	public void complete(String paymentKey, LocalDateTime requestedAt, LocalDateTime approvedAt) {
-		Preconditions.validate(status == PaymentStatus.READY, ErrorCode.INVALID_PAYMENT_STATUS);
+	public void confirm(String paymentKey, Object methodDetails, LocalDateTime requestedAt, LocalDateTime approvedAt) {
+		switch (methodDetails) {
+			case Card c -> confirm(paymentKey, c, requestedAt, approvedAt);
+			case EasyPay e -> confirm(paymentKey, e, requestedAt, approvedAt);
+			case VirtualAccount v -> confirm(paymentKey, v, requestedAt);
+			case null, default -> throw new CustomException(ErrorCode.INVALID_PAYMENT_METHOD_DETAILS);
+		}
+	}
+
+	private void confirm(String paymentKey, Card card, LocalDateTime requestedAt, LocalDateTime approvedAt) {
+		commonConfirm(paymentKey, PaymentMethod.CARD, requestedAt, approvedAt);
+		this.card = card;
+		this.status = PaymentStatus.DONE;
+	}
+
+	private void confirm(String paymentKey, EasyPay easyPay, LocalDateTime requestedAt, LocalDateTime approvedAt) {
+		commonConfirm(paymentKey, PaymentMethod.EASY_PAY, requestedAt, approvedAt);
+		this.easyPay = easyPay;
+		this.status = PaymentStatus.DONE;
+	}
+
+	private void confirm(String paymentKey, VirtualAccount virtualAccount, LocalDateTime requestedAt) {
+		commonConfirm(paymentKey, PaymentMethod.VIRTUAL_ACCOUNT, requestedAt, null);
+		this.virtualAccount = virtualAccount;
+		this.status = PaymentStatus.WAITING_FOR_DEPOSIT;
+	}
+
+	private void commonConfirm(String paymentKey, PaymentMethod method, LocalDateTime requestedAt,
+		LocalDateTime approvedAt) {
+		Preconditions.validate(this.status == PaymentStatus.READY && this.method == PaymentMethod.UNCONFIRMED,
+			ErrorCode.INVALID_PAYMENT_STATUS);
 		verifyPaymentKey(paymentKey);
 
 		this.paymentKey = paymentKey;
-		this.status = PaymentStatus.DONE;
+		this.method = method;
 		this.requestedAt = requestedAt;
 		this.approvedAt = approvedAt;
 	}
@@ -136,10 +163,6 @@ public class Payment extends BaseEntity {
 	private void processRefund(Long cancelAmount) {
 		this.cancelableAmount -= cancelAmount;
 		this.status = (this.cancelableAmount == 0) ? PaymentStatus.REFUNDED : PaymentStatus.PARTIAL_REFUNDED;
-	}
-
-	private void validateWaitDepositStatus() {
-		Preconditions.validate(status == PaymentStatus.READY, ErrorCode.INVALID_PAYMENT_STATUS);
 	}
 
 	private void validateExpireStatus() {

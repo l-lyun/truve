@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,6 +35,12 @@ public class PaymentController {
 
 	@Value("${app.frontend.fail-url}")
 	private String failUrl;
+
+	@Operation(summary = "결제 정보 상세 조회", description = "주문 ID로 결제 정보를 조회합니다.")
+	@GetMapping("/{orderId}")
+	public ApiResult<PaymentResponse.Details> details(@PathVariable String orderId) {
+		return ApiResult.ok(paymentService.details(orderId));
+	}
 
 	@Operation(summary = "결제 생성", description = "Toss Payments에 결제를 요청하기 전에 호출해 주세요")
 	@PostMapping
