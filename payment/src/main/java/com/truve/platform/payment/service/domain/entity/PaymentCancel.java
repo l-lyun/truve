@@ -1,12 +1,12 @@
 package com.truve.platform.payment.service.domain.entity;
 
+import java.time.LocalDateTime;
+
 import com.truve.platform.common.support.BaseEntity;
-import com.truve.platform.payment.service.domain.constant.CancelType;
+import com.truve.platform.payment.service.domain.command.CancelCommand;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -27,19 +27,36 @@ public class PaymentCancel extends BaseEntity {
 	private Payment payment;
 
 	@Column(nullable = false)
-	private Long cancelAmount;
+	private Long requestAmount;
+
+	@Column(nullable = false)
+	private Long refundFee;
+
+	@Column(nullable = false)
+	private Long refundAmount;
 
 	@Column(nullable = false)
 	private String cancelReason;
 
-	@Enumerated(EnumType.STRING)
-	private CancelType type;
+	@Column(nullable = false)
+	private LocalDateTime canceledAt;
+
+	@Column(unique = true, nullable = false)
+	private String transactionKey;
+
+	@Column(nullable = false)
+	private String cancelStatus;
 
 	@Builder
-	public PaymentCancel(Payment payment, Long cancelAmount, String cancelReason, CancelType type) {
+	public PaymentCancel(Payment payment, CancelCommand cancelCommand) {
 		this.payment = payment;
-		this.cancelAmount = cancelAmount;
-		this.cancelReason = cancelReason;
-		this.type = type;
+		this.requestAmount = cancelCommand.getAmount();
+		this.refundFee = cancelCommand.getFee();
+		this.refundAmount = requestAmount - refundFee;
+		this.cancelReason = cancelCommand.getReason();
+		this.canceledAt = cancelCommand.getCanceledAt();
+		this.transactionKey = cancelCommand.getTransactionKey();
+		this.cancelStatus = cancelCommand.getStatus();
 	}
+
 }

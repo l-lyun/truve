@@ -10,6 +10,7 @@ import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
 import com.truve.platform.common.support.BaseEntity;
 import com.truve.platform.common.support.Preconditions;
+import com.truve.platform.payment.service.domain.command.CancelCommand;
 import com.truve.platform.payment.service.domain.constant.CancelType;
 import com.truve.platform.payment.service.domain.constant.PaymentMethod;
 import com.truve.platform.payment.service.domain.constant.PaymentStatus;
@@ -91,8 +92,8 @@ public class Payment extends BaseEntity {
 		Preconditions.validate(this.amount.equals(amount), ErrorCode.INVALID_PAYMENT_AMOUNT);
 	}
 
-	public boolean isDone() {
-		return status.equals(PaymentStatus.DONE);
+	public boolean isNotDone() {
+		return !status.equals(PaymentStatus.DONE);
 	}
 
 	public void confirm(String paymentKey, Object methodDetails, LocalDateTime requestedAt, LocalDateTime approvedAt) {
@@ -141,28 +142,35 @@ public class Payment extends BaseEntity {
 		this.approvedAt = approvedAt;
 	}
 
-	public void applyCancel(Long cancelAmount, String reason, CancelType type) {
+	public void validateCancel(Long cancelAmount) {
+		CancelType type = cancelAmount.equals(this.amount) ? CancelType.FULL : CancelType.PARTIAL;
+
 		validateCancelStatus();
 		validateCancelPolicy(type);
 		validateCancelAmount(cancelAmount, type);
-
-		if (status.isCancelable()) {
-			processCancel();
-		} else if (status.isRefundable()) {
-			processRefund(cancelAmount);
-		}
-
-		this.cancels.add(new PaymentCancel(this, cancelAmount, reason, type));
 	}
 
-	private void processCancel() {
-		this.cancelableAmount = 0L;
-		this.status = PaymentStatus.CANCELED;
+	public PaymentCancel applyCancel(CancelCommand cancelCommand) {
+		updateCancelableAndStatus(cancelCommand.getAmount());
+
+		PaymentCancel cancel = PaymentCancel.builder()
+			.payment(this)
+			.cancelCommand(cancelCommand)
+			.build();
+
+		this.cancels.add(cancel);
+
+		return cancel;
 	}
 
-	private void processRefund(Long cancelAmount) {
+	private void updateCancelableAndStatus(Long cancelAmount) {
 		this.cancelableAmount -= cancelAmount;
-		this.status = (this.cancelableAmount == 0) ? PaymentStatus.REFUNDED : PaymentStatus.PARTIAL_REFUNDED;
+
+		if (this.cancelableAmount == 0) {
+			this.status = status.isCancelable() ? PaymentStatus.CANCELED : PaymentStatus.REFUNDED;
+		} else {
+			this.status = PaymentStatus.PARTIAL_REFUNDED;
+		}
 	}
 
 	private void validateExpireStatus() {

@@ -3,6 +3,7 @@ package com.truve.platform.payment.service.service.external.dto;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonAnySetter;
@@ -20,6 +21,7 @@ public class TossResponse {
 		private String orderId;
 		private String method;
 		private Long totalAmount;
+		private Long balanceAmount;
 		private String status;
 		private String approvedAt;
 		private String requestedAt;
@@ -28,6 +30,8 @@ public class TossResponse {
 		private Card card;
 		private EasyPay easyPay;
 		private VirtualAccount virtualAccount;
+
+		private List<Cancel> cancels;
 
 		@JsonAnySetter
 		private Map<String, Object> others = new HashMap<>();
@@ -98,6 +102,17 @@ public class TossResponse {
 				.dueDate(LocalDateTime.parse(this.dueDate, DateTimeFormatter.ISO_DATE_TIME))
 				.build();
 		}
+	}
+
+	@Getter
+	@NoArgsConstructor
+	public static class Cancel {
+		private Long cancelAmount;
+		private String cancelReason;
+		private Long refundableAmount;
+		private String canceledAt;
+		private String transactionKey;
+		private String cancelStatus;
 	}
 
 	@Getter
