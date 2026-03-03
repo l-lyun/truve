@@ -1,0 +1,29 @@
+server:
+  port: 8085
+
+spring:
+  web:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+  datasource:
+    url: ${SHOW_MYSQL_URL:jdbc:mysql://localhost:3306/musical_db}
+    username: ${SHOW_MYSQL_USERNAME:root}
+    password: ${SHOW_MYSQL_PASSWORD:1234}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+        default_batch_fetch_size: 100
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.hibernate.orm.jdbc.bind: trace

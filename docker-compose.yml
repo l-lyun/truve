@@ -130,7 +130,7 @@ services:
     networks:
       - truve-network
 
-  # 7. ticketing Server
+  # 7. Ticketing Server
   ticketing:
     build:
       context: .
@@ -150,6 +150,24 @@ services:
         condition: service_healthy
       user-redis:
         condition: service_started
+    networks:
+      - truve-network
+
+  # 8. Musical Server
+  musical:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: musical
+    image: truve/musical:1.0.0
+    ports:
+      - "8085:8085"
+    environment:
+      - SPRING_PROFILES_ACTIVE=local
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - truve-network
 
