@@ -1,4 +1,4 @@
-package com.truve.platform.show.service.dto;
+package com.truve.platform.musical.show.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;

@@ -14,19 +14,20 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.truve.platform.show.service.domain.constant.ShowScheduleStatus;
-import com.truve.platform.show.service.domain.entity.Artist;
-import com.truve.platform.show.service.domain.entity.Show;
-import com.truve.platform.show.service.domain.entity.ShowCasting;
-import com.truve.platform.show.service.domain.entity.ShowSchedule;
-import com.truve.platform.show.service.domain.entity.ShowScheduleCasting;
-import com.truve.platform.show.service.domain.entity.ShowSeatGrade;
-import com.truve.platform.show.service.domain.entity.Venue;
-import com.truve.platform.show.service.dto.ShowResponse;
-import com.truve.platform.show.service.repository.ShowRepository;
-import com.truve.platform.show.service.repository.ShowScheduleCastingRepository;
-import com.truve.platform.show.service.repository.ShowScheduleRepository;
-import com.truve.platform.show.service.repository.ShowSeatGradeRepository;
+import com.truve.platform.musical.show.domain.constant.ShowScheduleStatus;
+import com.truve.platform.musical.show.domain.entity.Artist;
+import com.truve.platform.musical.show.domain.entity.Show;
+import com.truve.platform.musical.show.domain.entity.ShowCasting;
+import com.truve.platform.musical.show.domain.entity.ShowSchedule;
+import com.truve.platform.musical.show.domain.entity.ShowScheduleCasting;
+import com.truve.platform.musical.pricing.domain.entity.ShowSeatGrade;
+import com.truve.platform.musical.seat.domain.entity.Venue;
+import com.truve.platform.musical.show.dto.ShowResponse;
+import com.truve.platform.musical.show.repository.ShowRepository;
+import com.truve.platform.musical.show.repository.ShowScheduleCastingRepository;
+import com.truve.platform.musical.show.repository.ShowScheduleRepository;
+import com.truve.platform.musical.pricing.domain.repository.ShowSeatGradeRepository;
+import com.truve.platform.musical.show.service.ShowService;
 
 @ExtendWith(MockitoExtension.class)
 class ShowServiceTest {

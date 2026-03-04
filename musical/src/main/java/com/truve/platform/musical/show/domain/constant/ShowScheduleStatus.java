@@ -1,4 +1,4 @@
-package com.truve.platform.show.service.domain.constant;
+package com.truve.platform.musical.show.domain.constant;
 
 public enum ShowScheduleStatus {
 	OPEN,   // 예매 가능

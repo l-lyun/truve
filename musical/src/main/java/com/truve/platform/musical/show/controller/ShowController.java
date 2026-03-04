@@ -1,4 +1,4 @@
-package com.truve.platform.show.service.controller;
+package com.truve.platform.musical.show.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.truve.platform.common.response.ApiResult;
-import com.truve.platform.show.service.dto.ShowResponse;
-import com.truve.platform.show.service.service.ShowService;
+import com.truve.platform.musical.show.dto.ShowResponse;
+import com.truve.platform.musical.show.service.ShowService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;

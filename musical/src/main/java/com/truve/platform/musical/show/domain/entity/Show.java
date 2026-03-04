@@ -1,11 +1,10 @@
-package com.truve.platform.show.service.domain.entity;
+package com.truve.platform.musical.show.domain.entity;
 
 import java.time.LocalDateTime;
 
 import com.truve.platform.common.support.BaseEntity;
+import com.truve.platform.musical.seat.domain.entity.Venue;
 
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

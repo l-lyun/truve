@@ -1,4 +1,4 @@
-package com.truve.platform.show.service.repository;
+package com.truve.platform.musical.show.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -6,7 +6,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
-import com.truve.platform.show.service.domain.entity.Show;
+import com.truve.platform.musical.show.domain.entity.Show;
 
 public interface ShowRepository extends JpaRepository<Show, Long> {
 

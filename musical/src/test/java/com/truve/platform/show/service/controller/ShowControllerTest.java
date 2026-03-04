@@ -22,9 +22,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ApiAdvice;
 import com.truve.platform.common.exception.ErrorCode;
-import com.truve.platform.show.service.domain.constant.ShowScheduleStatus;
-import com.truve.platform.show.service.dto.ShowResponse;
-import com.truve.platform.show.service.service.ShowService;
+import com.truve.platform.musical.show.controller.ShowController;
+import com.truve.platform.musical.show.domain.constant.ShowScheduleStatus;
+import com.truve.platform.musical.show.dto.ShowResponse;
+import com.truve.platform.musical.show.service.ShowService;
 
 @WebMvcTest(controllers = ShowController.class)
 @org.springframework.context.annotation.Import(ApiAdvice.class)

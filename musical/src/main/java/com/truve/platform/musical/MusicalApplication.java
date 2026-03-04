@@ -1,4 +1,4 @@
-package com.truve.platform.show;
+package com.truve.platform.musical;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

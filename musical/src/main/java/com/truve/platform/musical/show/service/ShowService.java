@@ -1,4 +1,4 @@
-package com.truve.platform.show.service.service;
+package com.truve.platform.musical.show.service;
 
 import java.util.Comparator;
 import java.util.List;
@@ -8,16 +8,16 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.truve.platform.show.service.domain.entity.Show;
-import com.truve.platform.show.service.domain.entity.ShowCasting;
-import com.truve.platform.show.service.domain.entity.ShowSchedule;
-import com.truve.platform.show.service.domain.entity.ShowScheduleCasting;
-import com.truve.platform.show.service.domain.entity.ShowSeatGrade;
-import com.truve.platform.show.service.dto.ShowResponse;
-import com.truve.platform.show.service.repository.ShowRepository;
-import com.truve.platform.show.service.repository.ShowScheduleRepository;
-import com.truve.platform.show.service.repository.ShowScheduleCastingRepository;
-import com.truve.platform.show.service.repository.ShowSeatGradeRepository;
+import com.truve.platform.musical.show.domain.entity.Show;
+import com.truve.platform.musical.show.domain.entity.ShowCasting;
+import com.truve.platform.musical.show.domain.entity.ShowSchedule;
+import com.truve.platform.musical.show.domain.entity.ShowScheduleCasting;
+import com.truve.platform.musical.pricing.domain.entity.ShowSeatGrade;
+import com.truve.platform.musical.show.dto.ShowResponse;
+import com.truve.platform.musical.show.repository.ShowRepository;
+import com.truve.platform.musical.show.repository.ShowScheduleRepository;
+import com.truve.platform.musical.show.repository.ShowScheduleCastingRepository;
+import com.truve.platform.musical.pricing.domain.repository.ShowSeatGradeRepository;
 
 import lombok.RequiredArgsConstructor;
 

@@ -1,6 +1,7 @@
-package com.truve.platform.show.service.domain.entity;
+package com.truve.platform.musical.pricing.domain.entity;
 
 import com.truve.platform.common.support.BaseEntity;
+import com.truve.platform.musical.show.domain.entity.Show;
 
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
