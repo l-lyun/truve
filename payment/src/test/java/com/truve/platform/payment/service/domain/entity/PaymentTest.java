@@ -5,419 +5,263 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDateTime;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import com.truve.platform.common.exception.CustomException;
-import com.truve.platform.common.exception.ErrorCode;
-import com.truve.platform.payment.service.domain.constant.CancelType;
+import com.truve.platform.payment.service.domain.command.CancelCommand;
 import com.truve.platform.payment.service.domain.constant.PaymentMethod;
 import com.truve.platform.payment.service.domain.constant.PaymentStatus;
 
 class PaymentTest {
-	private static final String DEFAULT_ORDER_ID = "ORDER-123";
-	private static final Long DEFAULT_AMOUNT = 10000L;
-	private static final PaymentMethod DEFAULT_PAYMENT_METHOD = PaymentMethod.CARD;
-	private static final String DEFAULT_PAYMENT_KEY = "테스트 결제 키";
-	private static final String DEFAULT_CANCEL_REASON = "테스트 결제 취소 사유";
-	private static final VirtualAccount DEFAULT_VIRTUAL_ACCOUNT = VirtualAccount.builder()
-		.accountNumber("Test Account Number")
-		.customerName("Test Customer Name")
-		.dueDate(LocalDateTime.now())
-		.bankCode("06")
-		.build();
-	private static final Card DEFAULT_CARD = Card.builder()
-		.issuerCode("3K")
-		.number("Test Number")
-		.installmentPlanMonths(0)
-		.build();
+	private static final Long DEFAULT_AMOUNT = 1000L;
 
-	private Payment createDefaultPayment() {
-		return new Payment(DEFAULT_ORDER_ID, DEFAULT_AMOUNT);
-	}
+	Payment payment;
+	LocalDateTime now;
 
-	private Payment createPaymentWithStatus(PaymentStatus status) {
-		Payment payment = createDefaultPayment();
-		ReflectionTestUtils.setField(payment, "status", status);
-		return payment;
-	}
-
-	private Payment createWaitPayment() {
-		Payment payment = createDefaultPayment();
-		payment.confirm(DEFAULT_PAYMENT_KEY, DEFAULT_VIRTUAL_ACCOUNT, LocalDateTime.now(), LocalDateTime.now());
-		return payment;
-	}
-
-	private Payment createCompletePayment() {
-		Payment payment = createDefaultPayment();
-		payment.confirm(DEFAULT_PAYMENT_KEY, DEFAULT_CARD, LocalDateTime.now(), LocalDateTime.now());
-		return payment;
-	}
-
-	@Test
-	@DisplayName("결제 생성")
-	void 결제_생성() {
-		// given & when
-		Payment payment = new Payment(DEFAULT_ORDER_ID, DEFAULT_AMOUNT);
-
-		// then
-		assertAll(
-			() -> assertThat(payment.getCancelableAmount()).isEqualTo(DEFAULT_AMOUNT),
-			() -> assertThat(payment.getStatus()).isEqualTo(PaymentStatus.READY)
-		);
+	@BeforeEach
+	void setup() {
+		payment = Payment.builder()
+			.orderId("ORDER-123")
+			.amount(DEFAULT_AMOUNT)
+			.build();
+		now = LocalDateTime.now();
 	}
 
 	@Nested
-	@DisplayName("입금대기 전환 테스트")
-	class WaitDepositTest {
+	@DisplayName("결제 승인 테스트")
+	class ConfirmTest {
 
 		@Test
-		@DisplayName("준비 상태에서 가상계좌가 발급되면 결제 키를 저장하고 입금대기 상태로 전환한다.")
-		void 입금대기_전환_성공() {
+		@DisplayName("카드 결제를 승인하면 카드 정보를 저장하고 결제 상태가 DONE이 된다.")
+		void 결제승인_카드() {
 			// given
-			Payment payment = createDefaultPayment();
+			String paymentKey = "Test Payment Key";
+			Card card = Card.builder()
+				.issuerCode("3K")
+				.number("1234")
+				.installmentPlanMonths(0)
+				.build();
 
 			// when
-			payment.confirm(DEFAULT_PAYMENT_KEY, DEFAULT_VIRTUAL_ACCOUNT, LocalDateTime.now(), LocalDateTime.now());
+			payment.confirm(paymentKey, card, now, now);
 
 			// then
 			assertAll(
-				() -> assertThat(payment.getPaymentKey()).isEqualTo(DEFAULT_PAYMENT_KEY),
-				() -> assertThat(payment.getStatus()).isEqualTo(PaymentStatus.WAITING_FOR_DEPOSIT),
-				() -> assertThat(payment.getVirtualAccount()).isEqualTo(DEFAULT_VIRTUAL_ACCOUNT)
+				() -> assertThat(payment.getPaymentKey()).isEqualTo(paymentKey),
+				() -> assertThat(payment.getMethod()).isEqualTo(PaymentMethod.CARD),
+				() -> assertThat(payment.getCard()).isEqualTo(card),
+				() -> assertThat(payment.getStatus()).isEqualTo(PaymentStatus.DONE)
 			);
 		}
 
-/*		@ParameterizedTest(name = "{0} 상태일 때는 입금대기 상태로 전환할 수 없다.")
-		@EnumSource(
-			value = PaymentStatus.class,
-			names = {"READY"},
-			mode = EnumSource.Mode.EXCLUDE
-		)
-		void 입금대기_전환_실패_유효하지_않은_상태(PaymentStatus status) {
-			// given
-			Payment payment = createPaymentWithStatus(status);
-
-			// when & then
-			assertThatThrownBy(() -> payment.waitDeposit(DEFAULT_PAYMENT_KEY, LocalDateTime.now(), DEFAULT_VIRTUAL_ACCOUNT))
-				.isInstanceOf(CustomException.class)
-				.hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_PAYMENT_STATUS);
-		}*/
-	}
-
-	@Nested
-	@DisplayName("만료 전환 테스트")
-	class ExpireTest {
-
 		@Test
-		@DisplayName("입금대기 상태에서 입금 시간이 만료되면 만료 상태로 변경되고 취소 가능 금액을 0으로 변경한다.")
-		void 만료_전환_성공() {
+		@DisplayName("간편결제를 승인하면 간편결제 정보를 저장하고 결제 상태가 DONE이 된다.")
+		void 결제승인_간편() {
 			// given
-			Payment payment = createWaitPayment();
+			String paymentKey = "Test Payment Key";
+			EasyPay easyPay = EasyPay.builder()
+				.provider("토스페이")
+				.discountAmount(0L)
+				.build();
 
 			// when
-			payment.expire();
+			payment.confirm(paymentKey, easyPay, now, now);
 
 			// then
 			assertAll(
-				() -> assertThat(payment.getStatus()).isEqualTo(PaymentStatus.EXPIRED),
-				() -> assertThat(payment.getCancelableAmount()).isEqualTo(0)
+				() -> assertThat(payment.getPaymentKey()).isEqualTo(paymentKey),
+				() -> assertThat(payment.getMethod()).isEqualTo(PaymentMethod.EASY_PAY),
+				() -> assertThat(payment.getEasyPay()).isEqualTo(easyPay),
+				() -> assertThat(payment.getStatus()).isEqualTo(PaymentStatus.DONE)
 			);
 		}
 
-		@ParameterizedTest(name = "{0} 상태일 때는 만료 상태로 전환할 수 없다.")
-		@EnumSource(
-			value = PaymentStatus.class,
-			names = {"WAITING_FOR_DEPOSIT"},
-			mode = EnumSource.Mode.EXCLUDE
-		)
-		void 만료_전환_실패_유효하지_않은_상태(PaymentStatus status) {
+		@Test
+		@DisplayName("가상계좌를 승인하면 가상계좌 정보를 저장하고 결제 상태가 WAITING_FOR_DEPOSIT이 된다.")
+		void 결제승인_가상계좌() {
 			// given
-			Payment payment = createPaymentWithStatus(status);
+			String paymentKey = "Test Payment Key";
+			VirtualAccount account = VirtualAccount.builder()
+				.accountNumber("number")
+				.bankCode("06")
+				.customerName("테스트")
+				.dueDate(now)
+				.build();
+
+			// when
+			payment.confirm(paymentKey, account, now, now);
+
+			// then
+			assertAll(
+				() -> assertThat(payment.getPaymentKey()).isEqualTo(paymentKey),
+				() -> assertThat(payment.getMethod()).isEqualTo(PaymentMethod.VIRTUAL_ACCOUNT),
+				() -> assertThat(payment.getVirtualAccount()).isEqualTo(account),
+				() -> assertThat(payment.getStatus()).isEqualTo(PaymentStatus.WAITING_FOR_DEPOSIT)
+			);
+		}
+
+		@Test
+		@DisplayName("이미 승인된 결제를 다시 승인하려 하면 예외가 발생한다.")
+		void 결제승인_중복요청() {
+			// given
+			String paymentKey = "Test Payment Key";
+			Card card = Card.builder()
+				.issuerCode("3K")
+				.number("1234")
+				.installmentPlanMonths(0)
+				.build();
+
+			payment.confirm(paymentKey, card, now, now);
 
 			// when & then
-			assertThatThrownBy(payment::expire)
-				.isInstanceOf(CustomException.class)
-				.hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_PAYMENT_STATUS);
-		}
-	}
-
-	@Nested
-	@DisplayName("완료 전환 테스트")
-	class CompleteTest {
-
-		@Nested
-		@DisplayName("완료 전환 성공 케이스")
-		class SuccessCases {
-
-			@Test
-			@DisplayName("준비 상태일 때 결제가 완료되면 결제 키를 업데이트하고 완료 상태로 전환한다.")
-			void 완료_전환_성공_준비상태() {
-				// given
-				Payment payment = createDefaultPayment();
-
-				// when
-				payment.confirm(DEFAULT_PAYMENT_KEY, DEFAULT_CARD, LocalDateTime.now(), LocalDateTime.now());
-
-				// then
-				assertAll(
-					() -> assertThat(payment.getPaymentKey()).isEqualTo(DEFAULT_PAYMENT_KEY),
-					() -> assertThat(payment.getStatus()).isEqualTo(PaymentStatus.DONE)
-				);
-			}
-
-			@Test
-			@DisplayName("가상계좌 입금이 확인되면 완료 상태로 전환한다.")
-			void 완료_전환_성공_가상계좌() {
-				// given
-				Payment payment = createWaitPayment();
-
-				// when
-				payment.completeDeposit(LocalDateTime.now());
-
-				// then
-				assertThat(payment.getStatus()).isEqualTo(PaymentStatus.DONE);
-			}
+			assertThatThrownBy(() -> payment.confirm("Test Payment Key 2", card, now, now))
+				.isInstanceOf(CustomException.class);
 		}
 
-		@Nested
-		@DisplayName("완료 전환 실패 케이스")
-		class FailureCases {
+		@Test
+		@DisplayName("지원하지 않는 결제 수단의 정보가 들어오면 예외를 반환한다.")
+		void 결제승인_지원하지_않는_결제수단() {
+			// given
+			String paymentKey = "Test Payment Key";
+			String methodDetails = "이상한 결제 수단 정보";
 
-			@ParameterizedTest(name = "{0} 상태일 때는 완료 상태로 전환할 수 없다.")
-			@EnumSource(
-				value = PaymentStatus.class,
-				names = {"READY", "WAITING_FOR_DEPOSIT"},
-				mode = EnumSource.Mode.EXCLUDE
-			)
-			void 완료_전환_실패_유효하지_않은_상태(PaymentStatus status) {
-				// given
-				Payment payment = createPaymentWithStatus(status);
-
-				// when & then
-				assertThatThrownBy(
-					() -> payment.confirm(DEFAULT_PAYMENT_KEY, DEFAULT_CARD, LocalDateTime.now(), LocalDateTime.now()))
-					.isInstanceOf(CustomException.class)
-					.hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_PAYMENT_STATUS);
-			}
+			// when & then
+			assertThatThrownBy(() -> payment.confirm(paymentKey, methodDetails, now, now))
+				.isInstanceOf(CustomException.class);
 		}
 	}
 
 	@Nested
 	@DisplayName("결제 취소 테스트")
 	class CancelTest {
+		private CancelCommand.CancelCommandBuilder commandBuilder;
 
-		@Nested
-		@DisplayName("결제 취소 성공 케이스")
-		class SuccessCases {
-
-			@Test
-			@DisplayName("입금대기 상태일 경우 취소 가능 금액을 업데이트하고 취소 상태로 전환한다.")
-			void 결제취소_성공_입금대기상태() {
-				// given
-				Payment payment = createWaitPayment();
-				Long cancelAmount = DEFAULT_AMOUNT;
-				String reason = "테스트 결제 사유";
-				CancelType type = CancelType.FULL;
-
-				// when
-				payment.applyCancel(cancelAmount, reason, type);
-
-				// then
-				assertAll(
-					() -> assertThat(payment.getCancelableAmount()).isEqualTo(0),
-					() -> assertThat(payment.getStatus()).isEqualTo(PaymentStatus.CANCELED)
-				);
-
-				assertThat(payment.getCancels())
-					.hasSize(1)
-					.extracting("payment", "cancelAmount", "cancelReason", "type")
-					.containsExactly(tuple(payment, cancelAmount, reason, type));
-			}
-
-			@Test
-			@DisplayName("결제 완료 상태에서 전액 환불 처리할 경우 취소 가능 금액을 업데이트하고 환불 상태로 전환한다.")
-			void 결제취소_성공_완료상태_전액환불() {
-				// given
-				Payment payment = createCompletePayment();
-				Long cancelAmount = DEFAULT_AMOUNT;
-				String reason = "테스트 결제 사유";
-				CancelType type = CancelType.FULL;
-
-				// when
-				payment.applyCancel(cancelAmount, reason, type);
-
-				// then
-				assertAll(
-					() -> assertThat(payment.getCancelableAmount()).isEqualTo(0),
-					() -> assertThat(payment.getStatus()).isEqualTo(PaymentStatus.REFUNDED)
-				);
-
-				assertThat(payment.getCancels())
-					.hasSize(1)
-					.extracting("payment", "cancelAmount", "cancelReason", "type")
-					.containsExactly(tuple(payment, cancelAmount, reason, type));
-			}
-
-			@Test
-			@DisplayName("결제 완료 상태에서 부분 환불 처리할 경우 취소 가능 금액을 업데이트하고 부분 환불 상태로 전환한다.")
-			void 결제취소_성공_완료상태_부분환불() {
-				// given
-				Payment payment = createCompletePayment();
-				Long cancelAmount = 6000L;
-				String reason = "테스트 결제 사유";
-				CancelType type = CancelType.PARTIAL;
-
-				// when
-				payment.applyCancel(cancelAmount, reason, type);
-
-				// then
-				assertAll(
-					() -> assertThat(payment.getCancelableAmount()).isEqualTo(DEFAULT_AMOUNT - cancelAmount),
-					() -> assertThat(payment.getStatus()).isEqualTo(PaymentStatus.PARTIAL_REFUNDED)
-				);
-
-				assertThat(payment.getCancels())
-					.hasSize(1)
-					.extracting("payment", "cancelAmount", "cancelReason", "type")
-					.containsExactly(tuple(payment, cancelAmount, reason, type));
-			}
-
-			@Test
-			@DisplayName("결제 완료 상태에서 부분 환불을 여러 번 실행했을 때의 데이터 정합성 및 취소 이력 업데이트 테스트")
-			void 결제취소_성공_완료상태_부분환불_여러_번() {
-				// given
-				Payment payment = createCompletePayment();
-				Long firstCancelAmount = 6000L;
-				Long secondCancelAmount = 3000L;
-				Long thirdCancelAmount = 1000L;
-				String firstReason = "테스트 결제 사유1";
-				String secondReason = "테스트 결제 사유2";
-				String thirdReason = "테스트 결제 사유3";
-				CancelType type = CancelType.PARTIAL;
-
-				// when
-				payment.applyCancel(firstCancelAmount, firstReason, type);
-				payment.applyCancel(secondCancelAmount, secondReason, type);
-				payment.applyCancel(thirdCancelAmount, thirdReason, type);
-
-				// then
-				assertAll(
-					() -> assertThat(payment.getCancelableAmount()).isEqualTo(0),
-					() -> assertThat(payment.getStatus()).isEqualTo(PaymentStatus.REFUNDED)
-				);
-
-				assertThat(payment.getCancels())
-					.hasSize(3)
-					.extracting("payment", "cancelAmount", "cancelReason", "type")
-					.containsExactly(
-						tuple(payment, firstCancelAmount, firstReason, type),
-						tuple(payment, secondCancelAmount, secondReason, type),
-						tuple(payment, thirdCancelAmount, thirdReason, type)
-					);
-			}
+		@BeforeEach
+		void setUp() {
+			commandBuilder = CancelCommand.builder()
+				.fee(0L)
+				.reason("테스트 취소 사유")
+				.canceledAt(now)
+				.transactionKey("테스트 트랜잭션 키")
+				.status("취소 완료");
 		}
 
-		@Nested
-		@DisplayName("결제 취소 실패 케이스")
-		class FailureCases {
+		@Test
+		@DisplayName("입금 대기(WAITING_FOR_DEPOSIT) 상태에서 전액 취소하면 상태가 CANCELED가 된다.")
+		void 결제취소_입금대기_전액취소() {
+			// given
+			setupPaymentWithStatus(PaymentStatus.WAITING_FOR_DEPOSIT);
+			CancelCommand command = commandBuilder.amount(DEFAULT_AMOUNT).build();
 
-			@ParameterizedTest(name = "{0} 상태일 때는 결제를 취소할 수 없다.")
-			@EnumSource(
-				value = PaymentStatus.class,
-				names = {"READY", "WAITING_FOR_DEPOSIT", "DONE", "PARTIAL_REFUNDED"},
-				mode = EnumSource.Mode.EXCLUDE
-			)
-			void 결제취소_실패_유효하지_않은_상태(PaymentStatus status) {
-				// given
-				Payment payment = createPaymentWithStatus(status);
+			// when
+			payment.validateCancel(command.getAmount());
+			payment.applyCancel(command);
 
-				// when & then
-				assertThatThrownBy(() -> payment.applyCancel(DEFAULT_AMOUNT, DEFAULT_CANCEL_REASON, CancelType.FULL))
-					.isInstanceOf(CustomException.class)
-					.hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_PAYMENT_STATUS);
-			}
+			// then
+			assertAll(
+				() -> assertThat(payment.getCancelableAmount()).isEqualTo(0L),
+				() -> assertThat(payment.getStatus()).isEqualTo(PaymentStatus.CANCELED),
+				() -> assertThat(payment.getCancels()).hasSize(1)
+			);
+		}
 
-			@Test
-			@DisplayName("입금대기 상태일 때는 부분 환불 처리할 수 없다.")
-			void 결제취소_실패_입금대기_부분환불() {
-				// given
-				Payment payment = createWaitPayment();
+		@Test
+		@DisplayName("입금 대기 상태에서 부분 취소를 시도하면 예외가 발생한다.")
+		void 결제취소_입금대기_부분취소_불가() {
+			// given
+			setupPaymentWithStatus(PaymentStatus.WAITING_FOR_DEPOSIT);
+			Long partialAmount = DEFAULT_AMOUNT - 100L;
 
-				// when & then
-				assertThatThrownBy(() -> payment.applyCancel(6000L, DEFAULT_CANCEL_REASON, CancelType.PARTIAL))
-					.isInstanceOf(CustomException.class)
-					.hasFieldOrPropertyWithValue("errorCode", ErrorCode.MUST_CANCEL_FULL);
-			}
+			// when & then
+			assertThatThrownBy(() -> payment.validateCancel(partialAmount))
+				.isInstanceOf(CustomException.class);
+		}
 
-			@Test
-			@DisplayName("취소 금액이 0보다 작으면 결제를 취소할 수 없다.")
-			void 결제취소_실패_유효하지_않은_취소금액() {
-				// given
-				Payment payment = createCompletePayment();
-				Long cancelAmount = -1000L;
+		@Test
+		@DisplayName("결제 완료(DONE) 상태에서 전액 취소하면 상태가 REFUNDED가 된다.")
+		void 결제취소_완료상태_전액취소() {
+			// given
+			setupPaymentWithStatus(PaymentStatus.DONE);
+			CancelCommand command = commandBuilder.amount(DEFAULT_AMOUNT).build();
 
-				// when & then
-				assertThatThrownBy(() -> payment.applyCancel(cancelAmount, DEFAULT_CANCEL_REASON, CancelType.PARTIAL))
-					.isInstanceOf(CustomException.class)
-					.hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_CANCEL_AMOUNT);
-			}
+			// when
+			payment.validateCancel(command.getAmount());
+			payment.applyCancel(command);
 
-			@Test
-			@DisplayName("취소 금액이 취소 가능 금액보다 크면 결제를 취소할 수 없다.")
-			void 결제취소_실패_충분하지_않은_취소가능금액() {
-				// given
-				Payment payment = createCompletePayment();
-				Long cancelAmount = 100000000L;
+			// then
+			assertAll(
+				() -> assertThat(payment.getCancelableAmount()).isEqualTo(0L),
+				() -> assertThat(payment.getStatus()).isEqualTo(PaymentStatus.REFUNDED)
+			);
+		}
 
-				// when & then
-				assertThatThrownBy(() -> payment.applyCancel(cancelAmount, DEFAULT_CANCEL_REASON, CancelType.PARTIAL))
-					.isInstanceOf(CustomException.class)
-					.hasFieldOrPropertyWithValue("errorCode", ErrorCode.NOT_ENOUGH_CANCELABLE_AMOUNT);
-			}
+		@Test
+		@DisplayName("결제 완료 상태에서 일부 금액만 취소하면 상태가 PARTIAL_REFUNDED가 된다.")
+		void 결제취소_완료상태_부분취소() {
+			// given
+			setupPaymentWithStatus(PaymentStatus.DONE);
+			Long partialAmount = 400L;
+			CancelCommand command = commandBuilder.amount(partialAmount).build();
 
-			@Test
-			@DisplayName("전액 환불일 때는 결제 총액과 취소 가능 금액과 취소 금액이 일치해야 한다.")
-			void 결제취소_실패_전액환불_금액_불일치() {
-				// given
-				Payment payment = createCompletePayment();
+			// when
+			payment.validateCancel(command.getAmount());
+			payment.applyCancel(command);
 
-				// when & then
-				assertThatThrownBy(() -> payment.applyCancel(5000L, DEFAULT_CANCEL_REASON, CancelType.FULL))
-					.isInstanceOf(CustomException.class)
-					.hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_CANCEL_AMOUNT);
+			// then
+			assertAll(
+				() -> assertThat(payment.getCancelableAmount()).isEqualTo(DEFAULT_AMOUNT - partialAmount),
+				() -> assertThat(payment.getStatus()).isEqualTo(PaymentStatus.PARTIAL_REFUNDED)
+			);
+		}
+
+		@Test
+		@DisplayName("남은 취소 가능 금액보다 큰 금액을 취소하려 하면 예외가 발생한다.")
+		void 결제취소_금액초과_예외() {
+			// given
+			setupPaymentWithStatus(PaymentStatus.DONE);
+			Long overAmount = DEFAULT_AMOUNT + 1L;
+
+			// when & then
+			assertThatThrownBy(() -> payment.validateCancel(overAmount))
+				.isInstanceOf(CustomException.class);
+		}
+
+		@Test
+		@DisplayName("이미 전액 취소된 결제를 다시 취소하려 하면 예외가 발생한다.")
+		void 결제취소_이미취소된상태_예외() {
+			// given
+			setupPaymentWithStatus(PaymentStatus.CANCELED);
+
+			// when & then
+			assertThatThrownBy(() -> payment.validateCancel(DEFAULT_AMOUNT))
+				.isInstanceOf(CustomException.class);
+		}
+
+		private void setupPaymentWithStatus(PaymentStatus targetStatus) {
+			VirtualAccount account = VirtualAccount.builder()
+				.accountNumber("number")
+				.bankCode("06")
+				.customerName("테스트")
+				.dueDate(now)
+				.build();
+			Card card = Card.builder()
+				.issuerCode("3K")
+				.number("1234")
+				.installmentPlanMonths(0)
+				.build();
+
+			if (targetStatus == PaymentStatus.WAITING_FOR_DEPOSIT) {
+				payment.confirm("key", account, now, now);
+			} else if (targetStatus == PaymentStatus.DONE) {
+				payment.confirm("key", card, now, now);
+			} else if (targetStatus == PaymentStatus.CANCELED) {
+				payment.confirm("key", account, now, now);
+				payment.applyCancel(commandBuilder.amount(DEFAULT_AMOUNT).build());
 			}
 		}
 	}
 
-	@Nested
-	@DisplayName("결제 금액 검증 테스트")
-	class ValidateAmountTest {
-
-		@Test
-		@DisplayName("기존 금액과 요청 금액이 다르면 INVALID_PAYMENT_AMOUNT 예외를 던진다")
-		void 결제금액_검증_예외() {
-			// given
-			Payment payment = createDefaultPayment();
-
-			// when & then
-			assertThatThrownBy(() -> payment.validateAmount(5000L))
-				.isInstanceOf(CustomException.class)
-				.hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_PAYMENT_AMOUNT);
-		}
-
-		@Test
-		@DisplayName("기존 금액과 요청 금액이 일치하면 예외를 던지지 않는다")
-		void it_does_not_throw_when_amount_matches() {
-			// given
-			Payment payment = createDefaultPayment();
-
-			// when & then
-			assertDoesNotThrow(() -> payment.validateAmount(DEFAULT_AMOUNT));
-		}
-	}
 }

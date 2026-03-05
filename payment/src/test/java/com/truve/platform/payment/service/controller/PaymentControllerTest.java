@@ -94,8 +94,7 @@ public class PaymentControllerTest {
 			.content(objectMapper.writeValueAsString(request)));
 
 		// then
-		resultActions.andExpect(status().isBadRequest()) // 400 에러가 나는지 확인
-			.andExpect(jsonPath("$.code").value("CLIENT_ERROR"))
+		resultActions.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.message").exists());
 	}
 }

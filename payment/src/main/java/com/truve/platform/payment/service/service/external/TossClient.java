@@ -67,7 +67,7 @@ public class TossClient {
 		TossResponse.Error error = e.getResponseBodyAs(TossResponse.Error.class);
 
 		String errorMessage =
-			(error != null && error.getError() != null) ? error.getError().getMessage() : "결제 대행사 통신 중 오류가 발생했습니다.";
+			(error != null && error.getMessage() != null) ? error.getMessage() : "결제 대행사 통신 중 오류가 발생했습니다.";
 
 		return new CustomException(ErrorCode.EXTERNAL_PAYMENT_ERROR, errorMessage);
 	}

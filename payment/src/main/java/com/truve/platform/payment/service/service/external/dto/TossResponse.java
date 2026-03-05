@@ -118,14 +118,6 @@ public class TossResponse {
 	@Getter
 	@NoArgsConstructor
 	public static class Error {
-		private String version;
-		private String traceId;
-		private ErrorDetail error;
-	}
-
-	@Getter
-	@NoArgsConstructor
-	public static class ErrorDetail {
 		private String code;
 		private String message;
 	}

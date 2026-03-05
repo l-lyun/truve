@@ -9,10 +9,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
 import com.truve.platform.common.support.Preconditions;
 import com.truve.platform.payment.service.domain.command.CancelCommand;
 import com.truve.platform.payment.service.domain.constant.Bank;
+import com.truve.platform.payment.service.domain.constant.PaymentStatus;
 import com.truve.platform.payment.service.domain.entity.Payment;
 import com.truve.platform.payment.service.domain.entity.PaymentCancel;
 import com.truve.platform.payment.service.dto.PaymentRequest;
@@ -38,20 +40,29 @@ public class PaymentService {
 
 	@Transactional(readOnly = true)
 	public PaymentResponse.Details details(String orderId) {
-		Payment payment = paymentRepository.findByOrderIdOrThrow(orderId);
+		Payment payment = paymentRepository.getByOrderId(orderId);
 		return PaymentResponse.Details.from(payment);
 	}
 
 	@Transactional
 	public Long create(PaymentRequest.Create request) {
-		// TODO: 이미 존재하는 결제여도 READY 상태면 찾아서 ID 반환 (결제창을 닫아서 재요청하는 경우)
-		Preconditions.validate(!paymentRepository.existsByOrderId(request.getOrderId()), ErrorCode.ALREADY_EXIST_PAYMENT);
+		return paymentRepository.findByOrderId(request.getOrderId())
+			.map(this::handleExistingPayment)
+			.orElseGet(() -> saveNewPayment(request));
+	}
 
+	private Long handleExistingPayment(Payment p) {
+		if (p.getStatus() == PaymentStatus.READY) {
+			return p.getId();
+		}
+		throw new CustomException(ErrorCode.ALREADY_EXIST_PAYMENT);
+	}
+
+	private Long saveNewPayment(PaymentRequest.Create request) {
 		Payment payment = Payment.builder()
 			.orderId(request.getOrderId())
 			.amount(request.getAmount())
 			.build();
-
 		return paymentRepository.save(payment).getId();
 	}
 
@@ -61,7 +72,7 @@ public class PaymentService {
 
 	@Transactional
 	public void confirm(String orderId, String paymentKey, Long amount) {
-		Payment payment = paymentRepository.findByOrderIdOrThrow(orderId);
+		Payment payment = paymentRepository.getByOrderIdWithLock(orderId);
 
 		Preconditions.validate(payment.isNotDone(), ErrorCode.ALREADY_DONE_PAYMENT);
 		payment.validateAmount(amount);
@@ -78,7 +89,7 @@ public class PaymentService {
 
 	@Transactional
 	public void completeDeposit(String orderId, String approvedAt) {
-		Payment payment = paymentRepository.findByOrderIdOrThrow(orderId);
+		Payment payment = paymentRepository.getByOrderIdWithLock(orderId);
 
 		Preconditions.validate(payment.isNotDone(), ErrorCode.ALREADY_DONE_PAYMENT);
 
@@ -87,7 +98,7 @@ public class PaymentService {
 
 	@Transactional
 	public PaymentResponse.Cancel cancel(String orderId, String idempotencyKey, PaymentRequest.Cancel request) {
-		Payment payment = paymentRepository.findByOrderIdOrThrow(orderId);
+		Payment payment = paymentRepository.getByOrderIdWithLock(orderId);
 		payment.validateCancel(request.getCancelAmount());
 
 		Long refundFee = 0L; // TODO: 환불 수수료 계산 구현 후 추가
