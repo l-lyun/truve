@@ -13,7 +13,6 @@ public interface ShowRepository extends JpaRepository<Show, Long> {
 	@Query("""
 		select p
 		from Show p
-		join fetch p.venue
 		where p.id = :showId
 		""")
 	java.util.Optional<Show> findDetailById(@Param("showId") Long showId);

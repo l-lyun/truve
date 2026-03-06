@@ -5,15 +5,17 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.truve.platform.musical.pricing.domain.entity.ShowSeatGrade;
-import com.truve.platform.musical.pricing.domain.repository.ShowSeatGradeRepository;
+import com.truve.platform.musical.seat.domain.entity.Venue;
+import com.truve.platform.musical.seat.domain.repository.VenueRepository;
 import com.truve.platform.musical.show.domain.entity.Show;
 import com.truve.platform.musical.show.domain.entity.ShowCasting;
 import com.truve.platform.musical.show.domain.entity.ShowSchedule;
+import com.truve.platform.musical.show.domain.entity.ShowSectionGrade;
 import com.truve.platform.musical.show.dto.ShowResponse;
 import com.truve.platform.musical.show.repository.ShowCastingRepository;
 import com.truve.platform.musical.show.repository.ShowRepository;
 import com.truve.platform.musical.show.repository.ShowScheduleRepository;
+import com.truve.platform.musical.show.repository.ShowSeatGradeRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,6 +25,7 @@ public class ShowService {
 
 	private final ShowRepository showRepository;
 	private final ShowCastingRepository showCastingRepository;
+	private final VenueRepository venueRepository;
 	private final ShowScheduleRepository showScheduleRepository;
 	private final ShowSeatGradeRepository showSeatGradeRepository;
 
@@ -62,10 +65,11 @@ public class ShowService {
 	}
 
 	private ShowResponse.Venue toVenueResponse(Show show) {
+		Venue venue = venueRepository.findById(show.getVenueId()).orElse(null);
 		return ShowResponse.Venue.builder()
-			.venueId(show.getVenue().getId())
-			.name(show.getVenue().getName())
-			.address(show.getVenue().getAddress())
+			.venueId(show.getVenueId())
+			.name(venue != null ? venue.getName() : null)
+			.address(venue != null ? venue.getAddress() : null)
 			.build();
 	}
 
@@ -90,11 +94,10 @@ public class ShowService {
 			.build();
 	}
 
-	private ShowResponse.SeatGrade toSeatGradeResponse(ShowSeatGrade seatGrade) {
+	private ShowResponse.SeatGrade toSeatGradeResponse(ShowSectionGrade seatGrade) {
 		return ShowResponse.SeatGrade.builder()
 			.showSeatGradeId(seatGrade.getId())
 			.gradeName(seatGrade.getGradeName())
-			.basePrice(seatGrade.getBasePrice())
 			.colorCode(seatGrade.getColorCode())
 			.build();
 	}

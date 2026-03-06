@@ -3,13 +3,9 @@ package com.truve.platform.musical.show.domain.entity;
 import java.time.LocalDateTime;
 
 import com.truve.platform.common.support.BaseEntity;
-import com.truve.platform.musical.seat.domain.entity.Venue;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -23,9 +19,8 @@ import lombok.NoArgsConstructor;
 
 public class Show extends BaseEntity {
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "venue_id", nullable = false)
-	private Venue venue;
+	@Column(nullable = false)
+	private Long venueId;
 
 	@Column(nullable = false)
 	private String title;
@@ -51,7 +46,7 @@ public class Show extends BaseEntity {
 
 	@Builder
 	private Show(
-		Venue venue,
+		Long venueId,
 		String title,
 		String description,
 		Integer runtimeMin,
@@ -61,7 +56,7 @@ public class Show extends BaseEntity {
 		LocalDateTime startTime,
 		LocalDateTime endTime
 	) {
-		this.venue = venue;
+		this.venueId = venueId;
 		this.title = title;
 		this.description = description;
 		this.runtimeMin = runtimeMin;
