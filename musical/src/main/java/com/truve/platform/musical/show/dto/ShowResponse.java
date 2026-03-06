@@ -23,7 +23,8 @@ public class ShowResponse {
 		private LocalDateTime startTime;
 		private LocalDateTime endTime;
 		private Venue venue;
-		private List<Schedule> schedules;
+		private List<Casting> castings;
+		private List<SimpleSchedule> schedules;
 		private List<SeatGrade> seatGrades;
 	}
 
@@ -34,6 +35,15 @@ public class ShowResponse {
 		private Long venueId;
 		private String name;
 		private String address;
+	}
+
+	@Getter
+	@AllArgsConstructor
+	@Builder
+	public static class SimpleSchedule {
+		private Long scheduleId;
+		private LocalDateTime showTime;
+		private String status;
 	}
 
 	@Getter
@@ -53,6 +63,7 @@ public class ShowResponse {
 		private Long showCastId;
 		private Long artistId;
 		private String artistName;
+		private String profileImageUrl;
 		private String roleName;
 		private Integer order;
 		private Boolean isLiked;
@@ -68,3 +79,4 @@ public class ShowResponse {
 		private String colorCode;
 	}
 }
+

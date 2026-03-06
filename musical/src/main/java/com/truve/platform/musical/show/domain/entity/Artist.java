@@ -2,6 +2,7 @@ package com.truve.platform.musical.show.domain.entity;
 
 import com.truve.platform.common.support.BaseEntity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
@@ -15,4 +16,7 @@ import lombok.NoArgsConstructor;
 public class Artist extends BaseEntity {
 
 	private String name;
+
+	@Column(length = 500)
+	private String profileImageUrl;
 }

@@ -52,44 +52,43 @@ class ShowControllerTest {
 			.noticeUrl("https://img/notice.jpg")
 			.startTime(LocalDateTime.of(2026, 3, 1, 0, 0))
 			.endTime(LocalDateTime.of(2026, 4, 1, 0, 0))
-			.venue(
-				ShowResponse.Venue.builder()
-					.venueId(10L)
-					.name("예술의전당")
-					.address("서울")
-					.build()
-			)
-			.schedules(List.of(
-				ShowResponse.Schedule.builder()
-					.scheduleId(1L)
-					.showTime(LocalDateTime.of(2026, 3, 2, 19, 30))
-					.status(ShowScheduleStatus.OPEN.name())
-					.castings(List.of(
-						ShowResponse.Casting.builder()
-							.showCastId(101L)
-							.artistId(501L)
-							.artistName("배우A")
-							.roleName("찰리")
-							.order(1)
-							.isLiked(false)
-							.build()
-						))
+				.venue(
+					ShowResponse.Venue.builder()
+						.venueId(10L)
+						.name("예술의전당")
+						.address("서울")
 						.build()
-				,
-				ShowResponse.Schedule.builder()
-					.scheduleId(2L)
-					.showTime(LocalDateTime.of(2026, 3, 3, 19, 30))
-					.status(ShowScheduleStatus.CLOSED.name())
-					.castings(List.of())
-					.build()
-				,
-				ShowResponse.Schedule.builder()
-					.scheduleId(3L)
-					.showTime(LocalDateTime.of(2026, 3, 4, 19, 30))
-					.status(ShowScheduleStatus.CANCELLED.name())
-					.castings(List.of())
-					.build()
-			))
+				)
+				.castings(List.of(
+					ShowResponse.Casting.builder()
+						.showCastId(101L)
+						.artistId(501L)
+						.artistName("배우A")
+						.profileImageUrl("https://img.example/artistA.jpg")
+						.roleName("찰리")
+						.order(1)
+						.isLiked(false)
+						.build()
+				))
+				.schedules(List.of(
+					ShowResponse.SimpleSchedule.builder()
+						.scheduleId(1L)
+						.showTime(LocalDateTime.of(2026, 3, 2, 19, 30))
+						.status(ShowScheduleStatus.OPEN.name())
+							.build()
+					,
+					ShowResponse.SimpleSchedule.builder()
+						.scheduleId(2L)
+						.showTime(LocalDateTime.of(2026, 3, 3, 19, 30))
+						.status(ShowScheduleStatus.CLOSED.name())
+						.build()
+					,
+					ShowResponse.SimpleSchedule.builder()
+						.scheduleId(3L)
+						.showTime(LocalDateTime.of(2026, 3, 4, 19, 30))
+						.status(ShowScheduleStatus.CANCELLED.name())
+						.build()
+				))
 			.seatGrades(List.of(
 				ShowResponse.SeatGrade.builder()
 					.showSeatGradeId(1001L)
@@ -105,13 +104,14 @@ class ShowControllerTest {
 		// when & then
 		mockMvc.perform(get("/api/shows/{showId}", 1L))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.code").value("ok"))
-			.andExpect(jsonPath("$.data.showId").value(1))
-			.andExpect(jsonPath("$.data.noticeUrl").value("https://img/notice.jpg"))
-			.andExpect(jsonPath("$.data.schedules[1].status").value(ShowScheduleStatus.CLOSED.name()))
-			.andExpect(jsonPath("$.data.schedules[2].status").value(ShowScheduleStatus.CANCELLED.name()))
-			.andExpect(jsonPath("$.data.schedules[0].castings[0].artistName").value("배우A"))
-			.andExpect(jsonPath("$.data.schedules[0].castings[0].isLiked").value(false));
+				.andExpect(jsonPath("$.code").value("ok"))
+				.andExpect(jsonPath("$.data.showId").value(1))
+				.andExpect(jsonPath("$.data.noticeUrl").value("https://img/notice.jpg"))
+					.andExpect(jsonPath("$.data.schedules[1].status").value(ShowScheduleStatus.CLOSED.name()))
+					.andExpect(jsonPath("$.data.schedules[2].status").value(ShowScheduleStatus.CANCELLED.name()))
+					.andExpect(jsonPath("$.data.castings[0].artistName").value("배우A"))
+					.andExpect(jsonPath("$.data.castings[0].profileImageUrl").value("https://img.example/artistA.jpg"))
+					.andExpect(jsonPath("$.data.castings[0].isLiked").value(false));
 	}
 
 	@Test
@@ -127,13 +127,14 @@ class ShowControllerTest {
 			.noticeUrl(null)
 			.startTime(LocalDateTime.of(2026, 5, 1, 0, 0))
 			.endTime(LocalDateTime.of(2026, 5, 31, 0, 0))
-			.venue(ShowResponse.Venue.builder()
-				.venueId(11L)
-				.name("블루스퀘어")
-				.address("서울")
-				.build())
-			.schedules(List.of())
-			.seatGrades(List.of())
+				.venue(ShowResponse.Venue.builder()
+					.venueId(11L)
+					.name("블루스퀘어")
+					.address("서울")
+					.build())
+				.castings(List.of())
+				.schedules(List.of())
+				.seatGrades(List.of())
 			.build();
 
 		given(showService.getDetail(10L)).willReturn(response);
@@ -157,7 +158,8 @@ class ShowControllerTest {
 		// when & then
 		mockMvc.perform(get("/api/shows/{showId}", 999L))
 			.andExpect(status().isNotFound())
-			.andExpect(jsonPath("$.code").value("CLIENT_ERROR"))
+			.andExpect(jsonPath("$.errorType").value("CLIENT_ERROR"))
+			.andExpect(jsonPath("$.code").value("M01"))
 			.andExpect(jsonPath("$.message").exists());
 	}
 }

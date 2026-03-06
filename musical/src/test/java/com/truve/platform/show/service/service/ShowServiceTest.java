@@ -2,6 +2,7 @@ package com.truve.platform.show.service.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
@@ -19,12 +20,11 @@ import com.truve.platform.musical.show.domain.entity.Artist;
 import com.truve.platform.musical.show.domain.entity.Show;
 import com.truve.platform.musical.show.domain.entity.ShowCasting;
 import com.truve.platform.musical.show.domain.entity.ShowSchedule;
-import com.truve.platform.musical.show.domain.entity.ShowScheduleCasting;
 import com.truve.platform.musical.pricing.domain.entity.ShowSeatGrade;
 import com.truve.platform.musical.seat.domain.entity.Venue;
 import com.truve.platform.musical.show.dto.ShowResponse;
+import com.truve.platform.musical.show.repository.ShowCastingRepository;
 import com.truve.platform.musical.show.repository.ShowRepository;
-import com.truve.platform.musical.show.repository.ShowScheduleCastingRepository;
 import com.truve.platform.musical.show.repository.ShowScheduleRepository;
 import com.truve.platform.musical.pricing.domain.repository.ShowSeatGradeRepository;
 import com.truve.platform.musical.show.service.ShowService;
@@ -35,9 +35,9 @@ class ShowServiceTest {
 	@Mock
 	private ShowRepository showRepository;
 	@Mock
-	private ShowScheduleRepository showScheduleRepository;
+	private ShowCastingRepository showCastingRepository;
 	@Mock
-	private ShowScheduleCastingRepository showScheduleCastingRepository;
+	private ShowScheduleRepository showScheduleRepository;
 	@Mock
 	private ShowSeatGradeRepository showSeatGradeRepository;
 
@@ -45,8 +45,8 @@ class ShowServiceTest {
 	private ShowService showService;
 
 	@Test
-	@DisplayName("회차별 캐스팅은 회차 기준으로 그룹핑되고 order 오름차순으로 정렬된다.")
-	void 공연_상세_회차별_캐스팅_그룹핑_정렬_성공() {
+	@DisplayName("공연 상세는 조회된 공연 전체 캐스팅을 응답한다.")
+	void 공연_상세_공연전체_캐스팅_응답_성공() {
 		Long showId = 1L;
 
 		Show show = org.mockito.Mockito.mock(Show.class);
@@ -79,14 +79,17 @@ class ShowServiceTest {
 		Artist artistC = org.mockito.Mockito.mock(Artist.class);
 		when(artistA.getId()).thenReturn(101L);
 		when(artistA.getName()).thenReturn("배우A");
+		when(artistA.getProfileImageUrl()).thenReturn("https://img.example/artistA.jpg");
 		when(artistB.getId()).thenReturn(102L);
 		when(artistB.getName()).thenReturn("배우B");
+		when(artistB.getProfileImageUrl()).thenReturn("https://img.example/artistB.jpg");
 		when(artistC.getId()).thenReturn(103L);
 		when(artistC.getName()).thenReturn("배우C");
+		when(artistC.getProfileImageUrl()).thenReturn("https://img.example/artistC.jpg");
 
 		ShowCasting castOrder2 = org.mockito.Mockito.mock(ShowCasting.class);
 		ShowCasting castOrder1 = org.mockito.Mockito.mock(ShowCasting.class);
-		ShowCasting castOtherSchedule = org.mockito.Mockito.mock(ShowCasting.class);
+		ShowCasting castOrderNull = org.mockito.Mockito.mock(ShowCasting.class);
 		when(castOrder2.getId()).thenReturn(5002L);
 		when(castOrder2.getArtist()).thenReturn(artistB);
 		when(castOrder2.getRoleName()).thenReturn("조연");
@@ -95,20 +98,10 @@ class ShowServiceTest {
 		when(castOrder1.getArtist()).thenReturn(artistA);
 		when(castOrder1.getRoleName()).thenReturn("주연");
 		when(castOrder1.getCastingOrder()).thenReturn(1);
-		when(castOtherSchedule.getId()).thenReturn(5003L);
-		when(castOtherSchedule.getArtist()).thenReturn(artistC);
-		when(castOtherSchedule.getRoleName()).thenReturn("특별출연");
-		when(castOtherSchedule.getCastingOrder()).thenReturn(1);
-
-		ShowScheduleCasting sc1 = org.mockito.Mockito.mock(ShowScheduleCasting.class);
-		ShowScheduleCasting sc2 = org.mockito.Mockito.mock(ShowScheduleCasting.class);
-		ShowScheduleCasting sc3 = org.mockito.Mockito.mock(ShowScheduleCasting.class);
-		when(sc1.getShowSchedule()).thenReturn(schedule1);
-		when(sc1.getShowCasting()).thenReturn(castOrder2);
-		when(sc2.getShowSchedule()).thenReturn(schedule1);
-		when(sc2.getShowCasting()).thenReturn(castOrder1);
-		when(sc3.getShowSchedule()).thenReturn(schedule2);
-		when(sc3.getShowCasting()).thenReturn(castOtherSchedule);
+		when(castOrderNull.getId()).thenReturn(5003L);
+		when(castOrderNull.getArtist()).thenReturn(artistC);
+		when(castOrderNull.getRoleName()).thenReturn("특별출연");
+		when(castOrderNull.getCastingOrder()).thenReturn(null);
 
 		ShowSeatGrade seat = org.mockito.Mockito.mock(ShowSeatGrade.class);
 		when(seat.getId()).thenReturn(7001L);
@@ -118,8 +111,8 @@ class ShowServiceTest {
 
 		when(showRepository.findByIdOrThrow(showId)).thenReturn(show);
 		when(showScheduleRepository.findSchedules(showId)).thenReturn(List.of(schedule1, schedule2));
-		when(showScheduleCastingRepository.findAllByScheduleIds(List.of(2001L, 2002L)))
-			.thenReturn(List.of(sc1, sc2, sc3));
+		when(showCastingRepository.findAllByShowId(showId))
+			.thenReturn(List.of(castOrder1, castOrder2, castOrderNull));
 		when(showSeatGradeRepository.findSeatPrices(showId)).thenReturn(List.of(seat));
 
 		ShowResponse.Detail result = showService.getDetail(showId);
@@ -128,18 +121,17 @@ class ShowServiceTest {
 		assertEquals("OPEN", result.getSchedules().get(0).getStatus());
 		assertEquals("CANCELLED", result.getSchedules().get(1).getStatus());
 
-		List<ShowResponse.Casting> firstScheduleCastings = result.getSchedules().get(0).getCastings();
-		assertEquals(2, firstScheduleCastings.size());
-		assertEquals("배우A", firstScheduleCastings.get(0).getArtistName());
-		assertEquals(1, firstScheduleCastings.get(0).getOrder());
-		assertEquals("배우B", firstScheduleCastings.get(1).getArtistName());
-		assertEquals(2, firstScheduleCastings.get(1).getOrder());
+		List<ShowResponse.Casting> castings = result.getCastings();
+		assertEquals(3, castings.size());
+		assertEquals("배우A", castings.get(0).getArtistName());
+		assertEquals("https://img.example/artistA.jpg", castings.get(0).getProfileImageUrl());
+		assertEquals(1, castings.get(0).getOrder());
+		assertEquals("배우B", castings.get(1).getArtistName());
+		assertEquals(2, castings.get(1).getOrder());
+		assertEquals("배우C", castings.get(2).getArtistName());
+		assertNull(castings.get(2).getOrder());
 
-		List<ShowResponse.Casting> secondScheduleCastings = result.getSchedules().get(1).getCastings();
-		assertEquals(1, secondScheduleCastings.size());
-		assertEquals("배우C", secondScheduleCastings.get(0).getArtistName());
-
-		assertFalse(firstScheduleCastings.get(0).getIsLiked());
-		assertFalse(firstScheduleCastings.get(1).getIsLiked());
+		assertFalse(castings.get(0).getIsLiked());
+		assertFalse(castings.get(1).getIsLiked());
 	}
 }
