@@ -13,6 +13,7 @@ import com.truve.platform.payment.service.domain.entity.Payment;
 import com.truve.platform.payment.service.domain.entity.PaymentCancel;
 import com.truve.platform.payment.service.domain.entity.VirtualAccount;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -41,6 +42,7 @@ public class PaymentResponse {
 
 	@Getter
 	@Builder
+	@Schema(name = "CancelResponse")
 	public static class Cancel {
 		private final Long requestAmount;
 		private final Long refundFee;
