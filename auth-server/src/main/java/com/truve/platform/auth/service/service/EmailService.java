@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.truve.platform.auth.service.event.EmailEventService;
 import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
 import com.truve.platform.common.support.Preconditions;
@@ -27,6 +28,7 @@ public class EmailService {
 	private final EmailVerificationRepository emailVerificationRepository;
 	private final JavaMailSender mailSender;
 	private final VerificationCodeGenerateUtils verificationCodeGenerateUtils;
+	private final EmailEventService emailEventService;
 
 	@Value("${spring.mail.username}")
 	private String senderEmail;
@@ -58,6 +60,7 @@ public class EmailService {
 			helper.setText(text, true);
 
 			mailSender.send(message);
+			emailEventService.sendEmail(email);
 		} catch (MessagingException e) {
 			log.error("이메일 전송 실패 - 받는 사람: {}, 제목: {}", email, subject, e);
 			throw new CustomException(ErrorCode.NOT_FOUND_EMAIL);

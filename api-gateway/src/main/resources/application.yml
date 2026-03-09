@@ -8,6 +8,12 @@ spring:
       host: ${USER_REDIS_HOST:user-redis}
       port: ${USER_REDIS_PORT:6379}
 
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS:localhost:29092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
   cloud:
     gateway:
       globalcors:
