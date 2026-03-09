@@ -1,4 +1,4 @@
-package org.truve.platform.ticketing.service.schedule.dto;
+package org.truve.platform.ticketing.service.ticketing.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

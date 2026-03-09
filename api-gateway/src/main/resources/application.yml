@@ -53,7 +53,7 @@ spring:
               predicates:
                 - Path=/api/queue/**
             - id: ticketing
-              uri: ${QUEUE_SERVER_URI:http://localhost:8084}
+              uri: ${TICKETING_SERVER_URI:http://localhost:8084}
               predicates:
                 - Path=/api/ticketing/**
 
@@ -76,7 +76,7 @@ springdoc:
       - name: "03-Queue Service"
         url: /api/queue/v3/api-docs
       - name: "04-Ticketing Service"
-        url: /api/tickets/v3/api-docs
+        url: /api/ticketing/v3/api-docs
       - name: "05-Musical Service"
         url: /api/shows/v3/api-docs
 

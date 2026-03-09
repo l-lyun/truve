@@ -1,9 +1,9 @@
-package org.truve.platform.ticketing.service.schedule.repository;
+package org.truve.platform.ticketing.service.ticketing.repository;
 
 import java.time.Duration;
 
 import org.springframework.stereotype.Repository;
-import org.truve.platform.ticketing.service.schedule.dto.SessionTicketValueDTO;
+import org.truve.platform.ticketing.service.ticketing.dto.SessionTicketValueDTO;
 import org.truve.platform.ticketing.service.global.support.RedisSupport;
 
 import lombok.RequiredArgsConstructor;
@@ -20,52 +20,62 @@ public class TicketingRedisRepository {
 	private final RedisSupport redisSupport;
 
 	public boolean consumeAdmissionToken(Long showId, Long userId, String admissionToken) {
-		String key = READY_KEY_PREFIX + showId + ":" + userId;
-		return redisSupport.consumeIfEquals(key, admissionToken);
+		return redisSupport.consumeIfEquals(readyUserKey(showId, userId), admissionToken);
 	}
 
 	public void saveSessionToken(String sessionToken, Long userId, Long showId, Duration ttl) {
-		String key =  SESSION_TOKEN_PREFIX + sessionToken;
 		SessionTicketValueDTO value = SessionTicketValueDTO.of(userId, showId);
-		redisSupport.setJsonValueWithTtl(key, value, ttl);
+		redisSupport.setJsonValueWithTtl(sessionTokenKey(sessionToken), value, ttl);
 	}
 
 	public void addActiveTicketingUser(Long showId, String sessionToken) {
-		String key = TICKET_ACTIVE_SHOW_USER_PREFIX + showId;
 		long nowMs =  System.currentTimeMillis();
-		redisSupport.zAdd(key, sessionToken, nowMs);
+		redisSupport.zAdd(activeTicketingUserKey(showId), sessionToken, nowMs);
 	}
 
 	public long getSessionTokenTtl(String sessionToken) {
-		String key = SESSION_TOKEN_PREFIX + sessionToken;
-		return redisSupport.getTtlMillis(key);
+		return redisSupport.getTtlMillis(sessionTokenKey(sessionToken));
 	}
 
 	public SessionTicketValueDTO getSessionTokenValue(String sessionToken) {
-		String key = SESSION_TOKEN_PREFIX + sessionToken;
-		return redisSupport.getJsonValue(key, SessionTicketValueDTO.class);
+		return redisSupport.getJsonValue(sessionTokenKey(sessionToken), SessionTicketValueDTO.class);
 	}
 
 	public long removeInactiveTicketingUsers(Long showId, long beforeMs) {
-		String key = TICKET_ACTIVE_SHOW_USER_PREFIX + showId;
-		return redisSupport.zRemRangeByScore(key, 0, beforeMs - 1);
+		return redisSupport.zRemRangeByScore(activeTicketingUserKey(showId), 0, beforeMs - 1);
 	}
 
 	public boolean refreshSessionTokenTtl(String sessionToken, long ttlSeconds) {
-		String key = SESSION_TOKEN_PREFIX + sessionToken;
-		return redisSupport.expireSeconds(key, ttlSeconds);
+		return redisSupport.expireSeconds(sessionTokenKey(sessionToken), ttlSeconds);
 	}
 
 	public boolean tryHoldSeat(Long showScheduleId, Long seatId, String sessionToken) {
-		String key = SEAT_HOLD_KEY_PREFIX + showScheduleId + ":" + seatId;
 		// TODO: 좌석 점유 시간 기획측과 논의
-		return redisSupport.setIfAbsent(key, sessionToken, Duration.ofMinutes(10));
+		return redisSupport.setIfAbsent(seatHoldKey(showScheduleId, seatId), sessionToken, Duration.ofMinutes(10));
+	}
+
+	public boolean deleteHoldSeat(Long showScheduleId, Long seatId) {
+		return redisSupport.delete(seatHoldKey(showScheduleId, seatId));
 	}
 
 	public String getHoldSeatSessionToken(Long showScheduleId, Long seatId) {
-		String key = SEAT_HOLD_KEY_PREFIX + showScheduleId + ":" + seatId;
-		return redisSupport.getValue(key);
+		return redisSupport.getValue(seatHoldKey(showScheduleId, seatId));
 	}
 
+	private String seatHoldKey(Long showScheduleId, Long seatId) {
+		return SEAT_HOLD_KEY_PREFIX + showScheduleId + ":" + seatId;
+	}
+
+	private String sessionTokenKey(String sessionToken) {
+		return SESSION_TOKEN_PREFIX + sessionToken;
+	}
+
+	private String activeTicketingUserKey(Long showId) {
+		return TICKET_ACTIVE_SHOW_USER_PREFIX + showId;
+	}
+
+	private String readyUserKey(Long showId, Long userId) {
+		return READY_KEY_PREFIX + showId + ":" + userId;
+	}
 
 }

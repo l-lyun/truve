@@ -1,4 +1,4 @@
-package org.truve.platform.ticketing.service.schedule.config;
+package org.truve.platform.ticketing.service.ticketing.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

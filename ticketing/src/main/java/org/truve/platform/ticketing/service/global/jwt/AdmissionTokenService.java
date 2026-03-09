@@ -1,7 +1,7 @@
 package org.truve.platform.ticketing.service.global.jwt;
 
 import org.springframework.stereotype.Component;
-import org.truve.platform.ticketing.service.schedule.dto.AdmissionTokenClaimsDTO;
+import org.truve.platform.ticketing.service.ticketing.dto.AdmissionTokenClaimsDTO;
 
 import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;

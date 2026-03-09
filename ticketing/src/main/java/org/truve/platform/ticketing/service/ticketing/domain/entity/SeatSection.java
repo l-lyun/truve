@@ -1,12 +1,9 @@
-package org.truve.platform.ticketing.service.schedule.domain.entity;
+package org.truve.platform.ticketing.service.ticketing.domain.entity;
 
 import com.truve.platform.common.support.BaseEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;

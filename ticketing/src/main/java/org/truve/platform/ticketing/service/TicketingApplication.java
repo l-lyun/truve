@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
 @ConfigurationPropertiesScan
-@SpringBootApplication(scanBasePackages = "com.truve.platform")
+@SpringBootApplication(scanBasePackages = "org.truve.platform")
 public class TicketingApplication {
 
 	public static void main(String[] args) {

@@ -1,4 +1,4 @@
-package org.truve.platform.ticketing.service.schedule.domain.entity;
+package org.truve.platform.ticketing.service.ticketing.domain.entity;
 
 import com.truve.platform.common.support.BaseEntity;
 

@@ -1,6 +1,6 @@
-package org.truve.platform.ticketing.service.schedule.domain.entity;
+package org.truve.platform.ticketing.service.ticketing.domain.entity;
 
-import org.truve.platform.ticketing.service.schedule.constant.SeatStatus;
+import org.truve.platform.ticketing.service.ticketing.constant.SeatStatus;
 
 import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;

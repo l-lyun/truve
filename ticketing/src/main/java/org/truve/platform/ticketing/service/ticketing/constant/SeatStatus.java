@@ -1,4 +1,4 @@
-package org.truve.platform.ticketing.service.schedule.constant;
+package org.truve.platform.ticketing.service.ticketing.constant;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
