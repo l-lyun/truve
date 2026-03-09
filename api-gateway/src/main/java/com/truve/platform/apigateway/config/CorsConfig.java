@@ -13,7 +13,8 @@ public class CorsConfig {
 
 	private static final List<String> ALLOWED_ORIGIN_PATTERNS = List.of(
 		"http://localhost:[*]",
-		"http://127.0.0.1:[*]"
+		"http://127.0.0.1:[*]",
+		"https://front-nu-tawny.vercel.app"
 	);
 	private static final List<String> ALLOWED_HEADERS = List.of("*");
 	private static final List<String> ALLOWED_METHODS = List.of("*");
