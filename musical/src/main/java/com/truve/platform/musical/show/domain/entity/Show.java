@@ -33,10 +33,10 @@ public class Show extends BaseEntity {
 	private Integer ageLimit;
 
 	@Column(nullable = false, length = 500)
-	private String posterUrl;
+	private String posterImg;
 
 	@Column(length = 500)
-	private String noticeUrl;
+	private String noticeImg;
 
 	@Column(name = "start_time")
 	private LocalDateTime startTime;
@@ -51,8 +51,8 @@ public class Show extends BaseEntity {
 		String description,
 		Integer runtimeMin,
 		Integer ageLimit,
-		String posterUrl,
-		String noticeUrl,
+		String posterImg,
+		String noticeImg,
 		LocalDateTime startTime,
 		LocalDateTime endTime
 	) {
@@ -61,8 +61,8 @@ public class Show extends BaseEntity {
 		this.description = description;
 		this.runtimeMin = runtimeMin;
 		this.ageLimit = ageLimit;
-		this.posterUrl = posterUrl;
-		this.noticeUrl = noticeUrl;
+		this.posterImg = posterImg;
+		this.noticeImg = noticeImg;
 		this.startTime = startTime;
 		this.endTime = endTime;
 	}

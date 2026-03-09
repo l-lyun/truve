@@ -1,9 +1,7 @@
 package com.truve.platform.show.service.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.truve.platform.musical.s3.S3Service;
 import com.truve.platform.musical.seat.domain.entity.Venue;
 import com.truve.platform.musical.seat.domain.repository.VenueRepository;
 import com.truve.platform.musical.show.domain.constant.ShowScheduleStatus;
@@ -44,6 +43,8 @@ class ShowServiceTest {
 	private ShowScheduleRepository showScheduleRepository;
 	@Mock
 	private ShowSeatGradeRepository showSeatGradeRepository;
+	@Mock
+	private S3Service s3Service;
 
 	@InjectMocks
 	private ShowService showService;
@@ -60,8 +61,10 @@ class ShowServiceTest {
 		when(show.getDescription()).thenReturn("설명");
 		when(show.getRuntimeMin()).thenReturn(120);
 		when(show.getAgeLimit()).thenReturn(8);
-		when(show.getPosterUrl()).thenReturn("https://img/poster.jpg");
-		when(show.getNoticeUrl()).thenReturn(null);
+		when(show.getPosterImg()).thenReturn("poster.jpg");
+		when(show.getNoticeImg()).thenReturn("notice.jpg");
+		when(s3Service.getImageUrl("poster.jpg")).thenReturn("https://img/poster.jpg");
+		when(s3Service.getImageUrl("notice.jpg")).thenReturn(null);
 		when(show.getStartTime()).thenReturn(LocalDateTime.of(2026, 3, 1, 0, 0));
 		when(show.getEndTime()).thenReturn(LocalDateTime.of(2026, 4, 1, 0, 0));
 		when(show.getVenueId()).thenReturn(10L);
@@ -82,13 +85,16 @@ class ShowServiceTest {
 		Artist artistC = org.mockito.Mockito.mock(Artist.class);
 		when(artistA.getId()).thenReturn(101L);
 		when(artistA.getName()).thenReturn("배우A");
-		when(artistA.getProfileImageUrl()).thenReturn("https://img.example/artistA.jpg");
+		when(artistA.getProfileImg()).thenReturn("artistA.jpg");
+		when(s3Service.getImageUrl("artistA.jpg")).thenReturn("https://img.example/artistA.jpg");
 		when(artistB.getId()).thenReturn(102L);
 		when(artistB.getName()).thenReturn("배우B");
-		when(artistB.getProfileImageUrl()).thenReturn("https://img.example/artistB.jpg");
+		when(artistB.getProfileImg()).thenReturn("artistB.jpg");
+		when(s3Service.getImageUrl("artistB.jpg")).thenReturn("https://img.example/artistB.jpg");
 		when(artistC.getId()).thenReturn(103L);
 		when(artistC.getName()).thenReturn("배우C");
-		when(artistC.getProfileImageUrl()).thenReturn("https://img.example/artistC.jpg");
+		when(artistC.getProfileImg()).thenReturn("artistC.jpg");
+		when(s3Service.getImageUrl("artistC.jpg")).thenReturn("https://img.example/artistC.jpg");
 
 		ShowCasting castOrder1 = org.mockito.Mockito.mock(ShowCasting.class);
 		ShowCasting castOrder2 = org.mockito.Mockito.mock(ShowCasting.class);

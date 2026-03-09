@@ -171,9 +171,31 @@ services:
       - MUSICAL_MYSQL_URL=jdbc:mysql://db:3306/musical_db
       - MUSICAL_MYSQL_USERNAME=root
       - MUSICAL_MYSQL_PASSWORD=1234
+      - AWS_S3_BUCKET=truve-media
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY=test
+      - AWS_SECRET_KEY=test
+      - AWS_S3_ENDPOINT=http://localstack:4566
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - truve-network
+
+
+  # 9. LocalStack
+  localstack:
+    image: localstack/localstack
+    container_name: truve-media-dev
+    ports:
+      - "4566:4566"
+    volumes:
+      - "./localstack:/var/lib/localstack"
+      - "./init-s3.sh:/etc/localstack/init/ready.d/init-s3.sh"
+    environment:
+      - PERSISTENCE=1
+    entrypoint: >
+      /bin/sh -c "chmod +x /etc/localstack/init/ready.d/init-s3.sh && /usr/local/bin/docker-entrypoint.sh"
     networks:
       - truve-network
 
