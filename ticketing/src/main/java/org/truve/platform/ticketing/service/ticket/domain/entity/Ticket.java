@@ -10,6 +10,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -22,36 +25,41 @@ import lombok.NoArgsConstructor;
 @Table(name = "tickets")
 public class Ticket extends BaseEntity {
 
-	@Column(nullable = false)
-	private Long reservationId;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "reservation_id")
+	private Reservation reservation;
 
-	@Column(nullable = false)
-	private Long scheduleSeatMappingId;
-
-	@Column(nullable = false)
-	private String ticketNumber;
+	@Column(name = "ticket_number", unique = true, nullable = false)
+	private String number;
 
 	@Column(nullable = false)
 	private Long priceSnapshot;
 
 	@Column(nullable = false)
-	@Enumerated(EnumType.STRING)
-	private TicketStatus status;
+	private String seatDetail;
 
 	@Column(nullable = false)
-	private LocalDateTime issuedAt;
+	@Enumerated(EnumType.STRING)
+	private TicketStatus status;
 
 	@Column
 	private LocalDateTime usedAt;
 
 	@Builder
-	public Ticket(Long reservationId, Long scheduleSeatMappingId, String ticketNumber, Long priceSnapshot) {
-		this.reservationId = reservationId;
-		this.scheduleSeatMappingId = scheduleSeatMappingId;
-		this.ticketNumber = ticketNumber;
+	private Ticket(Reservation reservation, String number, Long priceSnapshot, String seatDetail) {
+		this.reservation = reservation;
+		this.number = number;
 		this.priceSnapshot = priceSnapshot;
+		this.seatDetail = seatDetail;
 		this.status = TicketStatus.ISSUED;
-		this.issuedAt = LocalDateTime.now();
 	}
 
+	public static Ticket create(Reservation reservation, String number, Long priceSnapshot, String seatDetail) {
+		return Ticket.builder()
+			.reservation(reservation)
+			.number(number)
+			.priceSnapshot(priceSnapshot)
+			.seatDetail(seatDetail)
+			.build();
+	}
 }
