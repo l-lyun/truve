@@ -50,6 +50,8 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       CLUSTER_ID: 'ciWo7IWazngRchmPES6q5A=='
       KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+    networks:
+      - truve-network
 
   # 4. API Gateway
   api-gateway:
@@ -99,10 +101,13 @@ services:
       - NAVER_CLIENT_SECRET=${NAVER_CLIENT_SECRET}
       - NAVER_REDIRECT_URI=${NAVER_REDIRECT_URI}
       - FRONT_OAUTH_CALLBACK=${FRONT_OAUTH_CALLBACK}
+      - KAFKA_SERVERS=kafka:9092
     depends_on:
       db:
         condition: service_healthy
       user-redis:
+        condition: service_started
+      kafka:
         condition: service_started
     networks:
       - truve-network

@@ -10,7 +10,7 @@ jobs:
 
     strategy:
       matrix:
-        service: [ api-gateway, auth-server, payment, queue, ticketing, musical ]
+        service: [ api-gateway, auth-server, kafka, payment, queue, ticketing, musical ]
 
     steps:
       - name: Checkout code
