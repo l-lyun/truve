@@ -8,9 +8,9 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class S3Service {
-	@Value("${s3.endpoint}")
+	@Value("${spring.cloud.aws.s3.endpoint}")
 	private String endpoint;
-	@Value("${s3.bucket}")
+	@Value("${spring.cloud.aws.s3.bucket}")
 	private String bucketName;
 
 	public String getImageUrl(String fileName) {

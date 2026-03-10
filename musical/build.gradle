@@ -16,5 +16,5 @@ dependencies {
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui'
 
     // [AWS S3]
-    implementation 'io.awspring.cloud:spring-cloud-aws-starter-s3:3.4.0'
+    implementation 'io.awspring.cloud:spring-cloud-aws-starter-s3:4.0.0'
 }
