@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -16,6 +17,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import com.truve.platform.musical.s3.S3Service;
 import com.truve.platform.musical.seat.domain.entity.Venue;
@@ -25,14 +28,18 @@ import com.truve.platform.musical.show.domain.entity.Artist;
 import com.truve.platform.musical.show.domain.entity.Show;
 import com.truve.platform.musical.show.domain.entity.ShowCasting;
 import com.truve.platform.musical.show.domain.entity.ShowSchedule;
+import com.truve.platform.musical.show.domain.entity.ShowScheduleCasting;
 import com.truve.platform.musical.show.domain.entity.ShowSectionGrade;
+import com.truve.platform.musical.show.dto.ShowCastingResponse;
 import com.truve.platform.musical.show.dto.ShowResponse;
 import com.truve.platform.musical.show.repository.ArtistLikeRepository;
 import com.truve.platform.musical.show.repository.ShowCastingRepository;
 import com.truve.platform.musical.show.repository.ShowRepository;
+import com.truve.platform.musical.show.repository.ShowScheduleCastingRepository;
 import com.truve.platform.musical.show.repository.ShowScheduleRepository;
 import com.truve.platform.musical.show.repository.ShowSeatGradeRepository;
-import com.truve.platform.musical.show.service.ShowService;
+import com.truve.platform.musical.show.service.ShowCastingService;
+import com.truve.platform.musical.show.service.ShowDetailService;
 
 @ExtendWith(MockitoExtension.class)
 class ShowServiceTest {
@@ -46,6 +53,8 @@ class ShowServiceTest {
 	@Mock
 	private ShowScheduleRepository showScheduleRepository;
 	@Mock
+	private ShowScheduleCastingRepository showScheduleCastingRepository;
+	@Mock
 	private ArtistLikeRepository artistLikeRepository;
 	@Mock
 	private ShowSeatGradeRepository showSeatGradeRepository;
@@ -53,7 +62,9 @@ class ShowServiceTest {
 	private S3Service s3Service;
 
 	@InjectMocks
-	private ShowService showService;
+	private ShowDetailService showDetailService;
+	@InjectMocks
+	private ShowCastingService showCastingService;
 
 	@Test
 	@DisplayName("공연 상세는 조회된 공연 전체 캐스팅을 응답한다.")
@@ -132,7 +143,7 @@ class ShowServiceTest {
 			.thenReturn(List.of(101L));
 		when(showSeatGradeRepository.findSeatPrices(showId)).thenReturn(List.of(seat));
 
-		ShowResponse.Detail result = showService.getDetail(showId, 7L);
+		ShowResponse.Detail result = showDetailService.getDetail(showId, 7L);
 
 		assertEquals(2, result.getSchedules().size());
 		assertEquals("OPEN", result.getSchedules().get(0).getStatus());
@@ -151,5 +162,81 @@ class ShowServiceTest {
 		assertTrue(castings.get(0).getIsLiked());
 		assertFalse(castings.get(1).getIsLiked());
 		assertFalse(castings.get(2).getIsLiked());
+	}
+
+	@Test
+	@DisplayName("캐스팅 일정 조회는 페이지/역할/필터/행 데이터를 응답한다.")
+	void 캐스팅_일정_조회_성공() {
+		Long showId = 1L;
+		Show show = org.mockito.Mockito.mock(Show.class);
+		when(show.getId()).thenReturn(showId);
+		when(show.getStartTime()).thenReturn(LocalDateTime.of(2025, 12, 17, 0, 0));
+		when(show.getEndTime()).thenReturn(LocalDateTime.of(2026, 3, 29, 0, 0));
+
+		ShowSchedule schedule1 = org.mockito.Mockito.mock(ShowSchedule.class);
+		when(schedule1.getId()).thenReturn(101L);
+		when(schedule1.getShowTime()).thenReturn(LocalDateTime.of(2026, 1, 2, 19, 0));
+
+		Artist artistCharlie = org.mockito.Mockito.mock(Artist.class);
+		when(artistCharlie.getId()).thenReturn(1L);
+		when(artistCharlie.getName()).thenReturn("김호영");
+
+		Artist artistLola = org.mockito.Mockito.mock(Artist.class);
+		when(artistLola.getId()).thenReturn(10L);
+		when(artistLola.getName()).thenReturn("강홍석");
+
+		ShowCasting charlieCasting = org.mockito.Mockito.mock(ShowCasting.class);
+		when(charlieCasting.getRoleName()).thenReturn("찰리");
+		when(charlieCasting.getCastingOrder()).thenReturn(1);
+		when(charlieCasting.getArtist()).thenReturn(artistCharlie);
+
+		ShowCasting lolaCasting = org.mockito.Mockito.mock(ShowCasting.class);
+		when(lolaCasting.getRoleName()).thenReturn("롤라");
+		when(lolaCasting.getCastingOrder()).thenReturn(2);
+		when(lolaCasting.getArtist()).thenReturn(artistLola);
+
+		ShowScheduleCasting sc1 = org.mockito.Mockito.mock(ShowScheduleCasting.class);
+		when(sc1.getShowSchedule()).thenReturn(schedule1);
+		when(sc1.getShowCasting()).thenReturn(charlieCasting);
+
+		ShowScheduleCasting sc2 = org.mockito.Mockito.mock(ShowScheduleCasting.class);
+		when(sc2.getShowSchedule()).thenReturn(schedule1);
+		when(sc2.getShowCasting()).thenReturn(lolaCasting);
+
+		when(showRepository.findByIdOrThrow(showId)).thenReturn(show);
+		when(showScheduleRepository.findCastingSchedules(
+			org.mockito.ArgumentMatchers.eq(showId),
+			org.mockito.ArgumentMatchers.any(),
+			org.mockito.ArgumentMatchers.any(),
+			org.mockito.ArgumentMatchers.eq(true),
+			org.mockito.ArgumentMatchers.anyList(),
+			org.mockito.ArgumentMatchers.any(PageRequest.class)
+		)).thenReturn(new PageImpl<>(List.of(schedule1), PageRequest.of(0, 50), 1));
+		when(showCastingRepository.findAllByShowId(showId)).thenReturn(List.of(charlieCasting, lolaCasting));
+		when(showScheduleCastingRepository.findAllByScheduleIds(List.of(101L))).thenReturn(List.of(sc1, sc2));
+
+		ShowCastingResponse.Detail result = showCastingService.getCastingSchedules(
+			showId,
+			LocalDate.of(2025, 12, 17),
+			LocalDate.of(2026, 3, 29),
+			List.of(),
+			0,
+			50
+		);
+
+		assertEquals(showId, result.getShowId());
+		assertEquals(LocalDate.of(2025, 12, 17), result.getRange().getFrom());
+		assertEquals(LocalDate.of(2026, 3, 29), result.getRange().getTo());
+		assertEquals(2, result.getRoles().size());
+		assertEquals("찰리", result.getRoles().get(0).getRoleName());
+		assertEquals(1, result.getRoles().get(0).getOrder());
+		assertEquals(1, result.getRows().size());
+		assertEquals(101L, result.getRows().get(0).getScheduleId());
+		assertEquals("김호영", result.getRows().get(0).getCasts().get("찰리").getArtistName());
+		assertEquals("강홍석", result.getRows().get(0).getCasts().get("롤라").getArtistName());
+		assertEquals(0, result.getPage().getCurrentPage());
+		assertEquals(50, result.getPage().getSize());
+		assertEquals(1, result.getPage().getTotalElements());
+		assertEquals(1, result.getPage().getTotalPages());
 	}
 }

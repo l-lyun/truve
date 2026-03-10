@@ -4,6 +4,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.dao.DataIntegrityViolationException;
 
+import com.truve.platform.common.exception.CustomException;
+import com.truve.platform.common.exception.ErrorCode;
+import com.truve.platform.common.support.Preconditions;
 import com.truve.platform.musical.show.domain.entity.Artist;
 import com.truve.platform.musical.show.domain.entity.ArtistLike;
 import com.truve.platform.musical.show.repository.ArtistLikeRepository;
@@ -20,15 +23,11 @@ public class ArtistService {
 
 	@Transactional
 	public void likeArtist(Long artistId, Long userId) {
-		boolean artistExists = artistRepository.existsById(artistId);
-		if (!artistExists) {
-			return;
-		}
-
-		boolean exists = artistLikeRepository.existsByUserIdAndArtistId(userId, artistId);
-		if (exists) {
-			return;
-		}
+		Preconditions.validate(artistRepository.existsById(artistId), ErrorCode.NOT_FOUND_ARTIST);
+		Preconditions.validate(
+			!artistLikeRepository.existsByUserIdAndArtistId(userId, artistId),
+			ErrorCode.ALREADY_LIKED_ARTIST
+		);
 
 		Artist artist = artistRepository.getReferenceById(artistId);
 		ArtistLike artistLike = ArtistLike.builder()
@@ -38,11 +37,7 @@ public class ArtistService {
 		try {
 			artistLikeRepository.save(artistLike);
 		} catch (DataIntegrityViolationException e) {
-			boolean alreadyExists = artistLikeRepository.existsByUserIdAndArtistId(userId, artistId);
-			if (alreadyExists) {
-				return;
-			}
-			throw e;
+			throw new CustomException(ErrorCode.ALREADY_LIKED_ARTIST);
 		}
 	}
 

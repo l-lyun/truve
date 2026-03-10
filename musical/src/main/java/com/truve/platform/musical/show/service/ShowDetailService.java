@@ -5,6 +5,7 @@ import java.util.Set;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.truve.platform.musical.s3.S3Service;
 import com.truve.platform.musical.seat.domain.entity.Venue;
@@ -14,8 +15,8 @@ import com.truve.platform.musical.show.domain.entity.ShowCasting;
 import com.truve.platform.musical.show.domain.entity.ShowSchedule;
 import com.truve.platform.musical.show.domain.entity.ShowSectionGrade;
 import com.truve.platform.musical.show.dto.ShowResponse;
-import com.truve.platform.musical.show.repository.ShowCastingRepository;
 import com.truve.platform.musical.show.repository.ArtistLikeRepository;
+import com.truve.platform.musical.show.repository.ShowCastingRepository;
 import com.truve.platform.musical.show.repository.ShowRepository;
 import com.truve.platform.musical.show.repository.ShowScheduleRepository;
 import com.truve.platform.musical.show.repository.ShowSeatGradeRepository;
@@ -24,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class ShowService {
+public class ShowDetailService {
 
 	private final ShowRepository showRepository;
 	private final ShowCastingRepository showCastingRepository;
@@ -33,11 +34,6 @@ public class ShowService {
 	private final ArtistLikeRepository artistLikeRepository;
 	private final ShowSeatGradeRepository showSeatGradeRepository;
 	private final S3Service s3Service;
-
-	@Transactional(readOnly = true)
-	public ShowResponse.Detail getDetail(Long showId) {
-		return getDetail(showId, null);
-	}
 
 	@Transactional(readOnly = true)
 	public ShowResponse.Detail getDetail(Long showId, Long userId) {
@@ -69,8 +65,8 @@ public class ShowService {
 			.description(show.getDescription())
 			.runtimeMin(show.getRuntimeMin())
 			.ageLimit(show.getAgeLimit())
-			.posterUrl(s3Service.getImageUrl(show.getPosterImg()))
-			.noticeUrl(s3Service.getImageUrl(show.getNoticeImg()))
+			.posterUrl(toImageUrl(show.getPosterImg()))
+			.noticeUrl(toImageUrl(show.getNoticeImg()))
 			.startTime(show.getStartTime())
 			.endTime(show.getEndTime())
 			.venue(toVenueResponse(show))
@@ -119,11 +115,18 @@ public class ShowService {
 			.showCastId(casting.getId())
 			.artistId(casting.getArtist().getId())
 			.artistName(casting.getArtist().getName())
-			.profileImageUrl(s3Service.getImageUrl(casting.getArtist().getProfileImg()))
+			.profileImageUrl(toImageUrl(casting.getArtist().getProfileImg()))
 			.roleName(casting.getRoleName())
 			.order(casting.getCastingOrder())
 			.isLiked(isLiked)
 			.build();
+	}
+
+	private String toImageUrl(String fileName) {
+		if (!StringUtils.hasText(fileName)) {
+			return null;
+		}
+		return s3Service.getImageUrl(fileName);
 	}
 
 	private ShowResponse.SeatGrade toSeatGradeResponse(ShowSectionGrade seatGrade) {
@@ -131,6 +134,7 @@ public class ShowService {
 			.showSeatGradeId(seatGrade.getId())
 			.gradeName(seatGrade.getGradeName())
 			.colorCode(seatGrade.getColorCode())
+			.price(seatGrade.getPrice())
 			.build();
 	}
 }
