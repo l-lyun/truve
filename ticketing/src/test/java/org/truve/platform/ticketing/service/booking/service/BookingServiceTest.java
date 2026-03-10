@@ -1,4 +1,4 @@
-package org.truve.platform.ticketing.service.ticket.service;
+package org.truve.platform.ticketing.service.booking.service;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -13,17 +13,17 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.truve.platform.ticketing.service.ticket.client.TicketingClient;
-import org.truve.platform.ticketing.service.ticket.client.dto.TicketingResponse;
-import org.truve.platform.ticketing.service.ticket.domain.constant.TicketStatus;
-import org.truve.platform.ticketing.service.ticket.domain.entity.Reservation;
-import org.truve.platform.ticketing.service.ticket.dto.TicketRequest;
-import org.truve.platform.ticketing.service.ticket.dto.TicketResponse;
-import org.truve.platform.ticketing.service.ticket.repository.ReservationRepository;
-import org.truve.platform.ticketing.service.ticket.service.util.NumberGenerator;
+import org.truve.platform.ticketing.service.booking.client.TicketingClient;
+import org.truve.platform.ticketing.service.booking.client.dto.TicketingResponse;
+import org.truve.platform.ticketing.service.booking.domain.constant.TicketStatus;
+import org.truve.platform.ticketing.service.booking.domain.entity.Reservation;
+import org.truve.platform.ticketing.service.booking.dto.BookingRequest;
+import org.truve.platform.ticketing.service.booking.dto.BookingResponse;
+import org.truve.platform.ticketing.service.booking.repository.ReservationRepository;
+import org.truve.platform.ticketing.service.booking.service.util.NumberGenerator;
 
 @ExtendWith(MockitoExtension.class)
-class TicketServiceTest {
+class BookingServiceTest {
 
 	@Mock
 	private ReservationRepository reservationRepository;
@@ -33,7 +33,7 @@ class TicketServiceTest {
 	private NumberGenerator numberGenerator;
 
 	@InjectMocks
-	private TicketService ticketService;
+	private BookingService bookingService;
 
 	@Test
 	@DisplayName("예매 내역과 티켓을 생성하고 예매 번호를 반환한다.")
@@ -41,7 +41,7 @@ class TicketServiceTest {
 		// given
 		Long userId = 1L;
 		List<Long> seatIds = List.of(10L, 11L, 12L);
-		TicketRequest.Create request = new TicketRequest.Create(seatIds);
+		BookingRequest.Create request = new BookingRequest.Create(seatIds);
 
 		TicketingResponse.SeatInfo seat1 = new TicketingResponse.SeatInfo("A", 1L, "VIP", "A", 13L, 10000L);
 		TicketingResponse.SeatInfo seat2 = new TicketingResponse.SeatInfo("B", 2L, "VIP", "B", 14L, 20000L);
@@ -58,7 +58,7 @@ class TicketServiceTest {
 		given(numberGenerator.generateTicketNumber()).willReturn(ticketNumber1, ticketNumber2, ticketNumber3);
 
 		// when
-		TicketResponse.Create response = ticketService.create(userId, request);
+		BookingResponse.Create response = bookingService.create(userId, request);
 
 		// then
 		ArgumentCaptor<Reservation> captor = ArgumentCaptor.forClass(Reservation.class);

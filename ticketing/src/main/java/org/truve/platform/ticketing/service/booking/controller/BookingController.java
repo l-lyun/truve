@@ -1,13 +1,13 @@
-package org.truve.platform.ticketing.service.ticket.controller;
+package org.truve.platform.ticketing.service.booking.controller;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.truve.platform.ticketing.service.ticket.dto.TicketRequest;
-import org.truve.platform.ticketing.service.ticket.dto.TicketResponse;
-import org.truve.platform.ticketing.service.ticket.service.TicketService;
+import org.truve.platform.ticketing.service.booking.dto.BookingRequest;
+import org.truve.platform.ticketing.service.booking.dto.BookingResponse;
+import org.truve.platform.ticketing.service.booking.service.BookingService;
 
 import com.truve.platform.common.response.ApiResult;
 
@@ -17,17 +17,17 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/tickets")
-public class TicketController {
+@RequestMapping("/api/bookings")
+public class BookingController {
 	private static final String USER_ID_HEADER = "X-User-Id";
 
-	private final TicketService ticketService;
+	private final BookingService bookingService;
 
 	@Operation(summary = "예매 내역 생성", description = "예매 및 티켓 정보를 저장합니다.")
 	@PostMapping
-	public ApiResult<TicketResponse.Create> create(
+	public ApiResult<BookingResponse.Create> create(
 		@RequestHeader(USER_ID_HEADER) Long userId,
-		@RequestBody @Valid TicketRequest.Create request) {
-		return ApiResult.ok(ticketService.create(userId, request));
+		@RequestBody @Valid BookingRequest.Create request) {
+		return ApiResult.ok(bookingService.create(userId, request));
 	}
 }

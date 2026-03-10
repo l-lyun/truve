@@ -1,4 +1,4 @@
-package org.truve.platform.ticketing.service.ticket.domain.constant;
+package org.truve.platform.ticketing.service.booking.domain.constant;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

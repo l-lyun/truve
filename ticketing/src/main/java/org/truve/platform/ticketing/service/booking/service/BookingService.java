@@ -1,4 +1,4 @@
-package org.truve.platform.ticketing.service.ticket.service;
+package org.truve.platform.ticketing.service.booking.service;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -6,20 +6,20 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.truve.platform.ticketing.service.ticket.client.TicketingClient;
-import org.truve.platform.ticketing.service.ticket.client.dto.TicketingResponse;
-import org.truve.platform.ticketing.service.ticket.domain.entity.Reservation;
-import org.truve.platform.ticketing.service.ticket.domain.entity.Ticket;
-import org.truve.platform.ticketing.service.ticket.dto.TicketRequest;
-import org.truve.platform.ticketing.service.ticket.dto.TicketResponse;
-import org.truve.platform.ticketing.service.ticket.repository.ReservationRepository;
-import org.truve.platform.ticketing.service.ticket.service.util.NumberGenerator;
+import org.truve.platform.ticketing.service.booking.client.TicketingClient;
+import org.truve.platform.ticketing.service.booking.client.dto.TicketingResponse;
+import org.truve.platform.ticketing.service.booking.domain.entity.Reservation;
+import org.truve.platform.ticketing.service.booking.domain.entity.Ticket;
+import org.truve.platform.ticketing.service.booking.dto.BookingRequest;
+import org.truve.platform.ticketing.service.booking.dto.BookingResponse;
+import org.truve.platform.ticketing.service.booking.repository.ReservationRepository;
+import org.truve.platform.ticketing.service.booking.service.util.NumberGenerator;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class TicketService {
+public class BookingService {
 	private static final String GRADE_SUMMARY_FORMAT = "%s석 %d인";
 	private static final String LINE_BREAK = "\n";
 	private static final String SEAT_DETAIL_FORMAT = "%d층 %s구역 %s열 %d번";
@@ -29,7 +29,7 @@ public class TicketService {
 	private final NumberGenerator numberGenerator;
 
 	@Transactional
-	public TicketResponse.Create create(Long userId, TicketRequest.Create request) {
+	public BookingResponse.Create create(Long userId, BookingRequest.Create request) {
 		List<TicketingResponse.SeatInfo> seatInfos = ticketingClient.getSeatInfos(request.getSeatIds());
 
 		Reservation reservation = createReservation(userId, seatInfos);
@@ -37,7 +37,7 @@ public class TicketService {
 		reservation.addTickets(tickets);
 
 		reservationRepository.save(reservation);
-		return new TicketResponse.Create(reservation.getNumber());
+		return new BookingResponse.Create(reservation.getNumber());
 	}
 
 	private Reservation createReservation(Long userId, List<TicketingResponse.SeatInfo> seatInfos) {

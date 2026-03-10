@@ -1,4 +1,4 @@
-package org.truve.platform.ticketing.service.ticket.client.dto;
+package org.truve.platform.ticketing.service.booking.client.dto;
 
 import org.truve.platform.ticketing.service.ticketing.domain.entity.Seat;
 

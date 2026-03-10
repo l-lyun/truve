@@ -1,10 +1,10 @@
-package org.truve.platform.ticketing.service.ticket.domain.entity;
+package org.truve.platform.ticketing.service.booking.domain.entity;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.truve.platform.ticketing.service.ticket.domain.constant.ReservationStatus;
+import org.truve.platform.ticketing.service.booking.domain.constant.ReservationStatus;
 
 import com.truve.platform.common.support.BaseEntity;
 

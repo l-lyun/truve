@@ -1,9 +1,9 @@
-package org.truve.platform.ticketing.service.ticket.client;
+package org.truve.platform.ticketing.service.booking.client;
 
 import java.util.List;
 
 import org.springframework.stereotype.Component;
-import org.truve.platform.ticketing.service.ticket.client.dto.TicketingResponse;
+import org.truve.platform.ticketing.service.booking.client.dto.TicketingResponse;
 import org.truve.platform.ticketing.service.ticketing.domain.entity.Seat;
 import org.truve.platform.ticketing.service.ticketing.repository.SeatRepository;
 

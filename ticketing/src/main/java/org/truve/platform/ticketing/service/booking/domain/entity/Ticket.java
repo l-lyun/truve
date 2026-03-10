@@ -1,8 +1,8 @@
-package org.truve.platform.ticketing.service.ticket.domain.entity;
+package org.truve.platform.ticketing.service.booking.domain.entity;
 
 import java.time.LocalDateTime;
 
-import org.truve.platform.ticketing.service.ticket.domain.constant.TicketStatus;
+import org.truve.platform.ticketing.service.booking.domain.constant.TicketStatus;
 
 import com.truve.platform.common.support.BaseEntity;
 

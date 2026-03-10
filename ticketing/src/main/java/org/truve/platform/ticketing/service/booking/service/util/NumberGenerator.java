@@ -1,4 +1,4 @@
-package org.truve.platform.ticketing.service.ticket.service.util;
+package org.truve.platform.ticketing.service.booking.service.util;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;

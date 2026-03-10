@@ -1,9 +1,9 @@
-package org.truve.platform.ticketing.service.ticket.dto;
+package org.truve.platform.ticketing.service.booking.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-public class TicketResponse {
+public class BookingResponse {
 
 	@Getter
 	@AllArgsConstructor

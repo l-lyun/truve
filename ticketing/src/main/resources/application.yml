@@ -27,6 +27,11 @@ spring:
 springdoc:
   api-docs:
     path: /api/ticketing/v3/api-docs
+  group-configs:
+    - group: ticketing
+      paths-to-match: /api/ticketing/**
+    - group: booking
+      paths-to-match: /api/bookings/**
 
 jwt:
   secret: ${JWT_SECRET:kt-cloud-tech-up-final-queue-2026020201010101}

@@ -1,4 +1,4 @@
-package org.truve.platform.ticketing.service.ticket.dto;
+package org.truve.platform.ticketing.service.booking.dto;
 
 import java.util.List;
 
@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-public class TicketRequest {
+public class BookingRequest {
 
 	@Getter
 	@AllArgsConstructor
