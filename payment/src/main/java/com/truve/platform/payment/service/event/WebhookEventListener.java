@@ -1,10 +1,9 @@
-package com.truve.platform.payment.service.event.listener;
+package com.truve.platform.payment.service.event;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import com.truve.platform.payment.service.event.WebhookEvent;
 import com.truve.platform.payment.service.service.PaymentService;
 
 import lombok.RequiredArgsConstructor;

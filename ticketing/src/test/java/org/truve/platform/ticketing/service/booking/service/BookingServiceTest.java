@@ -14,12 +14,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.truve.platform.ticketing.service.booking.client.TicketingClient;
-import org.truve.platform.ticketing.service.booking.client.dto.TicketingResponse;
 import org.truve.platform.ticketing.service.booking.domain.constant.TicketStatus;
 import org.truve.platform.ticketing.service.booking.domain.entity.Reservation;
 import org.truve.platform.ticketing.service.booking.dto.BookingRequest;
 import org.truve.platform.ticketing.service.booking.dto.BookingResponse;
+import org.truve.platform.ticketing.service.booking.external.client.TicketingClient;
+import org.truve.platform.ticketing.service.booking.external.client.TicketingResponse;
 import org.truve.platform.ticketing.service.booking.repository.ReservationRepository;
 import org.truve.platform.ticketing.service.booking.service.util.NumberGenerator;
 

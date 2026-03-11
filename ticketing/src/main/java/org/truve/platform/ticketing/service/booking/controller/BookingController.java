@@ -1,5 +1,6 @@
 package org.truve.platform.ticketing.service.booking.controller;
 
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -31,5 +32,16 @@ public class BookingController {
 		@RequestHeader(USER_ID_HEADER) UUID userId,
 		@RequestBody @Valid BookingRequest.Create request) {
 		return ApiResult.ok(bookingService.create(userId, request));
+	}
+
+	@Operation(summary = "예매 결제 준비",
+		description = "예매 상태를 결제 대기 중으로 변경하고, 예약자 정보를 저장한 후 결제 정보를 생성합니다.")
+	@PostMapping("/{reservationNumber}/payment-ready")
+	public ApiResult<Void> readyPayment(
+		@PathVariable String reservationNumber,
+		@RequestBody @Valid BookingRequest.ApplicantInfo request
+	) {
+		bookingService.paymentReady(reservationNumber, request);
+		return ApiResult.ok();
 	}
 }

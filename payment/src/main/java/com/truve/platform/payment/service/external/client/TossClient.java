@@ -1,4 +1,4 @@
-package com.truve.platform.payment.service.service.external;
+package com.truve.platform.payment.service.external.client;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -12,8 +12,6 @@ import org.springframework.web.client.RestClientResponseException;
 
 import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
-import com.truve.platform.payment.service.service.external.dto.TossRequest;
-import com.truve.platform.payment.service.service.external.dto.TossResponse;
 
 import lombok.RequiredArgsConstructor;
 

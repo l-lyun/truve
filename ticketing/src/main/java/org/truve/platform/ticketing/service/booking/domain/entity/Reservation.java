@@ -7,10 +7,13 @@ import java.util.UUID;
 
 import org.truve.platform.ticketing.service.booking.domain.constant.ReservationStatus;
 
+import com.truve.platform.common.exception.ErrorCode;
 import com.truve.platform.common.support.BaseEntity;
+import com.truve.platform.common.support.Preconditions;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -46,6 +49,9 @@ public class Reservation extends BaseEntity {
 	@Column
 	private LocalDateTime paidAt;
 
+	@Embedded
+	private Applicant applicant;
+
 	@OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL)
 	private List<Ticket> tickets = new ArrayList<>();
 
@@ -70,5 +76,12 @@ public class Reservation extends BaseEntity {
 
 	public void addTickets(List<Ticket> tickets) {
 		this.tickets.addAll(tickets);
+	}
+
+	public void readyForPayment(Applicant applicant) {
+		Preconditions.validate(this.status == ReservationStatus.CREATED, ErrorCode.INVALID_RESERVATION_STATUS);
+
+		this.applicant = applicant;
+		this.status = ReservationStatus.PENDING_PAYMENT;
 	}
 }

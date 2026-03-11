@@ -1,4 +1,4 @@
-package com.truve.platform.payment.service.service.external.dto;
+package com.truve.platform.payment.service.external.client;
 
 import com.truve.platform.payment.service.dto.PaymentRequest;
 

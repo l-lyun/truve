@@ -53,15 +53,6 @@ public class PaymentController {
 		return ApiResult.ok(paymentService.getBankList());
 	}
 
-	@Operation(summary = "결제 생성", description = "Toss Payments에 결제를 요청하기 전에 호출해 주세요")
-	@PostMapping
-	public ApiResult<PaymentResponse.Create> create(@RequestBody @Valid PaymentRequest.Create request) {
-		Long paymentId = paymentService.create(request);
-		var response = new PaymentResponse.Create(paymentId);
-
-		return ApiResult.ok(response);
-	}
-
 	@Operation(summary = "결제 승인",
 		description = "Toss Payments에서 결제 요청 승인 후 successUrl로 호출하는 API입니다. 프론트엔드의 성공 페이지로 orderId를 담아 리다이렉트 합니다.")
 	@GetMapping("/confirm")

@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
 import com.truve.platform.common.support.Preconditions;
 import com.truve.platform.payment.service.domain.command.CancelCommand;
@@ -19,11 +18,12 @@ import com.truve.platform.payment.service.domain.entity.Payment;
 import com.truve.platform.payment.service.domain.entity.PaymentCancel;
 import com.truve.platform.payment.service.dto.PaymentRequest;
 import com.truve.platform.payment.service.dto.PaymentResponse;
+import com.truve.platform.payment.service.external.client.TossClient;
+import com.truve.platform.payment.service.external.client.TossRequest;
+import com.truve.platform.payment.service.external.client.TossResponse;
+import com.truve.platform.payment.service.external.kafka.PaymentEventCommand;
 import com.truve.platform.payment.service.repository.PaymentCancelRepository;
 import com.truve.platform.payment.service.repository.PaymentRepository;
-import com.truve.platform.payment.service.service.external.TossClient;
-import com.truve.platform.payment.service.service.external.dto.TossRequest;
-import com.truve.platform.payment.service.service.external.dto.TossResponse;
 
 import lombok.RequiredArgsConstructor;
 
@@ -45,25 +45,24 @@ public class PaymentService {
 	}
 
 	@Transactional
-	public Long create(PaymentRequest.Create request) {
-		return paymentRepository.findByOrderId(request.getOrderId())
-			.map(this::handleExistingPayment)
-			.orElseGet(() -> saveNewPayment(request));
+	public void create(PaymentEventCommand.Create request) {
+		paymentRepository.findByOrderId(request.getOrderId())
+			.ifPresentOrElse(
+				this::handleExistingPayment,
+				() -> saveNewPayment(request)
+			);
 	}
 
-	private Long handleExistingPayment(Payment p) {
-		if (p.getStatus() == PaymentStatus.READY) {
-			return p.getId();
-		}
-		throw new CustomException(ErrorCode.ALREADY_EXIST_PAYMENT);
+	private void handleExistingPayment(Payment p) {
+		Preconditions.validate(p.getStatus() == PaymentStatus.READY, ErrorCode.ALREADY_EXIST_PAYMENT);
 	}
 
-	private Long saveNewPayment(PaymentRequest.Create request) {
+	private void saveNewPayment(PaymentEventCommand.Create request) {
 		Payment payment = Payment.builder()
 			.orderId(request.getOrderId())
 			.amount(request.getAmount())
 			.build();
-		return paymentRepository.save(payment).getId();
+		paymentRepository.save(payment);
 	}
 
 	public List<PaymentResponse.Bank> getBankList() {

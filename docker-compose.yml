@@ -128,9 +128,12 @@ services:
       - PAYMENT_MYSQL_PASSWORD=1234
       - SPRING_PROFILES_ACTIVE=local
       - TOSS_SECRET_KEY=${TOSS_SECRET_KEY}
+      - KAFKA_SERVERS=kafka:9092
     depends_on:
       db:
         condition: service_healthy
+      kafka:
+        condition: service_started
     networks:
       - truve-network
 
@@ -172,11 +175,14 @@ services:
       - SPRING_PROFILES_ACTIVE=local
       - USER_REDIS_HOST=user-redis
       - USER_REDIS_PORT=6379
+      - KAFKA_SERVERS=kafka:9092
 
     depends_on:
       db:
         condition: service_healthy
       user-redis:
+        condition: service_started
+      kafka:
         condition: service_started
     networks:
       - truve-network
