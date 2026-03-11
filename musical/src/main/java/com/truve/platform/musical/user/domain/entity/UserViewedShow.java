@@ -19,16 +19,14 @@ import lombok.NoArgsConstructor;
 @Table(name = "user_viewed_show")
 public class UserViewedShow extends BaseEntity {
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_id")
-	private User user;
+	private Long userId;
 
 	@Column(nullable = false)
 	private Long showId;
 
 	@Builder
-	public UserViewedShow(User user, Long showId) {
-		this.user = user;
+	public UserViewedShow(Long userId, Long showId) {
+		this.userId = userId;
 		this.showId = showId;
 	}
 }
