@@ -11,6 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -19,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.truve.platform.auth.service.domain.entity.User;
+import com.truve.platform.auth.service.event.UserSignedUpEvent;
 import com.truve.platform.auth.service.repository.EmailVerificationRepository;
 import com.truve.platform.auth.service.repository.UserRepository;
 import com.truve.platform.auth.service.security.JwtService;
@@ -43,6 +45,8 @@ class AuthServiceTest {
 	private RefreshTokenService refreshTokenService;
 	@Mock
 	private AccessTokenBlacklistService accessTokenBlacklistService;
+	@Mock
+	private UserSignedUpEventPublisher userSignedUpEventPublisher;
 
 	@InjectMocks
 	private AuthService authService;
@@ -232,17 +236,27 @@ class AuthServiceTest {
 			given(emailVerificationRepository.isVerifiedEmail(email)).willReturn(verifiedAt);
 			given(userRepository.existsByEmail(email)).willReturn(false);
 			given(passwordEncoder.encode(password)).willReturn("encoded");
+			given(userRepository.save(any(User.class))).willAnswer(invocation -> {
+				User savedUser = invocation.getArgument(0);
+				ReflectionTestUtils.setField(savedUser, "id", 1L);
+				return savedUser;
+			});
 
 			// when
 			authService.signUp(email, password);
 
 			// then
-			verify(userRepository).save(argThat(user ->
-				user.getEmail().equals(email)
-					&& user.getPassword().equals("encoded")
-					&& user.getRole() == UserRole.MEMBER
-			));
+			ArgumentCaptor<User> savedUserCaptor = ArgumentCaptor.forClass(User.class);
+			ArgumentCaptor<Object> eventCaptor = ArgumentCaptor.forClass(Object.class);
+
+			verify(userRepository).save(savedUserCaptor.capture());
 			verify(emailVerificationRepository).deleteVerifiedEmail(email);
+			verify(userSignedUpEventPublisher).publish(eq("1"), eventCaptor.capture());
+
+			assertThat(savedUserCaptor.getValue().getEmail()).isEqualTo(email);
+			assertThat(savedUserCaptor.getValue().getPassword()).isEqualTo("encoded");
+			assertThat(savedUserCaptor.getValue().getRole()).isEqualTo(UserRole.MEMBER);
+			assertThat(eventCaptor.getValue()).isInstanceOf(UserSignedUpEvent.class);
 		}
 
 		@Test
@@ -260,6 +274,7 @@ class AuthServiceTest {
 			// then
 			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.NOT_VERIFIED_EMAIL);
 			verify(userRepository, never()).save(any(User.class));
+			verify(userSignedUpEventPublisher, never()).publish(anyString(), any());
 		}
 
 		@Test
@@ -279,6 +294,7 @@ class AuthServiceTest {
 			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ALREADY_EXISTS_EMAIL);
 			verify(userRepository, never()).save(any(User.class));
 			verify(emailVerificationRepository, never()).deleteVerifiedEmail(anyString());
+			verify(userSignedUpEventPublisher, never()).publish(anyString(), any());
 		}
 	}
 }

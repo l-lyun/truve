@@ -51,9 +51,14 @@ public enum ErrorCode {
 
 
 	NOT_FOUND_SHOW(HttpStatus.NOT_FOUND, "존재하지 않는 공연입니다.", "M01"),
-    NOT_FOUND_ARTIST(HttpStatus.NOT_FOUND, "존재하지 않는 배우입니다.", "M02"),
-    ALREADY_LIKED_ARTIST(HttpStatus.BAD_REQUEST, "이미 좋아요한 배우입니다.", "M03");
+	NOT_FOUND_ARTIST(HttpStatus.NOT_FOUND, "존재하지 않는 배우입니다.", "M02"),
+	ALREADY_LIKED_ARTIST(HttpStatus.BAD_REQUEST, "이미 좋아요한 배우입니다.", "M03"),
+
+	EVENT_SERIALIZATION_FAILED(HttpStatus.BAD_REQUEST, "이벤트 직렬화 오류입니다.", "I01"),
+	EVENT_PUBLISH_FAILED(HttpStatus.BAD_REQUEST, "이벤트 발행 실패입니다.", "I02"),
+	EVENT_USER_SIGNED_UP_FAILED(HttpStatus.BAD_REQUEST, "유저 회원가입 이벤트 소비 실패입니다.", "I03"),
 	;
+
 
 
 	private final HttpStatus status;

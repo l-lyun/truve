@@ -5,6 +5,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.truve.platform.auth.service.event.UserSignedUpEvent;
 import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
 import com.truve.platform.common.support.Preconditions;
@@ -27,6 +28,7 @@ public class AuthService {
 	private final JwtService jwtService;
 	private final RefreshTokenService refreshTokenService;
 	private final AccessTokenBlacklistService accessTokenBlacklistService;
+	private final UserSignedUpEventPublisher  userSignedUpEventPublisher;
 
 	@Transactional
 	public Pair<String, String> login(String email, String password) {
@@ -105,9 +107,12 @@ public class AuthService {
 		String encodedPassword = passwordEncoder.encode(password);
 
 		User user = User.createLocalUser(email, encodedPassword);
+
 		userRepository.save(user);
 		emailVerificationRepository.deleteVerifiedEmail(email);
 
+		UserSignedUpEvent event = UserSignedUpEvent.from(user);
+		userSignedUpEventPublisher.publish(String.valueOf(user.getId()), event);
 	}
 
 }
