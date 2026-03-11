@@ -1,6 +1,7 @@
 package com.truve.platform.common.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.springframework.data.domain.Page;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -20,6 +21,10 @@ public class ApiResult<T> {
 
 	public static <T> ApiResult<T> ok(T data) {
 		return ApiResult.of("ok", "성공", data);
+	}
+
+	public static <T> ApiResult<PageResponse<T>> ok(Page<T> page) {
+		return ApiResult.of("ok", "성공", new PageResponse<>(page));
 	}
 
 	private static <T> ApiResult<T> of(String code, String message, T data) {
