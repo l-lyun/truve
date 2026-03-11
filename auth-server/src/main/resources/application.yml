@@ -11,6 +11,11 @@ spring:
     password: ${USER_MYSQL_PASSWORD:1234}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
   kafka:
     bootstrap-servers: ${KAFKA_SERVERS:localhost:29092}
     producer:
@@ -47,6 +52,22 @@ jwt:
   secret: ${JWT_SECRET:kt-cloud-tech-up-final-project-2026020201010101}
   access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:300000}
   refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:43200000}
+
+oauth:
+  front:
+    callback: ${FRONT_OAUTH_CALLBACK:http://localhost:8081/test/callback}
+  kakao:
+    client-id: ${KAKAO_CLIENT_ID:kakao_client_id}
+    client-secret: ${KAKAO_CLIENT_SECRET:kakao_client_secret}
+    redirect-uri: ${KAKAO_REDIRECT_URI:http://localhost:8080/api/auth/kakao/callback}
+    token-url: ${KAKAO_TOKEN_URL:https://kauth.kakao.com/oauth/token}
+    authorization-url: ${KAKAO_AUTHORIZATION_URL:https://kauth.kakao.com/oauth/authorize}
+  naver:
+    client-id: ${NAVER_CLIENT_ID:naver_client_id}
+    client-secret: ${NAVER_CLIENT_SECRET:naver_client_secret}
+    redirect-url: ${NAVER_REDIRECT_URI:http://localhost:8080/api/auth/naver/callback}
+    token-url: ${NAVER_TOKEN_URL:https://nid.naver.com/oauth2.0/token}
+    authorization-url: ${NAVER_AUTHORIZATION_URL:https://nid.naver.com/oauth2.0/authorize}
 
 springdoc:
   api-docs:

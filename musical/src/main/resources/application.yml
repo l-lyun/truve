@@ -1,4 +1,24 @@
+server:
+  port: 8085
+
 spring:
+  web:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+  datasource:
+    url: ${MUSICAL_MYSQL_URL:jdbc:mysql://localhost:3306/musical_db}
+    username: ${MUSICAL_MYSQL_USERNAME:root}
+    password: ${MUSICAL_MYSQL_PASSWORD:1234}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
   application:
     name: musical
   profiles:

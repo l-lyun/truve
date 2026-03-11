@@ -1,32 +1,10 @@
-server:
-  port: 8082
-
 spring:
-  datasource:
-    url: ${PAYMENT_MYSQL_URL:jdbc:mysql://localhost:3306/payment_db}
-    username: ${PAYMENT_MYSQL_USERNAME:root}
-    password: ${PAYMENT_MYSQL_PASSWORD:1234}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
   jpa:
     hibernate:
-      # TODO: 다음 PR에서 update로 변경 필요
-      ddl-auto: create
-    properties:
-      hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.MySQLDialect
+      ddl-auto: update
+    show-sql: true
 
-  kafka:
-    bootstrap-servers: ${KAFKA_SERVERS:localhost:29092}
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
-    consumer:
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-app:
-  frontend:
-    success-url: /success-temp.html
-    fail-url: /fail-temp.html
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.hibernate.orm.jdbc.bind: trace

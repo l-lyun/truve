@@ -1,7 +1,4 @@
 spring:
-  config:
-    activate:
-      on-profile: local
   jpa:
     hibernate:
       ddl-auto: update

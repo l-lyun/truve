@@ -1,24 +1,5 @@
 spring:
-  config:
-    activate:
-      on-profile: local
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
-
-oauth:
-  front:
-    callback: ${FRONT_OAUTH_CALLBACK:http://localhost:8081/test/callback}
-  kakao:
-    client-id: ${KAKAO_CLIENT_ID:kakao_client_id}
-    client-secret: ${KAKAO_CLIENT_SECRET:kakao_client_secret}
-    redirect-uri: ${KAKAO_REDIRECT_URI:http://localhost:8080/api/auth/kakao/callback}
-    token-url: ${KAKAO_TOKEN_URL:https://kauth.kakao.com/oauth/token}
-    authorization-url: ${KAKAO_AUTHORIZATION_URL:https://kauth.kakao.com/oauth/authorize}
-  naver:
-    client-id: ${NAVER_CLIENT_ID:naver_client_id}
-    client-secret: ${NAVER_CLIENT_SECRET:naver_client_secret}
-    redirect-url: ${NAVER_REDIRECT_URI:http://localhost:8080/api/auth/naver/callback}
-    token-url: ${NAVER_TOKEN_URL:https://nid.naver.com/oauth2.0/token}
-    authorization-url: ${NAVER_AUTHORIZATION_URL:https://nid.naver.com/oauth2.0/authorize}

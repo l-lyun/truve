@@ -1,6 +1,27 @@
+server:
+  port: 8082
+
 spring:
-  profiles:
-    default: local
+  datasource:
+    url: ${PAYMENT_MYSQL_URL:jdbc:mysql://localhost:3306/payment_db}
+    username: ${PAYMENT_MYSQL_USERNAME:root}
+    password: ${PAYMENT_MYSQL_PASSWORD:1234}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS:localhost:29092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
 springdoc:
   api-docs:
@@ -10,3 +31,8 @@ toss:
   payment:
     secret-key: ${TOSS_SECRET_KEY:test_sk_tempKey}
     base-url: https://api.tosspayments.com/v1/payments/
+
+app:
+  frontend:
+    success-url: ${FRONT_SUCCESS_URL:/success-temp.html}
+    fail-url: ${FRONT_FAIL_URL:/fail-temp.html}
