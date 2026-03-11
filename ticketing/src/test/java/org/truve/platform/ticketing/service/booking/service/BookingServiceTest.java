@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,7 +40,7 @@ class BookingServiceTest {
 	@DisplayName("예매 내역과 티켓을 생성하고 예매 번호를 반환한다.")
 	void 예매생성_성공() {
 		// given
-		Long userId = 1L;
+		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
 		List<Long> seatIds = List.of(10L, 11L, 12L);
 		BookingRequest.Create request = new BookingRequest.Create(seatIds);
 

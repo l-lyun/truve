@@ -1,5 +1,7 @@
 package com.truve.platform.musical.user.service;
 
+import java.util.UUID;
+
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,10 +36,17 @@ public class UserSignedUpEventConsumer {
 	public void consume(String message) throws Exception {
 		JsonNode root = objectMapper.readTree(message);
 
-		Long userId = root.path(USER_ID).asLong();
+		String rawUserId = root.path(USER_ID).asText();
 		String nickname = root.path(NICKNAME).asText();
 
-		if (userId == 0L || !StringUtils.hasText(nickname)) {
+		if (!StringUtils.hasText(rawUserId) || !StringUtils.hasText(nickname)) {
+			throw new CustomException(ErrorCode.EVENT_USER_SIGNED_UP_FAILED);
+		}
+
+		UUID userId;
+		try {
+			userId = UUID.fromString(rawUserId);
+		} catch (IllegalArgumentException e) {
 			throw new CustomException(ErrorCode.EVENT_USER_SIGNED_UP_FAILED);
 		}
 

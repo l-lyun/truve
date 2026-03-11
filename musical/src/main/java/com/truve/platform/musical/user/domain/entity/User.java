@@ -1,5 +1,7 @@
 package com.truve.platform.musical.user.domain.entity;
 
+import java.util.UUID;
+
 import com.truve.platform.common.support.BaseEntity;
 
 import jakarta.persistence.Column;
@@ -17,13 +19,13 @@ import lombok.NoArgsConstructor;
 public class User extends BaseEntity {
 
 	@Column(nullable = false, unique = true)
-	private Long userId;
+	private UUID userId;
 
 	@Column(nullable = false)
 	private String nickname;
 
 	@Builder
-	public User(Long userId, String nickname) {
+	public User(UUID userId, String nickname) {
 		this.userId = userId;
 		this.nickname = nickname;
 	}

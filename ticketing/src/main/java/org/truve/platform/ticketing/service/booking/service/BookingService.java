@@ -2,6 +2,7 @@ package org.truve.platform.ticketing.service.booking.service;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -29,7 +30,7 @@ public class BookingService {
 	private final NumberGenerator numberGenerator;
 
 	@Transactional
-	public BookingResponse.Create create(Long userId, BookingRequest.Create request) {
+	public BookingResponse.Create create(UUID userId, BookingRequest.Create request) {
 		List<TicketingResponse.SeatInfo> seatInfos = ticketingClient.getSeatInfos(request.getSeatIds());
 
 		Reservation reservation = createReservation(userId, seatInfos);
@@ -40,7 +41,7 @@ public class BookingService {
 		return new BookingResponse.Create(reservation.getNumber());
 	}
 
-	private Reservation createReservation(Long userId, List<TicketingResponse.SeatInfo> seatInfos) {
+	private Reservation createReservation(UUID userId, List<TicketingResponse.SeatInfo> seatInfos) {
 		return Reservation.create(
 			userId,
 			numberGenerator.generateReservationNumber(),

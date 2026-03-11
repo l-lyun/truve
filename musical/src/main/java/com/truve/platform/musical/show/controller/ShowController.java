@@ -2,6 +2,7 @@ package com.truve.platform.musical.show.controller;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,7 +32,7 @@ public class ShowController {
 	@GetMapping("/{showId}")
 	public ApiResult<ShowResponse.Detail> getDetail(
 		@PathVariable Long showId,
-		@RequestHeader(name = "X-User-Id", required = false) Long userId
+		@RequestHeader(name = "X-User-Id", required = false) UUID userId
 	) {
 		return ApiResult.ok(showDetailService.getDetail(showId, userId));
 	}

@@ -20,7 +20,6 @@ import com.truve.platform.auth.service.service.EmailService;
 import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
 
-import tools.jackson.databind.ObjectMapper;
 
 @WebMvcTest(controllers = EmailController.class)
 @Import(SecurityConfig.class)
@@ -73,7 +72,8 @@ class EmailControllerTest {
 
 		// then
 		resultActions.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.code").value("CLIENT_ERROR"));
+			.andExpect(jsonPath("$.errorType").value("CLIENT_ERROR"))
+			.andExpect(jsonPath("$.code").value(ErrorCode.ALREADY_EXISTS_EMAIL.getCode()));
 	}
 
 	@Test
@@ -119,6 +119,7 @@ class EmailControllerTest {
 
 		// then
 		resultActions.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.code").value("CLIENT_ERROR"));
+			.andExpect(jsonPath("$.errorType").value("CLIENT_ERROR"))
+			.andExpect(jsonPath("$.code").value(ErrorCode.NOT_CORRECT_EMAIL_CODE.getCode()));
 	}
 }

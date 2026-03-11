@@ -2,6 +2,7 @@ package com.truve.platform.musical.show.service;
 
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,7 +37,7 @@ public class ShowDetailService {
 	private final S3Service s3Service;
 
 	@Transactional(readOnly = true)
-	public ShowResponse.Detail getDetail(Long showId, Long userId) {
+	public ShowResponse.Detail getDetail(Long showId, UUID userId) {
 		Show show = showRepository.findByIdOrThrow(showId);
 
 		List<ShowSchedule> schedules = showScheduleRepository.findSchedules(showId);
@@ -76,7 +77,7 @@ public class ShowDetailService {
 			.build();
 	}
 
-	private Set<Long> findLikedArtistIds(Long userId, List<ShowCasting> showCastings) {
+	private Set<Long> findLikedArtistIds(UUID userId, List<ShowCasting> showCastings) {
 		if (userId == null || showCastings.isEmpty()) {
 			return Set.of();
 		}

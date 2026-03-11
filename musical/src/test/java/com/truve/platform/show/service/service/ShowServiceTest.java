@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -70,6 +71,7 @@ class ShowServiceTest {
 	@DisplayName("공연 상세는 조회된 공연 전체 캐스팅을 응답한다.")
 	void 공연_상세_공연전체_캐스팅_응답_성공() {
 		Long showId = 1L;
+		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
 
 		Show show = org.mockito.Mockito.mock(Show.class);
 		Venue venue = org.mockito.Mockito.mock(Venue.class);
@@ -139,11 +141,11 @@ class ShowServiceTest {
 		when(showScheduleRepository.findSchedules(showId)).thenReturn(List.of(schedule1, schedule2));
 		when(showCastingRepository.findAllByShowId(showId))
 			.thenReturn(List.of(castOrder1, castOrder2, castOrderNull));
-		when(artistLikeRepository.findLikedArtistIds(7L, List.of(101L, 102L, 103L)))
+		when(artistLikeRepository.findLikedArtistIds(userId, List.of(101L, 102L, 103L)))
 			.thenReturn(List.of(101L));
 		when(showSeatGradeRepository.findSeatPrices(showId)).thenReturn(List.of(seat));
 
-		ShowResponse.Detail result = showDetailService.getDetail(showId, 7L);
+		ShowResponse.Detail result = showDetailService.getDetail(showId, userId);
 
 		assertEquals(2, result.getSchedules().size());
 		assertEquals("OPEN", result.getSchedules().get(0).getStatus());

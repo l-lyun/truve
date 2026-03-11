@@ -33,7 +33,7 @@ public class TicketingService {
 	private final ScheduledSeatRepository scheduledSeatRepository;
 	private final ShowScheduledRepository showScheduledRepository;
 
-	public TicketingResponse.Enter enter(Long showScheduleId, Long userId, String admissionToken) {
+	public TicketingResponse.Enter enter(Long showScheduleId, UUID userId, String admissionToken) {
 		AdmissionTokenClaimsDTO claims = admissionTokenService.parseAdmissionToken(admissionToken, showScheduleId, userId);
 
 		boolean consumedAdmissionToken = ticketingRedisRepository.consumeAdmissionToken(claims.getShowId(), claims.getUserId(), admissionToken);
@@ -49,7 +49,7 @@ public class TicketingService {
 		return new TicketingResponse.Enter(sessionToken, sessionTokenTtl);
 	}
 
-	public void heartbeat(Long showScheduleId, Long userId, String sessionToken) {
+	public void heartbeat(Long showScheduleId, UUID userId, String sessionToken) {
 
 		isCorrectSessionToken(showScheduleId, userId, sessionToken);
 
@@ -62,7 +62,7 @@ public class TicketingService {
 		Preconditions.validate(extended, ErrorCode.INVALID_SESSION_TOKEN);
 	}
 
-	public void holdSeat(Long showScheduleId, Long userId, String sessionToken, List<Long> seatIds) {
+	public void holdSeat(Long showScheduleId, UUID userId, String sessionToken, List<Long> seatIds) {
 		heartbeat(showScheduleId, userId, sessionToken);
 
 		Preconditions.validate(seatIds.size() <= 4, ErrorCode.EXCEEDED_MAX_TICKET_COUNT);
@@ -102,7 +102,7 @@ public class TicketingService {
 
 	}
 
-	public void cancelHoldSeat(Long showScheduleId, Long userId, String sessionToken,List<Long> seatIds) {
+	public void cancelHoldSeat(Long showScheduleId, UUID userId, String sessionToken,List<Long> seatIds) {
 
 		heartbeat(showScheduleId, userId, sessionToken);
 
@@ -113,7 +113,7 @@ public class TicketingService {
 		}
 	}
 
-	public TicketingResponse.Show getShow(Long userId, Long showScheduleId, String sessionToken) {
+	public TicketingResponse.Show getShow(UUID userId, Long showScheduleId, String sessionToken) {
 		heartbeat(showScheduleId, userId, sessionToken);
 
 		ShowScheduled schedule = showScheduledRepository.findById(showScheduleId)
@@ -122,7 +122,7 @@ public class TicketingService {
 		return TicketingResponse.Show.of(schedule.getTitle(), schedule.getTitle(), schedule.getStartAt());
 	}
 
-	public TicketingResponse.Seats getSeats(Long showScheduleId, Long userId, String sessionToken) {
+	public TicketingResponse.Seats getSeats(Long showScheduleId, UUID userId, String sessionToken) {
 		heartbeat(showScheduleId, userId, sessionToken);
 
 		showScheduledRepository.findById(showScheduleId).orElseThrow(
@@ -135,7 +135,7 @@ public class TicketingService {
 	}
 
 
-	private void isCorrectSessionToken(Long showScheduleId, Long userId, String sessionToken) {
+	private void isCorrectSessionToken(Long showScheduleId, UUID userId, String sessionToken) {
 		Preconditions.validate(sessionToken != null && !sessionToken.isBlank(), ErrorCode.INVALID_SESSION_TOKEN);
 
 

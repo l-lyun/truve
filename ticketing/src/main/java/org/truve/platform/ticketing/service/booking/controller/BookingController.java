@@ -9,6 +9,8 @@ import org.truve.platform.ticketing.service.booking.dto.BookingRequest;
 import org.truve.platform.ticketing.service.booking.dto.BookingResponse;
 import org.truve.platform.ticketing.service.booking.service.BookingService;
 
+import java.util.UUID;
+
 import com.truve.platform.common.response.ApiResult;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,7 +28,7 @@ public class BookingController {
 	@Operation(summary = "예매 내역 생성", description = "예매 및 티켓 정보를 저장합니다.")
 	@PostMapping
 	public ApiResult<BookingResponse.Create> create(
-		@RequestHeader(USER_ID_HEADER) Long userId,
+		@RequestHeader(USER_ID_HEADER) UUID userId,
 		@RequestBody @Valid BookingRequest.Create request) {
 		return ApiResult.ok(bookingService.create(userId, request));
 	}

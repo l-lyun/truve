@@ -22,18 +22,18 @@ import com.truve.platform.payment.service.dto.PaymentRequest;
 import com.truve.platform.payment.service.dto.PaymentResponse;
 import com.truve.platform.payment.service.service.PaymentService;
 
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(controllers = PaymentController.class)
 public class PaymentControllerTest {
 	@Autowired
 	private MockMvc mockMvc;
-	@Autowired
-	private ObjectMapper objectMapper;
 	@MockitoBean
 	private PaymentService paymentService;
 	@MockitoBean
 	private JpaMetamodelMappingContext jpaMetamodelMappingContext;
+
+	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	@Test
 	@DisplayName("결제 정보 조회에 성공하면 200 OK와 결제 정보를 응답한다.")

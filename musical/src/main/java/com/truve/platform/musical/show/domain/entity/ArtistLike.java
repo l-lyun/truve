@@ -9,6 +9,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import java.util.UUID;
 import lombok.Builder;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -29,14 +30,14 @@ import lombok.NoArgsConstructor;
 public class ArtistLike extends BaseEntity {
 
 	@Column(name = "user_id", nullable = false)
-	private Long userId;
+	private UUID userId;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "artist_id", nullable = false)
 	private Artist artist;
 
 	@Builder
-	private ArtistLike(Long userId, Artist artist) {
+	private ArtistLike(UUID userId, Artist artist) {
 		this.userId = userId;
 		this.artist = artist;
 	}

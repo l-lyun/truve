@@ -2,6 +2,7 @@ package com.truve.platform.musical.show.repository;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -18,11 +19,11 @@ public interface ArtistLikeRepository extends JpaRepository<ArtistLike, Long> {
 		and al.artist.id in :artistIds
 		""")
 	List<Long> findLikedArtistIds(
-		@Param("userId") Long userId,
+		@Param("userId") UUID userId,
 		@Param("artistIds") Collection<Long> artistIds
 	);
 
-	boolean existsByUserIdAndArtistId(Long userId, Long artistId);
+	boolean existsByUserIdAndArtistId(UUID userId, Long artistId);
 
-	void deleteByUserIdAndArtistId(Long userId, Long artistId);
+	void deleteByUserIdAndArtistId(UUID userId, Long artistId);
 }

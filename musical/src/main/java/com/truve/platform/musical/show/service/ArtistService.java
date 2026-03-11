@@ -4,6 +4,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.dao.DataIntegrityViolationException;
 
+import java.util.UUID;
+
 import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
 import com.truve.platform.common.support.Preconditions;
@@ -22,7 +24,7 @@ public class ArtistService {
 	private final ArtistLikeRepository artistLikeRepository;
 
 	@Transactional
-	public void likeArtist(Long artistId, Long userId) {
+	public void likeArtist(Long artistId, UUID userId) {
 		Preconditions.validate(artistRepository.existsById(artistId), ErrorCode.NOT_FOUND_ARTIST);
 		Preconditions.validate(
 			!artistLikeRepository.existsByUserIdAndArtistId(userId, artistId),
@@ -42,7 +44,7 @@ public class ArtistService {
 	}
 
 	@Transactional
-	public void unlikeArtist(Long artistId, Long userId) {
+	public void unlikeArtist(Long artistId, UUID userId) {
 		artistLikeRepository.deleteByUserIdAndArtistId(userId, artistId);
 	}
 }

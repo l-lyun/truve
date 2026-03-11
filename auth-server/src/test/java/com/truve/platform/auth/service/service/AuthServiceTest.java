@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
 
 import java.util.Date;
+import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -75,9 +76,9 @@ class AuthServiceTest {
 			given(passwordEncoder.matches(password, user.getPassword())).willReturn(true);
 			given(jwtService.getAccessExpiration()).willReturn(accessExp);
 			given(jwtService.getRefreshExpiration()).willReturn(refreshExp);
-			given(jwtService.issue(eq(user.getId()), eq(user.getEmail()), eq(UserRole.MEMBER), eq(accessExp), eq("access")))
+			given(jwtService.issue(eq(user.getPublicId()), eq(user.getId()), eq(user.getEmail()), eq(UserRole.MEMBER), eq(accessExp), eq("access")))
 				.willReturn("access-token");
-			given(jwtService.issue(eq(user.getId()), eq(user.getEmail()), eq(UserRole.MEMBER), eq(refreshExp), eq("refresh")))
+			given(jwtService.issue(eq(user.getPublicId()), eq(user.getId()), eq(user.getEmail()), eq(UserRole.MEMBER), eq(refreshExp), eq("refresh")))
 				.willReturn("refresh-token");
 
 			// when
@@ -86,7 +87,7 @@ class AuthServiceTest {
 			// then
 			assertThat(result.getFirst()).isEqualTo("access-token");
 			assertThat(result.getSecond()).isEqualTo("refresh-token");
-			verify(refreshTokenService).save(eq(user.getId()), eq("refresh-token"), anyLong());
+			verify(refreshTokenService).save(eq(user.getPublicId()), eq("refresh-token"), anyLong());
 		}
 
 		@Test
@@ -105,8 +106,8 @@ class AuthServiceTest {
 
 			// then
 			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.NOT_CORRECT_PASSWORD);
-			verify(jwtService, never()).issue(anyLong(), anyString(), any(), any(), anyString());
-			verify(refreshTokenService, never()).save(anyLong(), anyString(), anyLong());
+			verify(jwtService, never()).issue(any(), anyLong(), anyString(), any(), any(), anyString());
+			verify(refreshTokenService, never()).save(any(), anyString(), anyLong());
 		}
 	}
 
@@ -120,17 +121,18 @@ class AuthServiceTest {
 			// given
 			String refreshToken = "refresh-token";
 			String email = "user@test.com";
+
 			User user = createUser(1L, email, "encoded");
 			Date newAccessExp = new Date(System.currentTimeMillis() + 60_000L);
 			Date newRefreshExp = new Date(System.currentTimeMillis() + 120_000L);
 
-			given(jwtService.parseEmail(refreshToken)).willReturn(email);
-			given(userRepository.findByEmailOrThrow(email)).willReturn(user);
+			given(jwtService.parsePublicId(refreshToken)).willReturn(user.getPublicId());
+			given(userRepository.findByPublicId(user.getPublicId())).willReturn(java.util.Optional.of(user));
 			given(jwtService.getAccessExpiration()).willReturn(newAccessExp);
 			given(jwtService.getRefreshExpiration()).willReturn(newRefreshExp);
-			given(jwtService.issue(eq(user.getId()), eq(user.getEmail()), eq(UserRole.MEMBER), eq(newAccessExp), eq("access")))
+			given(jwtService.issue(eq(user.getPublicId()), eq(user.getId()), eq(user.getEmail()), eq(UserRole.MEMBER), eq(newAccessExp), eq("access")))
 				.willReturn("new-access-token");
-			given(jwtService.issue(eq(user.getId()), eq(user.getEmail()), eq(UserRole.MEMBER), eq(newRefreshExp), eq("refresh")))
+			given(jwtService.issue(eq(user.getPublicId()), eq(user.getId()), eq(user.getEmail()), eq(UserRole.MEMBER), eq(newRefreshExp), eq("refresh")))
 				.willReturn("new-refresh-token");
 
 			// when
@@ -139,7 +141,7 @@ class AuthServiceTest {
 			// then
 			assertThat(result.getFirst()).isEqualTo("new-access-token");
 			assertThat(result.getSecond()).isEqualTo("new-refresh-token");
-			verify(refreshTokenService).save(eq(user.getId()), eq("new-refresh-token"), anyLong());
+			verify(refreshTokenService).save(eq(user.getPublicId()), eq("new-refresh-token"), anyLong());
 		}
 
 		@Test
@@ -147,14 +149,14 @@ class AuthServiceTest {
 		void 재발급_실패_유효하지_않은_토큰() {
 			// given
 			String refreshToken = "invalid-refresh-token";
-			given(jwtService.parseEmail(refreshToken)).willThrow(new JwtException("invalid"));
+			given(jwtService.parsePublicId(refreshToken)).willThrow(new JwtException("invalid"));
 
 			// when
 			CustomException exception = assertThrows(CustomException.class, () -> authService.reissue(refreshToken));
 
 			// then
 			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_REFRESH_TOKEN);
-			verify(userRepository, never()).findByEmailOrThrow(anyString());
+			verify(userRepository, never()).findByPublicId(any());
 		}
 	}
 
@@ -166,19 +168,20 @@ class AuthServiceTest {
 		@DisplayName("액세스 토큰이 유효하고 만료 전이면 블랙리스트에 등록한다.")
 		void 로그아웃_성공() {
 			// given
-			Long userId = 1L;
 			String accessToken = "access-token";
 			String jti = "jti-123";
 			Date exp = new Date(System.currentTimeMillis() + 60_000L);
+			UUID userPublicId = UUID.randomUUID();
 
+			given(jwtService.parsePublicId(accessToken)).willReturn(userPublicId);
 			given(jwtService.parseJti(accessToken)).willReturn(jti);
 			given(jwtService.parseExpiration(accessToken)).willReturn(exp);
 
 			// when
-			authService.logout(userId, accessToken);
+			authService.logout(accessToken);
 
 			// then
-			verify(refreshTokenService).delete(userId);
+			verify(refreshTokenService).delete(userPublicId);
 			verify(accessTokenBlacklistService).save(eq(jti), anyLong());
 		}
 
@@ -186,19 +189,20 @@ class AuthServiceTest {
 		@DisplayName("액세스 토큰이 이미 만료됐으면 블랙리스트 저장은 생략한다.")
 		void 로그아웃_성공_만료된_토큰() {
 			// given
-			Long userId = 1L;
 			String accessToken = "expired-access-token";
 			String jti = "jti-123";
 			Date expired = new Date(System.currentTimeMillis() - 1_000L);
+			UUID userPublicId = UUID.randomUUID();
 
+			given(jwtService.parsePublicId(accessToken)).willReturn(userPublicId);
 			given(jwtService.parseJti(accessToken)).willReturn(jti);
 			given(jwtService.parseExpiration(accessToken)).willReturn(expired);
 
 			// when
-			authService.logout(userId, accessToken);
+			authService.logout(accessToken);
 
 			// then
-			verify(refreshTokenService).delete(userId);
+			verify(refreshTokenService).delete(userPublicId);
 			verify(accessTokenBlacklistService, never()).save(anyString(), anyLong());
 		}
 
@@ -206,17 +210,16 @@ class AuthServiceTest {
 		@DisplayName("액세스 토큰 파싱에 실패하면 예외가 발생한다.")
 		void 로그아웃_실패_유효하지_않은_토큰() {
 			// given
-			Long userId = 1L;
 			String accessToken = "invalid-access-token";
 
-			given(jwtService.parseJti(accessToken)).willThrow(new JwtException("invalid"));
+			given(jwtService.parsePublicId(accessToken)).willThrow(new JwtException("invalid"));
 
 			// when
-			CustomException exception = assertThrows(CustomException.class, () -> authService.logout(userId, accessToken));
+			CustomException exception = assertThrows(CustomException.class, () -> authService.logout(accessToken));
 
 			// then
 			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_REFRESH_TOKEN);
-			verify(refreshTokenService).delete(userId);
+			verify(refreshTokenService, never()).delete(any());
 			verify(accessTokenBlacklistService, never()).save(anyString(), anyLong());
 		}
 	}
@@ -248,14 +251,17 @@ class AuthServiceTest {
 			// then
 			ArgumentCaptor<User> savedUserCaptor = ArgumentCaptor.forClass(User.class);
 			ArgumentCaptor<Object> eventCaptor = ArgumentCaptor.forClass(Object.class);
+			ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
 
 			verify(userRepository).save(savedUserCaptor.capture());
 			verify(emailVerificationRepository).deleteVerifiedEmail(email);
-			verify(userSignedUpEventPublisher).publish(eq("1"), eventCaptor.capture());
+			verify(userSignedUpEventPublisher).publish(keyCaptor.capture(), eventCaptor.capture());
 
 			assertThat(savedUserCaptor.getValue().getEmail()).isEqualTo(email);
 			assertThat(savedUserCaptor.getValue().getPassword()).isEqualTo("encoded");
 			assertThat(savedUserCaptor.getValue().getRole()).isEqualTo(UserRole.MEMBER);
+			assertThat(savedUserCaptor.getValue().getPublicId()).isInstanceOf(UUID.class);
+			assertThat(keyCaptor.getValue()).isEqualTo(savedUserCaptor.getValue().getPublicId().toString());
 			assertThat(eventCaptor.getValue()).isInstanceOf(UserSignedUpEvent.class);
 		}
 

@@ -1,5 +1,7 @@
 package com.truve.platform.auth.service.domain.entity;
 
+import java.util.UUID;
+
 import com.truve.platform.common.constants.AuthProvider;
 import com.truve.platform.common.constants.UserRole;
 import com.truve.platform.common.support.BaseEntity;
@@ -20,6 +22,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "users")
 public class User extends BaseEntity {
+
+	@Column(nullable = false, unique = true, updatable = false)
+	private UUID publicId;
 
 	@Email
 	@Column(nullable = false, unique = true)
@@ -44,8 +49,9 @@ public class User extends BaseEntity {
 
 
 	@Builder
-	private User(String email, String password, AuthProvider provider,
+	private User(UUID publicId, String email, String password, AuthProvider provider,
 		UserRole role,  String oAuthUserId, String oAuthAccessToken, String oAuthRefreshToken) {
+		this.publicId = publicId;
 		this.email = email;
 		this.password = password;
 		this.provider = provider;
@@ -57,6 +63,7 @@ public class User extends BaseEntity {
 
 	public static User createLocalUser(String email, String password) {
 		return User.builder()
+			.publicId(UUID.randomUUID())
 			.email(email)
 			.password(password)
 			.provider(AuthProvider.LOCAL)
@@ -72,6 +79,7 @@ public class User extends BaseEntity {
 		String oAuthRefreshToken
 	) {
 		return User.builder()
+			.publicId(UUID.randomUUID())
 			.email(email)
 			.provider(provider)
 			.role(UserRole.MEMBER)

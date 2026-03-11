@@ -9,6 +9,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -54,14 +55,14 @@ class TicketingServiceTest {
 	private TicketingService ticketingService;
 
 	private Long showScheduleId;
-	private Long userId;
+	private UUID userId;
 	private String admissionToken;
 	private String sessionToken;
 
 	@BeforeEach
 	void setUp() {
 		showScheduleId = 1L;
-		userId = 2L;
+		userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
 		admissionToken = "admission-token";
 		sessionToken = "session-token";
 	}
@@ -162,7 +163,7 @@ class TicketingServiceTest {
 		void 하트비트_유저불일치() {
 			// given
 			given(ticketingRedisRepository.getSessionTokenValue(sessionToken))
-				.willReturn(SessionTicketValueDTO.of(999L, showScheduleId));
+				.willReturn(SessionTicketValueDTO.of(UUID.fromString("22222222-2222-2222-2222-222222222222"), showScheduleId));
 
 			// when
 			CustomException exception = assertThrows(

@@ -12,6 +12,8 @@ import org.truve.platform.ticketing.service.ticketing.dto.TicketingRequest;
 import org.truve.platform.ticketing.service.ticketing.dto.TicketingResponse;
 import org.truve.platform.ticketing.service.ticketing.service.TicketingService;
 
+import java.util.UUID;
+
 import com.truve.platform.common.response.ApiResult;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -47,7 +49,7 @@ public class TicketingController {
 	public ApiResult<TicketingResponse.Enter> enter(
 		@PathVariable Long showScheduleId,
 		@Parameter(hidden = true)
-		@RequestHeader(value = USER_ID_HEADER) Long userId,
+		@RequestHeader(value = USER_ID_HEADER) UUID userId,
 		@RequestHeader(value = ADMISSION_HEADER, required = false) String admissionToken
 	) {
 		var response = ticketingService.enter(showScheduleId, userId, admissionToken);
@@ -69,7 +71,7 @@ public class TicketingController {
 	public ApiResult<Void> heartbeat(
 		@PathVariable Long showScheduleId,
 		@Parameter(hidden = true)
-		@RequestHeader(value = USER_ID_HEADER) Long userId,
+		@RequestHeader(value = USER_ID_HEADER) UUID userId,
 		@RequestHeader(value = SESSION_HEADER) String sessionToken
 	) {
 		ticketingService.heartbeat(showScheduleId, userId, sessionToken);
@@ -91,7 +93,7 @@ public class TicketingController {
 	public ApiResult<TicketingResponse.Seats> getSeats(
 		@PathVariable Long showScheduleId,
 		@Parameter(hidden = true)
-		@RequestHeader(value = USER_ID_HEADER) Long userId,
+		@RequestHeader(value = USER_ID_HEADER) UUID userId,
 		@RequestHeader(value = SESSION_HEADER) String sessionToken
 	) {
 		var response = ticketingService.getSeats(showScheduleId, userId, sessionToken);
@@ -113,7 +115,7 @@ public class TicketingController {
 	public ApiResult<Void> holdSeat(
 		@PathVariable Long showScheduleId,
 		@Parameter(hidden = true)
-		@RequestHeader(value = USER_ID_HEADER) Long userId,
+		@RequestHeader(value = USER_ID_HEADER) UUID userId,
 		@RequestHeader(value = SESSION_HEADER) String sessionToken,
 		@RequestBody @Valid TicketingRequest.HoldSeat request
 	) {
@@ -135,7 +137,7 @@ public class TicketingController {
 	@GetMapping("/shows/{showScheduleId}/seats")
 	public ApiResult<TicketingResponse.Show> getShow(
 		@Parameter(hidden = true)
-		@RequestHeader(value = USER_ID_HEADER) Long userId,
+		@RequestHeader(value = USER_ID_HEADER) UUID userId,
 		@RequestHeader(value = SESSION_HEADER) String sessionToken,
 		@PathVariable Long showScheduleId
 	) {
@@ -159,7 +161,7 @@ public class TicketingController {
 	public ApiResult<Void> deleteHoldSeat(
 		@PathVariable Long showScheduleId,
 		@Parameter(hidden = true)
-		@RequestHeader(value = USER_ID_HEADER) Long userId,
+		@RequestHeader(value = USER_ID_HEADER) UUID userId,
 		@RequestHeader(value = SESSION_HEADER) String sessionToken,
 		@RequestBody @Valid TicketingRequest.DeleteHoldSeat request
 	) {

@@ -1,6 +1,7 @@
 package com.truve.platform.musical.review.domain.entity;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import com.truve.platform.common.support.BaseEntity;
 
@@ -22,7 +23,7 @@ public class Review extends BaseEntity {
 	private Long showId;
 
 	@Column(nullable = false)
-	private Long userId;
+	private UUID userId;
 
 	@Column(nullable = false)
 	private String content;
@@ -37,7 +38,7 @@ public class Review extends BaseEntity {
 	private LocalDateTime deletedAt;
 
 	@Builder
-	public Review(Long showId, Long userId, String content, Boolean isPositive, LocalDateTime watchedAt) {
+	public Review(Long showId, UUID userId, String content, Boolean isPositive, LocalDateTime watchedAt) {
 		this.showId = showId;
 		this.userId = userId;
 		this.content = content;

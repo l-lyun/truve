@@ -3,6 +3,8 @@ package com.truve.platform.auth.service.domain.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
+import java.util.UUID;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -30,6 +32,7 @@ class UserTest {
 
 			// then
 			assertAll(
+				() -> assertThat(user.getPublicId()).isInstanceOf(UUID.class),
 				() -> assertThat(user.getEmail()).isEqualTo(EMAIL),
 				() -> assertThat(user.getPassword()).isEqualTo(PASSWORD),
 				() -> assertThat(user.getProvider()).isEqualTo(AuthProvider.LOCAL),
@@ -59,6 +62,7 @@ class UserTest {
 
 			// then
 			assertAll(
+				() -> assertThat(user.getPublicId()).isInstanceOf(UUID.class),
 				() -> assertThat(user.getEmail()).isEqualTo(EMAIL),
 				() -> assertThat(user.getPassword()).isNull(),
 				() -> assertThat(user.getProvider()).isEqualTo(AuthProvider.KAKAO),

@@ -23,7 +23,7 @@ import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
 
 import jakarta.servlet.http.HttpServletResponse;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(controllers = AuthController.class)
 @Import(SecurityConfig.class)
@@ -80,7 +80,8 @@ class AuthControllerTest {
 
 		// then
 		resultActions.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.code").value("CLIENT_ERROR"));
+			.andExpect(jsonPath("$.errorType").value("CLIENT_ERROR"))
+			.andExpect(jsonPath("$.code").value(ErrorCode.ALREADY_EXISTS_EMAIL.getCode()));
 	}
 
 	@Test
@@ -130,13 +131,12 @@ class AuthControllerTest {
 	void 로그아웃_성공() throws Exception {
 		// when
 		ResultActions resultActions = mockMvc.perform(delete("/api/auth/logout")
-			.header("X-User-Id", "1")
 			.header("X-Token", "access-token"));
 
 		// then
 		resultActions.andExpect(status().isOk())
 			.andExpect(jsonPath("$.code").value("ok"));
-		verify(authService).logout(1L, "access-token");
+		verify(authService).logout("access-token");
 		verify(authCookieManager).clearRefreshToken(any(HttpServletResponse.class));
 	}
 }

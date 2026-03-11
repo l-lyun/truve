@@ -1,5 +1,7 @@
 package org.truve.platform.ticketing.service.global.jwt;
 
+import java.util.UUID;
+
 import org.springframework.stereotype.Component;
 import org.truve.platform.ticketing.service.ticketing.dto.AdmissionTokenClaimsDTO;
 
@@ -23,14 +25,14 @@ public class AdmissionTokenService {
 
 	private final JwtProperties jwtProperties;
 
-	public AdmissionTokenClaimsDTO parseAdmissionToken(String token, Long expectedShowId, Long expectedUserId) {
+	public AdmissionTokenClaimsDTO parseAdmissionToken(String token, Long expectedShowId, UUID expectedUserId) {
 		Preconditions.validate(!((token == null) || token.isEmpty()), ErrorCode.INVALID_ADMISSION_TOKEN);
 
 		Claims claims = parseClaims(token);
 
 		String tokenType = (String) claims.get(TOKEN_TYPE_KEY);
 		Long showId = Long.parseLong((String) claims.get(SHOW_ID_KEY));
-		Long userId = Long.parseLong(claims.getSubject());
+		UUID userId = UUID.fromString(claims.getSubject());
 
 		Preconditions.validate(ADMISSION_TOKEN_TYPE.equals(tokenType), ErrorCode.INVALID_ADMISSION_TOKEN);
 		Preconditions.validate(userId.equals(expectedUserId), ErrorCode.INVALID_ADMISSION_TOKEN);

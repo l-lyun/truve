@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,7 +29,8 @@ import com.truve.platform.common.exception.ApiAdvice;
 import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
 
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 @WebMvcTest(controllers = TicketingController.class)
 @Import(ApiAdvice.class)
@@ -40,8 +42,6 @@ class TicketingControllerTest {
 
 	@Autowired
 	private MockMvc mockMvc;
-	@Autowired
-	private ObjectMapper objectMapper;
 
 	@MockitoBean
 	private TicketingService ticketingService;
@@ -50,12 +50,14 @@ class TicketingControllerTest {
 	@MockitoBean
 	private ApplicationEventPublisher applicationEventPublisher;
 
+	private final ObjectMapper objectMapper = new ObjectMapper();
+
 	@Test
 	@DisplayName("티켓팅 입장 성공")
 	void 티켓팅_입장() throws Exception {
 		// given
 		Long showScheduleId = 1L;
-		Long userId = 2L;
+		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
 		TicketingResponse.Enter response = new TicketingResponse.Enter("session-token", 300000L);
 
 		given(ticketingService.enter(showScheduleId, userId, "admission-token")).willReturn(response);
@@ -78,14 +80,14 @@ class TicketingControllerTest {
 	void 세션_하트비트() throws Exception {
 		// when
 		ResultActions resultActions = mockMvc.perform(post("/api/ticketing/{showScheduleId}/heartbeat", 1L)
-			.header(USER_ID_HEADER, 2L)
+			.header(USER_ID_HEADER, "11111111-1111-1111-1111-111111111111")
 			.header(SESSION_HEADER, "session-token"));
 
 		// then
 		resultActions.andExpect(status().isOk())
 			.andExpect(jsonPath("$.code").value("ok"))
 			.andExpect(jsonPath("$.message").value("성공"));
-		verify(ticketingService).heartbeat(1L, 2L, "session-token");
+		verify(ticketingService).heartbeat(1L, UUID.fromString("11111111-1111-1111-1111-111111111111"), "session-token");
 	}
 
 	@Test
@@ -110,11 +112,12 @@ class TicketingControllerTest {
 			)
 		));
 
-		given(ticketingService.getSeats(1L, 2L, "session-token")).willReturn(response);
+		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+		given(ticketingService.getSeats(1L, userId, "session-token")).willReturn(response);
 
 		// when
 		ResultActions resultActions = mockMvc.perform(get("/api/ticketing/{showScheduleId}", 1L)
-			.header(USER_ID_HEADER, 2L)
+			.header(USER_ID_HEADER, userId)
 			.header(SESSION_HEADER, "session-token"));
 
 		// then
@@ -122,7 +125,7 @@ class TicketingControllerTest {
 			.andExpect(jsonPath("$.data.sections[0].sectionId").value(1L))
 			.andExpect(jsonPath("$.data.sections[0].rows[0].row").value("A"))
 			.andExpect(jsonPath("$.data.sections[0].rows[0].seats[1].status").value("SOLD"));
-		verify(ticketingService).getSeats(1L, 2L, "session-token");
+		verify(ticketingService).getSeats(1L, userId, "session-token");
 	}
 
 	@Test
@@ -134,14 +137,14 @@ class TicketingControllerTest {
 		// when
 		ResultActions resultActions = mockMvc.perform(post("/api/ticketing/{showScheduleId}/hold/seat", 1L)
 			.contentType(MediaType.APPLICATION_JSON)
-			.header(USER_ID_HEADER, 2L)
+			.header(USER_ID_HEADER, "11111111-1111-1111-1111-111111111111")
 			.header(SESSION_HEADER, "session-token")
 			.content(objectMapper.writeValueAsString(request)));
 
 		// then
 		resultActions.andExpect(status().isOk())
 			.andExpect(jsonPath("$.code").value("ok"));
-		verify(ticketingService).holdSeat(1L, 2L, "session-token", List.of(10L, 11L));
+		verify(ticketingService).holdSeat(1L, UUID.fromString("11111111-1111-1111-1111-111111111111"), "session-token", List.of(10L, 11L));
 	}
 
 	@Test
@@ -153,14 +156,14 @@ class TicketingControllerTest {
 		// when
 		ResultActions resultActions = mockMvc.perform(delete("/api/ticketing/{showScheduleId}/hold/seat", 1L)
 			.contentType(MediaType.APPLICATION_JSON)
-			.header(USER_ID_HEADER, 2L)
+			.header(USER_ID_HEADER, "11111111-1111-1111-1111-111111111111")
 			.header(SESSION_HEADER, "session-token")
 			.content(objectMapper.writeValueAsString(request)));
 
 		// then
 		resultActions.andExpect(status().isOk())
 			.andExpect(jsonPath("$.code").value("ok"));
-		verify(ticketingService).cancelHoldSeat(1L, 2L, "session-token", List.of(10L, 11L));
+		verify(ticketingService).cancelHoldSeat(1L, UUID.fromString("11111111-1111-1111-1111-111111111111"), "session-token", List.of(10L, 11L));
 	}
 
 	@Test
@@ -169,12 +172,13 @@ class TicketingControllerTest {
 		// given
 		LocalDateTime startAt = LocalDateTime.of(2026, 3, 9, 20, 0);
 		TicketingResponse.Show response = new TicketingResponse.Show("지킬앤하이드", "블루스퀘어", startAt);
+		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
 
-		given(ticketingService.getShow(2L, 1L, "session-token")).willReturn(response);
+		given(ticketingService.getShow(userId, 1L, "session-token")).willReturn(response);
 
 		// when
 		ResultActions resultActions = mockMvc.perform(get("/api/ticketing/shows/{showScheduleId}/seats", 1L)
-			.header(USER_ID_HEADER, 2L)
+			.header(USER_ID_HEADER, userId)
 			.header(SESSION_HEADER, "session-token"));
 
 		// then
@@ -182,19 +186,19 @@ class TicketingControllerTest {
 			.andExpect(jsonPath("$.data.title").value("지킬앤하이드"))
 			.andExpect(jsonPath("$.data.venueName").value("블루스퀘어"))
 			.andExpect(jsonPath("$.data.startAt").value("2026-03-09T20:00:00"));
-		verify(ticketingService).getShow(2L, 1L, "session-token");
+		verify(ticketingService).getShow(userId, 1L, "session-token");
 	}
 
 	@Test
 	@DisplayName("서비스에서 예외가 발생 에러")
 	void 컨트롤러_예외응답() throws Exception {
 		// given
-		given(ticketingService.enter(1L, 2L, "bad-token"))
+		given(ticketingService.enter(1L, UUID.fromString("11111111-1111-1111-1111-111111111111"), "bad-token"))
 			.willThrow(new CustomException(ErrorCode.INVALID_ADMISSION_TOKEN));
 
 		// when
 		ResultActions resultActions = mockMvc.perform(post("/api/ticketing/{showScheduleId}/enter", 1L)
-			.header(USER_ID_HEADER, 2L)
+			.header(USER_ID_HEADER, "11111111-1111-1111-1111-111111111111")
 			.header(ADMISSION_HEADER, "bad-token"));
 
 		// then
@@ -212,14 +216,15 @@ class TicketingControllerTest {
 		// when
 		ResultActions resultActions = mockMvc.perform(post("/api/ticketing/{showScheduleId}/hold/seat", 1L)
 			.contentType(MediaType.APPLICATION_JSON)
-			.header(USER_ID_HEADER, 2L)
+			.header(USER_ID_HEADER, "11111111-1111-1111-1111-111111111111")
 			.header(SESSION_HEADER, "session-token")
 			.content(objectMapper.writeValueAsString(request)));
 
 		// then
 		resultActions.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.code").value("C02"));
-		verify(ticketingService, never()).holdSeat(anyLong(), anyLong(), anyString(), anyList());
+		verify(ticketingService, never())
+			.holdSeat(anyLong(), any(UUID.class), anyString(), anyList());
 	}
 
 	@Test
@@ -231,13 +236,15 @@ class TicketingControllerTest {
 		// when
 		ResultActions resultActions = mockMvc.perform(delete("/api/ticketing/{showScheduleId}/hold/seat", 1L)
 			.contentType(MediaType.APPLICATION_JSON)
-			.header(USER_ID_HEADER, 2L)
+			.header(USER_ID_HEADER, "11111111-1111-1111-1111-111111111111")
 			.header(SESSION_HEADER, "session-token")
 			.content(objectMapper.writeValueAsString(request)));
 
 		// then
 		resultActions.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.code").value("C02"));
-		verify(ticketingService, never()).cancelHoldSeat(anyLong(), anyLong(), anyString(), anyList());
+
+		verify(ticketingService, never())
+			.cancelHoldSeat(anyLong(), any(UUID.class), anyString(), anyList());
 	}
 }

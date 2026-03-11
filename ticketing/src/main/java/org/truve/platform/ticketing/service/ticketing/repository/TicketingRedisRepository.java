@@ -1,6 +1,7 @@
 package org.truve.platform.ticketing.service.ticketing.repository;
 
 import java.time.Duration;
+import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
 import org.truve.platform.ticketing.service.ticketing.dto.SessionTicketValueDTO;
@@ -19,11 +20,11 @@ public class TicketingRedisRepository {
 
 	private final RedisSupport redisSupport;
 
-	public boolean consumeAdmissionToken(Long showId, Long userId, String admissionToken) {
+	public boolean consumeAdmissionToken(Long showId, UUID userId, String admissionToken) {
 		return redisSupport.consumeIfEquals(readyUserKey(showId, userId), admissionToken);
 	}
 
-	public void saveSessionToken(String sessionToken, Long userId, Long showId, Duration ttl) {
+	public void saveSessionToken(String sessionToken, UUID userId, Long showId, Duration ttl) {
 		SessionTicketValueDTO value = SessionTicketValueDTO.of(userId, showId);
 		redisSupport.setJsonValueWithTtl(sessionTokenKey(sessionToken), value, ttl);
 	}
@@ -74,7 +75,7 @@ public class TicketingRedisRepository {
 		return TICKET_ACTIVE_SHOW_USER_PREFIX + showId;
 	}
 
-	private String readyUserKey(Long showId, Long userId) {
+	private String readyUserKey(Long showId, UUID userId) {
 		return READY_KEY_PREFIX + showId + ":" + userId;
 	}
 

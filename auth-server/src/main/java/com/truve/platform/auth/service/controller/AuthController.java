@@ -115,12 +115,11 @@ public class AuthController {
 	})
 	@DeleteMapping("/logout")
 	public ApiResult<Void> logout(
-		@RequestHeader("X-User-Id") String userId,
 		@RequestHeader("X-Token") String accessToken,
 		HttpServletResponse httpServletResponse
 	) {
 
-		authService.logout(Long.parseLong(userId), accessToken);
+		authService.logout(accessToken);
 
 		authCookieManager.clearRefreshToken(httpServletResponse);
 

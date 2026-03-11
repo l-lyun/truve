@@ -1,6 +1,7 @@
 package com.truve.platform.auth.service.service;
 
 import java.time.Duration;
+import java.util.UUID;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -14,21 +15,21 @@ public class RefreshTokenService {
 	private final StringRedisTemplate redisTemplate;
 	private static final String PREFIX = "RT:";
 
-	private String key(Long userId) {
-		return PREFIX + userId.toString();
+	private String key(UUID userPublicId) {
+		return PREFIX + userPublicId;
 	}
 
-	public void save(Long userId, String refreshToken, long expireMs) {
+	public void save(UUID userPublicId, String refreshToken, long expireMs) {
 		redisTemplate.opsForValue()
-			.set(key(userId), refreshToken, Duration.ofMillis(expireMs));
+			.set(key(userPublicId), refreshToken, Duration.ofMillis(expireMs));
 	}
 
-	public boolean isSame(Long userId, String refreshToken) {
-		String stored = redisTemplate.opsForValue().get(key(userId));
+	public boolean isSame(UUID userPublicId, String refreshToken) {
+		String stored = redisTemplate.opsForValue().get(key(userPublicId));
 		return refreshToken.equals(stored);
 	}
 
-	public void delete(Long userId) {
-		redisTemplate.delete(key(userId));
+	public void delete(UUID userPublicId) {
+		redisTemplate.delete(key(userPublicId));
 	}
 }

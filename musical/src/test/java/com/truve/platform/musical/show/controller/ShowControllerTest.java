@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.List;
+import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -105,7 +106,7 @@ class ShowControllerTest {
 			))
 			.build();
 
-		given(showDetailService.getDetail(anyLong(), nullable(Long.class))).willReturn(response);
+		given(showDetailService.getDetail(anyLong(), nullable(UUID.class))).willReturn(response);
 
 		mockMvc.perform(get("/api/shows/{showId}", 1L))
 			.andExpect(status().isOk())
@@ -142,7 +143,7 @@ class ShowControllerTest {
 			.seatGrades(List.of())
 			.build();
 
-		given(showDetailService.getDetail(org.mockito.ArgumentMatchers.eq(10L), nullable(Long.class))).willReturn(response);
+		given(showDetailService.getDetail(org.mockito.ArgumentMatchers.eq(10L), nullable(UUID.class))).willReturn(response);
 
 		mockMvc.perform(get("/api/shows/{showId}", 10L))
 			.andExpect(status().isOk())
@@ -157,7 +158,7 @@ class ShowControllerTest {
 	@DisplayName("존재하지 않는 공연을 조회하면 404를 응답한다.")
 	void 뮤지컬_상세_조회_실패() throws Exception {
 		willThrow(new CustomException(ErrorCode.NOT_FOUND_SHOW))
-			.given(showDetailService).getDetail(org.mockito.ArgumentMatchers.eq(999L), nullable(Long.class));
+			.given(showDetailService).getDetail(org.mockito.ArgumentMatchers.eq(999L), nullable(UUID.class));
 
 		mockMvc.perform(get("/api/shows/{showId}", 999L))
 			.andExpect(status().isNotFound())

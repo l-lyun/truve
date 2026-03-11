@@ -59,13 +59,15 @@ public class KakaoOAuthService {
 		var accessExp = jwtService.getAccessExpiration();
 		var refreshExp = jwtService.getRefreshExpiration();
 
-		String accessToken = jwtService.issue(user.getId(), user.getEmail(), user.getRole(), accessExp, TokenType.ACCESS_TOKEN.getType());
+		String accessToken = jwtService.issue(
+			user.getPublicId(), user.getId(), user.getEmail(), user.getRole(), accessExp, TokenType.ACCESS_TOKEN.getType()
+		);
 
-		String refreshToken = jwtService.issue(user.getId(), user.getEmail(), user.getRole(), refreshExp,
+		String refreshToken = jwtService.issue(user.getPublicId(), user.getId(), user.getEmail(), user.getRole(), refreshExp,
 			TokenType.REFRESH_TOKEN.getType());
 
 		long refreshTtlMs = refreshExp.getTime() - System.currentTimeMillis();
-		refreshTokenService.save(user.getId(), refreshToken, refreshTtlMs);
+		refreshTokenService.save(user.getPublicId(), refreshToken, refreshTtlMs);
 
 		return Pair.of(accessToken, refreshToken);
 	}

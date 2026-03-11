@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.truve.platform.auth.service.event.EmailEventService;
 import com.truve.platform.auth.service.repository.EmailVerificationRepository;
 import com.truve.platform.auth.service.repository.UserRepository;
 import com.truve.platform.common.exception.CustomException;
@@ -37,6 +38,8 @@ class EmailServiceTest {
 	private JavaMailSender mailSender;
 	@Mock
 	private VerificationCodeGenerateUtils verificationCodeGenerateUtils;
+	@Mock
+	private EmailEventService emailEventService;
 
 	@InjectMocks
 	private EmailService emailService;
@@ -64,6 +67,7 @@ class EmailServiceTest {
 			// then
 			verify(emailVerificationRepository).registerEmailVerificationCode(email, code);
 			verify(mailSender).send(mimeMessage);
+			verify(emailEventService).sendEmail(email);
 		}
 
 		@Test

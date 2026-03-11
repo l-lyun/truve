@@ -15,12 +15,15 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class JwtService {
 
+	private static final String USER_PUBLIC_ID_CLAIM = "user_public_id";
+
 	private final JwtProperties jwtProperties;
 
-	public String issue(Long userId, String email, UserRole role, Date expiration, String tokenType) {
+	public String issue(UUID userPublicId, Long userId, String email, UserRole role, Date expiration, String tokenType) {
 		return Jwts.builder()
 			.issuer("truve-api")
 			.subject(email)
+			.claim(USER_PUBLIC_ID_CLAIM, userPublicId.toString())
 			.claim("user_id", userId)
 			.claim("role", role.name())
 			.claim("token_type", tokenType)
@@ -58,6 +61,17 @@ public class JwtService {
 			.parseSignedClaims(token)
 			.getPayload()
 			.getSubject();
+	}
+
+	public UUID parsePublicId(String token) {
+		String publicId = Jwts.parser()
+			.verifyWith(jwtProperties.getSecret())
+			.build()
+			.parseSignedClaims(token)
+			.getPayload()
+			.get(USER_PUBLIC_ID_CLAIM, String.class);
+
+		return UUID.fromString(publicId);
 	}
 
 	// public Role parseRole(String token) {

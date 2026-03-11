@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,10 +15,11 @@ class ReviewTest {
 	@DisplayName("Review를 생성한다.")
 	void 리뷰_생성_성공() {
 		LocalDateTime watchedAt = LocalDateTime.of(2026, 3, 11, 0, 0);
+		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
 
 		Review review = Review.builder()
 			.showId(10L)
-			.userId(20L)
+			.userId(userId)
 			.content("테스트")
 			.isPositive(true)
 			.watchedAt(watchedAt)
@@ -25,7 +27,7 @@ class ReviewTest {
 
 		assertAll(
 			() -> assertThat(review.getShowId()).isEqualTo(10L),
-			() -> assertThat(review.getUserId()).isEqualTo(20L),
+			() -> assertThat(review.getUserId()).isEqualTo(userId),
 			() -> assertThat(review.getContent()).isEqualTo("테스트"),
 			() -> assertThat(review.getIsPositive()).isTrue(),
 			() -> assertThat(review.getWatchedAt()).isEqualTo(watchedAt),

@@ -15,6 +15,8 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.UUID;
+
 import com.truve.platform.common.exception.ApiAdvice;
 import com.truve.platform.musical.MusicalApplication;
 import com.truve.platform.musical.show.controller.ArtistLikeController;
@@ -35,10 +37,11 @@ class ArtistLikeControllerTest {
 	@Test
 	@DisplayName("배우 좋아요 등록에 성공하면 200 OK를 응답한다.")
 	void 배우_좋아요_등록_성공() throws Exception {
-		willDoNothing().given(artistService).likeArtist(101L, 7L);
+		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+		willDoNothing().given(artistService).likeArtist(101L, userId);
 
 		mockMvc.perform(post("/api/artists/{artistId}/likes", 101L)
-				.header("X-User-Id", "7"))
+				.header("X-User-Id", userId))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.code").value("ok"));
 	}
@@ -46,10 +49,11 @@ class ArtistLikeControllerTest {
 	@Test
 	@DisplayName("배우 좋아요 취소에 성공하면 200 OK를 응답한다.")
 	void 배우_좋아요_취소_성공() throws Exception {
-		willDoNothing().given(artistService).unlikeArtist(101L, 7L);
+		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+		willDoNothing().given(artistService).unlikeArtist(101L, userId);
 
 		mockMvc.perform(delete("/api/artists/{artistId}/likes", 101L)
-				.header("X-User-Id", "7"))
+				.header("X-User-Id", userId))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.code").value("ok"));
 	}

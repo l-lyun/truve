@@ -2,11 +2,11 @@ package com.truve.platform.apigateway.authentication;
 
 import javax.crypto.SecretKey;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -46,11 +46,11 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory {
 				return exchange.getResponse().setComplete();
 			}
 
-			Long userId = claims.get("user_id", Long.class);
+			String userId = claims.get("user_public_id", String.class);
 			String role = claims.get("role", String.class);
 			String tokenType = claims.get("token_type", String.class);
 
-			if (!"access".equals(tokenType)) {
+			if (!"access".equals(tokenType) || !StringUtils.hasText(tokenType)) {
 				exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
 				return exchange.getResponse().setComplete();
 			}
@@ -60,7 +60,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory {
 					.request(
 						exchange.getRequest()
 							.mutate()
-							.header("X-User-Id", userId.toString())
+							.header("X-User-Id", userId)
 							.header("X-User-Role", role)
 							.header("X-Token", token)
 							.build()

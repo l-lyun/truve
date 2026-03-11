@@ -1,5 +1,7 @@
 package com.truve.platform.auth.service.service;
 
+import java.util.UUID;
+
 import org.springframework.data.util.Pair;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -39,50 +41,53 @@ public class AuthService {
 		var accessExp = jwtService.getAccessExpiration();
 		var refreshExp = jwtService.getRefreshExpiration();
 
-		String accessToken = jwtService.issue(user.getId(), user.getEmail(), user.getRole(), accessExp, TokenType.ACCESS_TOKEN.getType());
+		String accessToken = jwtService.issue(
+			user.getPublicId(), user.getId(), user.getEmail(), user.getRole(), accessExp, TokenType.ACCESS_TOKEN.getType()
+		);
 
-		String refreshToken = jwtService.issue(user.getId(), user.getEmail(), user.getRole(), refreshExp,
+		String refreshToken = jwtService.issue(user.getPublicId(), user.getId(), user.getEmail(), user.getRole(), refreshExp,
 			TokenType.REFRESH_TOKEN.getType());
 
 		long refreshTtlMs = refreshExp.getTime() - System.currentTimeMillis();
-		refreshTokenService.save(user.getId(), refreshToken, refreshTtlMs);
+		refreshTokenService.save(user.getPublicId(), refreshToken, refreshTtlMs);
 
 		return Pair.of(accessToken, refreshToken);
 	}
 
 	@Transactional
 	public Pair<String, String> reissue(String refreshToken) {
-		String email;
+		UUID userPublicId;
 
 		try {
-			email = jwtService.parseEmail(refreshToken);
+			userPublicId = jwtService.parsePublicId(refreshToken);
 		} catch (JwtException | IllegalArgumentException e) {
 			throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
 		}
 
-		User user = userRepository.findByEmailOrThrow(email);
+		User user = userRepository.findByPublicId(userPublicId)
+			.orElseThrow(() -> new CustomException(ErrorCode.INVALID_REFRESH_TOKEN));
 		var newAccessExp = jwtService.getAccessExpiration();
 		var newRefreshExp = jwtService.getRefreshExpiration();
 
-		String newAccessToken = jwtService.issue(user.getId(), user.getEmail(), user.getRole(), newAccessExp,
+		String newAccessToken = jwtService.issue(user.getPublicId(), user.getId(), user.getEmail(), user.getRole(), newAccessExp,
 			TokenType.ACCESS_TOKEN.getType());
 
-		String newRefreshToken = jwtService.issue(user.getId(), user.getEmail(), user.getRole(), newRefreshExp,
+		String newRefreshToken = jwtService.issue(user.getPublicId(), user.getId(), user.getEmail(), user.getRole(), newRefreshExp,
 			TokenType.REFRESH_TOKEN.getType());
 
 		long newRefreshTtlMs = newRefreshExp.getTime() - System.currentTimeMillis();
-		refreshTokenService.save(user.getId(), newRefreshToken, newRefreshTtlMs);
+		refreshTokenService.save(user.getPublicId(), newRefreshToken, newRefreshTtlMs);
 
 		return Pair.of(newAccessToken, newRefreshToken);
 	}
 
 	@Transactional
-	public void logout(Long id, String accessToken) {
-		refreshTokenService.delete(id);
-
+	public void logout(String accessToken) {
 		try {
+			UUID userPublicId = jwtService.parsePublicId(accessToken);
 			String jti = jwtService.parseJti(accessToken);
 			var exp = jwtService.parseExpiration(accessToken);
+			refreshTokenService.delete(userPublicId);
 
 			long ttlMs = exp.getTime() - System.currentTimeMillis();
 			if (ttlMs > 0) {
@@ -112,7 +117,7 @@ public class AuthService {
 		emailVerificationRepository.deleteVerifiedEmail(email);
 
 		UserSignedUpEvent event = UserSignedUpEvent.from(user);
-		userSignedUpEventPublisher.publish(String.valueOf(user.getId()), event);
+		userSignedUpEventPublisher.publish(user.getPublicId().toString(), event);
 	}
 
 }

@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.UUID;
+
 import com.truve.platform.common.response.ApiResult;
 import com.truve.platform.musical.show.service.ArtistService;
 
@@ -24,7 +26,7 @@ public class ArtistLikeController {
 	@PostMapping("/{artistId}/likes")
 	public ApiResult<Void> likeArtist(
 		@PathVariable Long artistId,
-		@RequestHeader(name = "X-User-Id") Long userId
+		@RequestHeader(name = "X-User-Id") UUID userId
 	) {
 		artistService.likeArtist(artistId, userId);
 		return ApiResult.ok();
@@ -34,7 +36,7 @@ public class ArtistLikeController {
 	@DeleteMapping("/{artistId}/likes")
 	public ApiResult<Void> unlikeArtist(
 		@PathVariable Long artistId,
-		@RequestHeader(name = "X-User-Id") Long userId
+		@RequestHeader(name = "X-User-Id") UUID userId
 	) {
 		artistService.unlikeArtist(artistId, userId);
 		return ApiResult.ok();
