@@ -7,9 +7,7 @@ import java.util.UUID;
 
 import org.truve.platform.ticketing.service.booking.domain.constant.ReservationStatus;
 
-import com.truve.platform.common.exception.ErrorCode;
 import com.truve.platform.common.support.BaseEntity;
-import com.truve.platform.common.support.Preconditions;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -79,9 +77,17 @@ public class Reservation extends BaseEntity {
 	}
 
 	public void readyForPayment(Applicant applicant) {
-		Preconditions.validate(this.status == ReservationStatus.CREATED, ErrorCode.INVALID_RESERVATION_STATUS);
-
 		this.applicant = applicant;
 		this.status = ReservationStatus.PENDING_PAYMENT;
+	}
+
+	public void confirm(LocalDateTime paidAt, boolean isDepositPending) {
+		this.paidAt = paidAt;
+		this.status = isDepositPending ? ReservationStatus.PENDING_DEPOSIT : ReservationStatus.CONFIRMED;
+	}
+
+	public void depositReceive(LocalDateTime paidAt) {
+		this.paidAt = paidAt;
+		this.status = ReservationStatus.CONFIRMED;
 	}
 }

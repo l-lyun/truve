@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.truve.platform.payment.service.domain.constant.PaymentStatus;
@@ -35,6 +36,8 @@ class PaymentServiceTest {
 	private PaymentCancelRepository paymentCancelRepository;
 	@Mock
 	private TossClient tossClient;
+	@Mock
+	private ApplicationEventPublisher applicationEventPublisher;
 
 	@InjectMocks
 	private PaymentService paymentService;
@@ -107,6 +110,8 @@ class PaymentServiceTest {
 			Payment payment = Payment.builder().orderId(orderId).amount(amount).build();
 			given(paymentRepository.getByOrderIdWithLock(orderId)).willReturn(payment);
 
+			PaymentRequest.Confirm request = new PaymentRequest.Confirm(orderId, "paymentKey", amount);
+
 			TossResponse.Payment tossResponse = mock(TossResponse.Payment.class);
 			given(tossResponse.getMethodDetailsEntity()).willReturn(
 				EasyPay.builder().provider("토스").discountAmount(0L).build());
@@ -115,7 +120,7 @@ class PaymentServiceTest {
 			given(tossClient.confirm(any())).willReturn(tossResponse);
 
 			// when
-			paymentService.confirm(orderId, "paymentKey", amount);
+			paymentService.confirm(request);
 
 			// then
 			assertThat(payment.getStatus()).isNotEqualTo(PaymentStatus.READY);

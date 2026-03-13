@@ -16,6 +16,14 @@ public class TossRequest {
 		private String orderId;
 		private Long amount;
 		private String paymentKey;
+
+		public static Confirm of(PaymentRequest.Confirm request) {
+			return new Confirm(
+				request.getOrderId(),
+				request.getAmount(),
+				request.getPaymentKey()
+			);
+		}
 	}
 
 	@Getter

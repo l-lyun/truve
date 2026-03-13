@@ -41,6 +41,12 @@ public class PaymentResponse {
 	}
 
 	@Getter
+	@AllArgsConstructor
+	public static class OrderId {
+		private final String orderId;
+	}
+
+	@Getter
 	@Builder
 	@Schema(name = "CancelResponse")
 	public static class Cancel {

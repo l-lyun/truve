@@ -31,8 +31,3 @@ toss:
   payment:
     secret-key: ${TOSS_SECRET_KEY:test_sk_tempKey}
     base-url: https://api.tosspayments.com/v1/payments/
-
-app:
-  frontend:
-    success-url: ${FRONT_SUCCESS_URL:/success-temp.html}
-    fail-url: ${FRONT_FAIL_URL:/fail-temp.html}

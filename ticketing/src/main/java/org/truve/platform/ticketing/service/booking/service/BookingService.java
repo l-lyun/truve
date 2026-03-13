@@ -13,6 +13,7 @@ import org.truve.platform.ticketing.service.booking.dto.BookingRequest;
 import org.truve.platform.ticketing.service.booking.dto.BookingResponse;
 import org.truve.platform.ticketing.service.booking.external.client.TicketingClient;
 import org.truve.platform.ticketing.service.booking.external.client.TicketingResponse;
+import org.truve.platform.ticketing.service.booking.external.kafka.BookingEventCommand;
 import org.truve.platform.ticketing.service.booking.external.kafka.PaymentEventCommand;
 import org.truve.platform.ticketing.service.booking.external.kafka.PaymentPublisher;
 import org.truve.platform.ticketing.service.booking.repository.ReservationRepository;
@@ -98,5 +99,17 @@ public class BookingService {
 		reservation.readyForPayment(request.toEntity());
 
 		paymentPublisher.publish(PaymentEventCommand.Create.of(reservation));
+	}
+
+	@Transactional
+	public void confirm(BookingEventCommand.Confirmed event) {
+		Reservation reservation = reservationRepository.findByNumber(event.getReservationNumber());
+		reservation.confirm(event.getPaidAt(), event.isDepositPending());
+	}
+
+	@Transactional
+	public void depositReceive(BookingEventCommand.DepositReceived event) {
+		Reservation reservation = reservationRepository.findByNumber(event.getReservationNumber());
+		reservation.depositReceive(event.getPaidAt());
 	}
 }

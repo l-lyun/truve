@@ -1,20 +1,14 @@
 package com.truve.platform.payment.service.controller;
 
-import java.net.URI;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import com.truve.platform.common.response.ApiResult;
 import com.truve.platform.payment.service.dto.PaymentRequest;
@@ -25,7 +19,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -34,12 +27,6 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/payments")
 public class PaymentController {
 	private final PaymentService paymentService;
-
-	@Value("${app.frontend.success-url}")
-	private String successUrl;
-
-	@Value("${app.frontend.fail-url}")
-	private String failUrl;
 
 	@Operation(summary = "결제 정보 상세 조회", description = "주문 ID로 결제 정보를 조회합니다.")
 	@GetMapping("/{orderId}")
@@ -53,41 +40,10 @@ public class PaymentController {
 		return ApiResult.ok(paymentService.getBankList());
 	}
 
-	@Operation(summary = "결제 승인",
-		description = "Toss Payments에서 결제 요청 승인 후 successUrl로 호출하는 API입니다. 프론트엔드의 성공 페이지로 orderId를 담아 리다이렉트 합니다.")
-	@GetMapping("/confirm")
-	@ApiResponse(responseCode = "302")
-	public ResponseEntity<Void> confirm(
-		@RequestParam String orderId,
-		@RequestParam String paymentKey,
-		@RequestParam Long amount
-	) {
-		paymentService.confirm(orderId, paymentKey, amount);
-
-		return ResponseEntity.status(HttpStatus.FOUND)
-			.location(URI.create(successUrl + "?orderId=" + orderId))
-			.build();
-	}
-
-	@Operation(summary = "결제 실패",
-		description = "Toss Payments에서 결제 요청이 실패했을 때 failUrl로 호출하는 API입니다. 프론트엔드의 실패 페이지로 code, message, orderId를 담아 리다이렉트합니다.")
-	@GetMapping("/fail")
-	@ApiResponse(responseCode = "302")
-	public ResponseEntity<Void> fail(
-		@RequestParam String code,
-		@RequestParam String message,
-		@RequestParam String orderId
-	) {
-		String redirectUrl = UriComponentsBuilder.fromPath(failUrl)
-			.queryParam("code", code)
-			.queryParam("message", message)
-			.queryParam("orderId", orderId)
-			.build()
-			.toUriString();
-
-		return ResponseEntity.status(HttpStatus.FOUND)
-			.location(URI.create(redirectUrl))
-			.build();
+	@Operation(summary = "결제 승인", description = "결제를 승인 처리합니다.")
+	@PostMapping("/confirm")
+	public ApiResult<PaymentResponse.OrderId> confirm(@RequestBody @Valid PaymentRequest.Confirm request) {
+		return ApiResult.ok(paymentService.confirm(request));
 	}
 
 	@Operation(summary = "결제 취소",

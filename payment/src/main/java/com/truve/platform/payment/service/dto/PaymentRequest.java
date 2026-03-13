@@ -23,6 +23,19 @@ public class PaymentRequest {
 	@Getter
 	@AllArgsConstructor
 	@NoArgsConstructor
+	public static class Confirm {
+		@NotBlank
+		private String orderId;
+		@NotBlank
+		private String paymentKey;
+		@NotNull
+		@Positive
+		private Long amount;
+	}
+
+	@Getter
+	@AllArgsConstructor
+	@NoArgsConstructor
 	@Schema(name = "CancelRequest")
 	public static class Cancel {
 		@NotNull

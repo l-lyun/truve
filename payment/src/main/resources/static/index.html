@@ -109,25 +109,6 @@
         const method = document.getElementById('method').value;
 
         try {
-            console.log("1. 서버에 주문 정보 저장 중...");
-            const response = await fetch('/api/payments', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    orderId: orderId,
-                    amount: amount,
-                    method: method
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.text();
-                throw new Error('서버 주문 저장 실패: ' + errorData);
-            }
-
-            console.log("2. 서버 저장 완료! 토스 결제창 호출...");
-
-            // B. 토스 결제창 띄우기 (V2 Standard 방식)
             const payment = tossPayments.payment({
                 customerKey: "GUEST_" + Math.random().toString(36).substring(2, 11), // 비회원용 랜덤 키
             });
