@@ -71,6 +71,7 @@ class BookingServiceTest {
 			() -> assertThat(savedReservation.getTotalAmount()).isEqualTo(60000L),
 			() -> assertThat(savedReservation.getGradeSummary()).isEqualTo("VIP석 2인\nS석 1인"),
 			() -> assertThat(savedReservation.getTickets()).hasSize(3),
+			() -> assertThat(savedReservation.getServiceFee()).isEqualTo(6000L),
 			() -> {
 				assertNotNull(savedReservation.getTickets());
 				assertThat(savedReservation.getTickets().getFirst().getNumber()).isEqualTo(ticketNumber1);
