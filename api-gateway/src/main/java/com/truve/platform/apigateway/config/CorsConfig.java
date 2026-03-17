@@ -15,7 +15,8 @@ public class CorsConfig {
 		"http://localhost:[*]",
 		"http://127.0.0.1:[*]",
 		"https://front-nu-tawny.vercel.app",
-		"https://front-rosy-two.vercel.app"
+		"https://front-rosy-two.vercel.app",
+		"https://www.truve.site"
 	);
 	private static final List<String> ALLOWED_HEADERS = List.of("*");
 	private static final List<String> ALLOWED_METHODS = List.of("*");
