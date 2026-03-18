@@ -49,4 +49,4 @@ spring:
 
 springdoc:
   api-docs:
-    path: /api/shows/v3/api-docs
+    path: /api/musical/v3/api-docs

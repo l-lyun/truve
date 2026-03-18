@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/artists")
+@RequestMapping("/api/musical/artists")
 public class ArtistLikeController {
 
 	private final ArtistService artistService;

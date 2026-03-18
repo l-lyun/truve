@@ -40,7 +40,7 @@ class ArtistLikeControllerTest {
 		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
 		willDoNothing().given(artistService).likeArtist(101L, userId);
 
-		mockMvc.perform(post("/api/artists/{artistId}/likes", 101L)
+		mockMvc.perform(post("/api/musical/artists/{artistId}/likes", 101L)
 				.header("X-User-Id", userId))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.code").value("ok"));
@@ -52,7 +52,7 @@ class ArtistLikeControllerTest {
 		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
 		willDoNothing().given(artistService).unlikeArtist(101L, userId);
 
-		mockMvc.perform(delete("/api/artists/{artistId}/likes", 101L)
+		mockMvc.perform(delete("/api/musical/artists/{artistId}/likes", 101L)
 				.header("X-User-Id", userId))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.code").value("ok"));

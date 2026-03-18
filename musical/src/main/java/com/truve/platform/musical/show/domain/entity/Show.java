@@ -35,7 +35,7 @@ public class Show extends BaseEntity {
 
 	private Integer ageLimit;
 
-	@Column(nullable = false, length = 500)
+	@Column(name = "poster_img", nullable = false, length = 500)
 	private String posterImg;
 
 	@Convert(converter = StringListConverter.class)

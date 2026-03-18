@@ -22,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/shows")
+@RequestMapping("/api/musical/shows")
 public class ShowController {
 
 	private final ShowDetailService showDetailService;

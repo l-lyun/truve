@@ -17,6 +17,6 @@ public class Artist extends BaseEntity {
 
 	private String name;
 
-	@Column(length = 500)
+	@Column(name = "profile_img", length = 500)
 	private String profileImg;
 }

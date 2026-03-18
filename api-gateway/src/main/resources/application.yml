@@ -66,10 +66,10 @@ spring:
               uri: ${TICKETING_SERVER_URI:http://localhost:8084}
               predicates:
                 - Path=/api/bookings/**
-            - id: show
+            - id: musical
               uri: ${MUSICAL_SERVER_URI:http://localhost:8085}
               predicates:
-                - Path=/api/shows/**
+                - Path=/api/musical/**
 
 
 
@@ -94,4 +94,4 @@ springdoc:
       - name: "05-Booking Service"
         url: /api/ticketing/v3/api-docs/booking
       - name: "06-Musical Service"
-        url: /api/shows/v3/api-docs
+        url: /api/musical/v3/api-docs

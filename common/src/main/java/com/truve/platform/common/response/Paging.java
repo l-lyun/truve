@@ -8,15 +8,20 @@ import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class Paging {
 	@Min(1)
-	int page;
+	@Max(100000)
+	private int page = 1;
+
 	@Min(1)
-	int size;
+	@Max(100)
+	private int size = 10;
 
 	public Pageable toPageable() {
 		return PageRequest.of(page - 1, size);
