@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.truve.platform.ticketing.service.booking.domain.entity.Reservation;
 import org.truve.platform.ticketing.service.booking.domain.entity.ShowInfo;
 import org.truve.platform.ticketing.service.booking.domain.entity.Ticket;
+import org.truve.platform.ticketing.service.booking.domain.entity.VirtualAccount;
 import org.truve.platform.ticketing.service.booking.dto.BookingRequest;
 import org.truve.platform.ticketing.service.booking.dto.BookingResponse;
 import org.truve.platform.ticketing.service.booking.external.client.TicketingClient;
@@ -119,7 +120,7 @@ public class BookingService {
 	@Transactional
 	public void confirm(BookingEventCommand.Confirmed event) {
 		Reservation reservation = reservationRepository.findByNumber(event.getReservationNumber());
-		reservation.confirm(event.getPaidAt(), event.isDepositPending());
+		reservation.confirm(event.getPaidAt(), event.getMethod(), VirtualAccount.from(event.getVirtualAccount()));
 	}
 
 	@Transactional

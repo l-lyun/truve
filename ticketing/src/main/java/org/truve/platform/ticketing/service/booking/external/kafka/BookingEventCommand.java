@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -26,12 +25,23 @@ public class BookingEventCommand {
 		private String reservationNumber;
 		@JsonFormat(shape = JsonFormat.Shape.ARRAY)
 		private LocalDateTime paidAt;
-		@JsonProperty("depositPending")
-		private boolean isDepositPending;
+		private String method;
+		private VirtualAccount virtualAccount;
 
 		@Override
 		public String getEventType() {
 			return "CONFIRMED";
+		}
+
+		@Getter
+		@AllArgsConstructor
+		@NoArgsConstructor
+		public static class VirtualAccount {
+			private String accountNumber;
+			private String bank;
+			private String customerName;
+			@JsonFormat(shape = JsonFormat.Shape.ARRAY)
+			private LocalDateTime dueDate;
 		}
 	}
 

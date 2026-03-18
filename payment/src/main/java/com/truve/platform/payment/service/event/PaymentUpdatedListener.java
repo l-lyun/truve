@@ -4,7 +4,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import com.truve.platform.payment.service.domain.constant.PaymentStatus;
 import com.truve.platform.payment.service.external.kafka.BookingEventCommand;
 import com.truve.platform.payment.service.external.kafka.BookingPublisher;
 
@@ -22,9 +21,15 @@ public class PaymentUpdatedListener {
 			new BookingEventCommand.Confirmed(
 				event.getOrderId(),
 				event.getApprovedAt(),
-				event.getStatus() == PaymentStatus.WAITING_FOR_DEPOSIT
-			)
-		);
+				event.getMethod().getDisplayName(),
+				event.getVirtualAccount() == null ? null
+					: new BookingEventCommand.Confirmed.VirtualAccount(
+					event.getVirtualAccount().getAccountNumber(),
+					event.getVirtualAccount().getBank().getBankName(),
+					event.getVirtualAccount().getCustomerName(),
+					event.getVirtualAccount().getDueDate()
+				)
+			));
 	}
 
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
