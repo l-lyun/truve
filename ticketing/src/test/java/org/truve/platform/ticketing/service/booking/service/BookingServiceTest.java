@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -44,17 +45,24 @@ class BookingServiceTest {
 		List<Long> seatIds = List.of(10L, 11L, 12L);
 		BookingRequest.Create request = new BookingRequest.Create(seatIds);
 
-		TicketingResponse.SeatInfo seat1 = new TicketingResponse.SeatInfo("A", 1L, "VIP", "A", 13L, 10000L);
-		TicketingResponse.SeatInfo seat2 = new TicketingResponse.SeatInfo("B", 2L, "VIP", "B", 14L, 20000L);
-		TicketingResponse.SeatInfo seat3 = new TicketingResponse.SeatInfo("C", 3L, "S", "C", 15L, 30000L);
-		List<TicketingResponse.SeatInfo> seatInfos = List.of(seat1, seat2, seat3);
+		TicketingResponse.Seat seat1 = new TicketingResponse.Seat("Section1", 1L, "VIP", "A", 10L, 10000L);
+		TicketingResponse.Seat seat2 = new TicketingResponse.Seat("Section2", 2L, "S", "B", 20L, 20000L);
+		TicketingResponse.Seat seat3 = new TicketingResponse.Seat("Section3", 3L, "VIP", "C", 30L, 30000L);
+		List<TicketingResponse.Seat> seats = List.of(seat1, seat2, seat3);
+		TicketingResponse.SeatInfo seatInfo = new TicketingResponse.SeatInfo(
+			1L,
+			"title",
+			"venue",
+			LocalDateTime.now(),
+			"poster",
+			seats);
 
 		String reservationNumber = "R20260309ABCDEF";
 		String ticketNumber1 = "T-1234567890123";
 		String ticketNumber2 = "T-9876543210987";
 		String ticketNumber3 = "T-1111111111111";
 
-		given(ticketingClient.getSeatInfos(seatIds)).willReturn(seatInfos);
+		given(ticketingClient.getSeatInfo(seatIds)).willReturn(seatInfo);
 		given(numberGenerator.generateReservationNumber()).willReturn(reservationNumber);
 		given(numberGenerator.generateTicketNumber()).willReturn(ticketNumber1, ticketNumber2, ticketNumber3);
 
@@ -78,7 +86,7 @@ class BookingServiceTest {
 				assertThat(savedReservation.getTickets().get(1).getPriceSnapshot()).isEqualTo(20000L);
 				assertThat(savedReservation.getTickets().getLast().getStatus()).isEqualTo(TicketStatus.ISSUED);
 				assertThat(savedReservation.getTickets().get(1).getUsedAt()).isNull();
-				assertThat(savedReservation.getTickets().getFirst().getSeatDetail()).isEqualTo("1층 A구역 A열 13번");
+				assertThat(savedReservation.getTickets().getFirst().getSeatDetail()).isEqualTo("1층 Section1구역 A열 10번");
 			}
 		);
 	}

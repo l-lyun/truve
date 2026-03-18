@@ -1,25 +1,21 @@
-package org.truve.platform.ticketing.service.ticketing.domain.entity;
+package org.truve.platform.ticketing.service.booking.domain.entity;
 
 import java.time.LocalDateTime;
 
-import com.truve.platform.common.support.BaseEntity;
-
 import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.Embeddable;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Entity
-@Getter
+@Embeddable
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "show_scheduled")
-public class ShowScheduled extends BaseEntity {
+@Getter
+public class ShowInfo {
 
 	@Column(nullable = false)
-	Long showId;
+	private Long showId;
 
 	@Column(nullable = false)
 	private String title;
@@ -34,8 +30,7 @@ public class ShowScheduled extends BaseEntity {
 	private String posterImg;
 
 	@Builder
-	public ShowScheduled(Long showId, String title, String venueName, LocalDateTime startAt, String posterImg) {
-
+	public ShowInfo(Long showId, String title, String venueName, LocalDateTime startAt, String posterImg) {
 		this.showId = showId;
 		this.title = title;
 		this.venueName = venueName;

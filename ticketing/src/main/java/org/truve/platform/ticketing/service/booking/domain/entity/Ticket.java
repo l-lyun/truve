@@ -36,6 +36,9 @@ public class Ticket extends BaseEntity {
 	private Long priceSnapshot;
 
 	@Column(nullable = false)
+	private String grade;
+
+	@Column(nullable = false)
 	private String seatDetail;
 
 	@Column(nullable = false)
@@ -46,18 +49,25 @@ public class Ticket extends BaseEntity {
 	private LocalDateTime usedAt;
 
 	@Builder
-	private Ticket(Reservation reservation, String number, Long priceSnapshot, String seatDetail) {
+	private Ticket(Reservation reservation, String number, String grade, Long priceSnapshot, String seatDetail) {
 		this.reservation = reservation;
 		this.number = number;
+		this.grade = grade;
 		this.priceSnapshot = priceSnapshot;
 		this.seatDetail = seatDetail;
 		this.status = TicketStatus.ISSUED;
 	}
 
-	public static Ticket create(Reservation reservation, String number, Long priceSnapshot, String seatDetail) {
+	public static Ticket create(
+		Reservation reservation,
+		String number,
+		String grade,
+		Long priceSnapshot,
+		String seatDetail) {
 		return Ticket.builder()
 			.reservation(reservation)
 			.number(number)
+			.grade(grade)
 			.priceSnapshot(priceSnapshot)
 			.seatDetail(seatDetail)
 			.build();

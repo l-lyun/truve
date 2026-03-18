@@ -51,29 +51,41 @@ public class Reservation extends BaseEntity {
 	private LocalDateTime paidAt;
 
 	@Embedded
+	private ShowInfo showInfo;
+
+	@Embedded
 	private Applicant applicant;
 
 	@OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL)
 	private List<Ticket> tickets = new ArrayList<>();
 
 	@Builder
-	private Reservation(UUID userId, String number, Long totalAmount, Long serviceFee, String gradeSummary) {
+	private Reservation(UUID userId, String number, Long totalAmount, Long serviceFee, String gradeSummary, ShowInfo showInfo) {
 
 		this.userId = userId;
 		this.number = number;
 		this.totalAmount = totalAmount;
 		this.serviceFee = serviceFee;
 		this.gradeSummary = gradeSummary;
+		this.showInfo = showInfo;
 		this.status = ReservationStatus.CREATED;
 	}
 
-	public static Reservation create(UUID userId, String number, Long totalAmount, Long serviceFee, String gradeSummary) {
+	public static Reservation create(
+		UUID userId,
+		String number,
+		Long totalAmount,
+    Long serviceFee,
+		String gradeSummary,
+		ShowInfo showInfo
+	) {
 		return Reservation.builder()
 			.userId(userId)
 			.number(number)
 			.totalAmount(totalAmount)
 			.serviceFee(serviceFee)
 			.gradeSummary(gradeSummary)
+			.showInfo(showInfo)
 			.build();
 	}
 
