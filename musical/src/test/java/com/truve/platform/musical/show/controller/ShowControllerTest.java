@@ -1,6 +1,5 @@
 package com.truve.platform.musical.show.controller;
 
-import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.BDDMockito.given;
@@ -58,7 +57,8 @@ class ShowControllerTest {
 			.runtimeMin(120)
 			.ageLimit(8)
 			.posterUrl("https://img/1.jpg")
-			.noticeUrl("https://img/notice.jpg")
+			.noticeImgs(List.of("https://img/notice.jpg"))
+			.detailImgs(List.of("https://img/detail-1.jpg", "https://img/detail-2.jpg"))
 			.startTime(LocalDateTime.of(2026, 3, 1, 0, 0))
 			.endTime(LocalDateTime.of(2026, 4, 1, 0, 0))
 			.venue(
@@ -112,7 +112,8 @@ class ShowControllerTest {
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.code").value("ok"))
 			.andExpect(jsonPath("$.data.showId").value(1))
-			.andExpect(jsonPath("$.data.noticeUrl").value("https://img/notice.jpg"))
+			.andExpect(jsonPath("$.data.noticeImgs[0]").value("https://img/notice.jpg"))
+			.andExpect(jsonPath("$.data.detailImgs[0]").value("https://img/detail-1.jpg"))
 			.andExpect(jsonPath("$.data.schedules[1].status").value(ShowScheduleStatus.CLOSED.name()))
 			.andExpect(jsonPath("$.data.schedules[2].status").value(ShowScheduleStatus.CANCELLED.name()))
 			.andExpect(jsonPath("$.data.castings[0].artistName").value("배우A"))
@@ -121,7 +122,7 @@ class ShowControllerTest {
 	}
 
 	@Test
-	@DisplayName("noticeUrl이 없고 회차/좌석 정보가 없어도 200과 빈 목록을 응답한다.")
+	@DisplayName("noticeImgs/detailImgs가 비어도 회차/좌석 정보와 함께 200을 응답한다.")
 	void 공연_상세_조회_공지없음_빈목록_성공() throws Exception {
 		ShowResponse.Detail response = ShowResponse.Detail.builder()
 			.showId(10L)
@@ -130,7 +131,8 @@ class ShowControllerTest {
 			.runtimeMin(100)
 			.ageLimit(12)
 			.posterUrl("https://img/2.jpg")
-			.noticeUrl(null)
+			.noticeImgs(List.of())
+			.detailImgs(List.of())
 			.startTime(LocalDateTime.of(2026, 5, 1, 0, 0))
 			.endTime(LocalDateTime.of(2026, 5, 31, 0, 0))
 			.venue(ShowResponse.Venue.builder()
@@ -147,7 +149,10 @@ class ShowControllerTest {
 
 		mockMvc.perform(get("/api/shows/{showId}", 10L))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.data.noticeUrl").value(nullValue()))
+			.andExpect(jsonPath("$.data.noticeImgs").isArray())
+			.andExpect(jsonPath("$.data.noticeImgs").isEmpty())
+			.andExpect(jsonPath("$.data.detailImgs").isArray())
+			.andExpect(jsonPath("$.data.detailImgs").isEmpty())
 			.andExpect(jsonPath("$.data.schedules").isArray())
 			.andExpect(jsonPath("$.data.schedules").isEmpty())
 			.andExpect(jsonPath("$.data.seatGrades").isArray())
@@ -178,7 +183,10 @@ class ShowControllerTest {
 				.build())
 			.filters(ShowCastingResponse.Filters.builder()
 				.artists(List.of(
-					ShowCastingResponse.FilterArtist.builder().artistId(1L).artistName("김호영").build()
+					ShowCastingResponse.FilterArtist.builder()
+						.artistId(1L)
+						.artistName("김호영")
+						.build()
 				))
 				.build())
 			.roles(List.of(
@@ -195,10 +203,16 @@ class ShowControllerTest {
 				ShowCastingResponse.Row.builder()
 					.scheduleId(101L)
 					.showTime(LocalDateTime.of(2026, 1, 2, 19, 0))
-					.casts(Map.of(
-						"찰리", ShowCastingResponse.CastArtist.builder().artistId(1L).artistName("김호영").build(),
-						"롤라", ShowCastingResponse.CastArtist.builder().artistId(10L).artistName("강홍석").build()
-					))
+						.casts(Map.of(
+							"찰리", ShowCastingResponse.CastArtist.builder()
+								.artistId(1L)
+								.artistName("김호영")
+								.build(),
+							"롤라", ShowCastingResponse.CastArtist.builder()
+								.artistId(10L)
+								.artistName("강홍석")
+								.build()
+						))
 					.build()
 			))
 			.build();
@@ -223,8 +237,9 @@ class ShowControllerTest {
 			.andExpect(jsonPath("$.data.showId").value(1))
 			.andExpect(jsonPath("$.data.range.from").value("2025-12-17"))
 			.andExpect(jsonPath("$.data.roles[0].roleName").value("찰리"))
-			.andExpect(jsonPath("$.data.page.currentPage").value(0))
-			.andExpect(jsonPath("$.data.rows[0].scheduleId").value(101))
-			.andExpect(jsonPath("$.data.rows[0].casts.찰리.artistName").value("김호영"));
+				.andExpect(jsonPath("$.data.page.currentPage").value(0))
+				.andExpect(jsonPath("$.data.rows[0].scheduleId").value(101))
+				.andExpect(jsonPath("$.data.rows[0].casts.찰리.artistName").value("김호영"))
+				.andExpect(jsonPath("$.data.rows[0].casts.찰리.profileImageUrl").doesNotExist());
 	}
 }

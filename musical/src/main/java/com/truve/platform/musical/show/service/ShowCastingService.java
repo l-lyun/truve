@@ -141,7 +141,6 @@ public class ShowCastingService {
 		List<ShowScheduleCasting> scheduleCastings = showScheduleCastingRepository.findAllByScheduleIds(scheduleIds);
 		Map<Long, List<ShowScheduleCasting>> grouped = scheduleCastings.stream()
 			.collect(Collectors.groupingBy(sc -> sc.getShowSchedule().getId()));
-
 		Map<Long, Map<String, ShowCastingResponse.CastArtist>> result = new LinkedHashMap<>();
 		grouped.forEach((Long scheduleId, List<ShowScheduleCasting> castings) -> {
 			Map<String, ShowCastingResponse.CastArtist> casts = castings.stream()

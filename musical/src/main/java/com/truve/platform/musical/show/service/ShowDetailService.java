@@ -1,6 +1,8 @@
 package com.truve.platform.musical.show.service;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -67,7 +69,8 @@ public class ShowDetailService {
 			.runtimeMin(show.getRuntimeMin())
 			.ageLimit(show.getAgeLimit())
 			.posterUrl(toImageUrl(show.getPosterImg()))
-			.noticeUrl(toImageUrl(show.getNoticeImg()))
+			.noticeImgs(toImageUrls(show.getNoticeImg()))
+			.detailImgs(toImageUrls(show.getDetailImg()))
 			.startTime(show.getStartTime())
 			.endTime(show.getEndTime())
 			.venue(toVenueResponse(show))
@@ -116,7 +119,7 @@ public class ShowDetailService {
 			.showCastId(casting.getId())
 			.artistId(casting.getArtist().getId())
 			.artistName(casting.getArtist().getName())
-			.profileImageUrl(toImageUrl(casting.getArtist().getProfileImg()))
+			.profileImageUrl(toImageUrl(chooseProfileImgKey(casting)))
 			.roleName(casting.getRoleName())
 			.order(casting.getCastingOrder())
 			.isLiked(isLiked)
@@ -130,6 +133,17 @@ public class ShowDetailService {
 		return s3Service.getImageUrl(fileName);
 	}
 
+	private List<String> toImageUrls(List<String> fileNames) {
+		if (fileNames == null || fileNames.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		return fileNames.stream()
+			.map(this::toImageUrl)
+			.filter(Objects::nonNull)
+			.toList();
+	}
+
 	private ShowResponse.SeatGrade toSeatGradeResponse(ShowSectionGrade seatGrade) {
 		return ShowResponse.SeatGrade.builder()
 			.showSeatGradeId(seatGrade.getId())
@@ -137,5 +151,12 @@ public class ShowDetailService {
 			.colorCode(seatGrade.getColorCode())
 			.price(seatGrade.getPrice())
 			.build();
+	}
+
+	private String chooseProfileImgKey(ShowCasting casting) {
+		if (StringUtils.hasText(casting.getProfileImg())) {
+			return casting.getProfileImg();
+		}
+		return casting.getArtist().getProfileImg();
 	}
 }

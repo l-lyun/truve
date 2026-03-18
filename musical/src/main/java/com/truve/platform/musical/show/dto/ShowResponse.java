@@ -19,7 +19,8 @@ public class ShowResponse {
 		private Integer runtimeMin;
 		private Integer ageLimit;
 		private String posterUrl;
-		private String noticeUrl;
+		private List<String> noticeImgs;
+		private List<String> detailImgs;
 		private LocalDateTime startTime;
 		private LocalDateTime endTime;
 		private Venue venue;
@@ -79,4 +80,3 @@ public class ShowResponse {
 		private Long price;
 	}
 }
-

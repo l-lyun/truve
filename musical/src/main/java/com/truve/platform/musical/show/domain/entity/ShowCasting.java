@@ -33,11 +33,15 @@ public class ShowCasting extends BaseEntity {
 	@Column(name = "`order`")
 	private Integer castingOrder;
 
+	@Column(name = "profile_img", length = 500)
+	private String profileImg;
+
 	@Builder
-	private ShowCasting(Show show, Artist artist, String roleName, Integer castingOrder) {
+	private ShowCasting(Show show, Artist artist, String roleName, Integer castingOrder, String profileImg) {
 		this.show = show;
 		this.artist = artist;
 		this.roleName = roleName;
 		this.castingOrder = castingOrder;
+		this.profileImg = profileImg;
 	}
 }

@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "venue")
+@AttributeOverride(name = "id", column = @Column(name = "venue_id"))
 public class Venue extends BaseEntity {
 
 	@Column(nullable = false, length = 255)
