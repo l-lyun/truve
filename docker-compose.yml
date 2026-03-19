@@ -71,6 +71,7 @@ services:
       - USER_REDIS_PORT=6379
       - TICKETING_SERVER_URI=http://ticketing:8084
       - MUSICAL_SERVER_URI=http://musical:8085
+      - KAFKA_SERVERS=kafka:9092
     networks:
       - truve-network
 
@@ -207,6 +208,7 @@ services:
       - AWS_ACCESS_KEY=test
       - AWS_SECRET_KEY=test
       - AWS_S3_ENDPOINT=http://localstack:4566
+      - KAFKA_SERVERS=kafka:9092
     depends_on:
       db:
         condition: service_healthy

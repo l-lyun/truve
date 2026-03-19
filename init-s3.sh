@@ -6,7 +6,9 @@ awslocal s3api put-public-access-block \
     --public-access-block-configuration "BlockPublicAcls=false,IgnorePublicAcls=false,BlockPublicPolicy=false,RestrictPublicBuckets=false"
 
 cd /tmp
-for i in {1..5}; do
-  echo "This is fake image $i" > "test_$i.png"
-  awslocal s3 cp "test_$i.png" s3://truve-media/ --acl public-read
-done
+awslocal s3 cp "poster_temp.png" s3://truve-media/ --acl public-read
+awslocal s3 cp "notice_temp_1.png" s3://truve-media/ --acl public-read
+awslocal s3 cp "notice_temp_2.png" s3://truve-media/ --acl public-read
+awslocal s3 cp "detail_temp_1.png" s3://truve-media/ --acl public-read
+awslocal s3 cp "detail_temp_2.png" s3://truve-media/ --acl public-read
+awslocal s3 cp "profile_temp.png" s3://truve-media/ --acl public-read
