@@ -3,9 +3,11 @@ package com.truve.platform.musical.show.service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -30,6 +32,10 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class ShowCastingService {
+	private static final DateTimeFormatter SHOW_DATE_LABEL_FORMATTER =
+		DateTimeFormatter.ofPattern("MM/dd(E)", Locale.KOREAN);
+	private static final DateTimeFormatter SHOW_TIME_LABEL_FORMATTER =
+		DateTimeFormatter.ofPattern("a h:mm", Locale.KOREAN);
 
 	private final ShowRepository showRepository;
 	private final ShowScheduleRepository showScheduleRepository;
@@ -85,15 +91,24 @@ public class ShowCastingService {
 			.map(schedule -> ShowCastingResponse.Row.builder()
 				.scheduleId(schedule.getId())
 				.showTime(schedule.getShowTime())
+				.showDateLabel(toShowDateLabel(schedule.getShowTime()))
+				.showTimeLabel(toShowTimeLabel(schedule.getShowTime()))
 				.casts(castsByScheduleId.getOrDefault(schedule.getId(), Map.of()))
 				.build())
 			.toList();
 
+		LocalDate rangeFrom = from != null
+			? from
+			: (show.getStartTime() != null ? show.getStartTime().toLocalDate() : null);
+		LocalDate rangeTo = to != null
+			? to
+			: (show.getEndTime() != null ? show.getEndTime().toLocalDate() : null);
+
 		return ShowCastingResponse.Detail.builder()
 			.showId(show.getId())
 			.range(ShowCastingResponse.Range.builder()
-				.from(show.getStartTime() != null ? show.getStartTime().toLocalDate() : null)
-				.to(show.getEndTime() != null ? show.getEndTime().toLocalDate() : null)
+				.from(rangeFrom)
+				.to(rangeTo)
 				.build())
 			.filters(ShowCastingResponse.Filters.builder()
 				.artists(filterArtists)
@@ -160,5 +175,19 @@ public class ShowCastingService {
 			result.put(scheduleId, casts);
 		});
 		return result;
+	}
+
+	private String toShowDateLabel(LocalDateTime showTime) {
+		if (showTime == null) {
+			return null;
+		}
+		return showTime.format(SHOW_DATE_LABEL_FORMATTER);
+	}
+
+	private String toShowTimeLabel(LocalDateTime showTime) {
+		if (showTime == null) {
+			return null;
+		}
+		return showTime.toLocalTime().format(SHOW_TIME_LABEL_FORMATTER);
 	}
 }

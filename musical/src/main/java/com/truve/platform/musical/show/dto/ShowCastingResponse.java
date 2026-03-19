@@ -71,6 +71,8 @@ public class ShowCastingResponse {
 	public static class Row {
 		private Long scheduleId;
 		private LocalDateTime showTime;
+		private String showDateLabel;
+		private String showTimeLabel;
 		private Map<String, CastArtist> casts;
 	}
 

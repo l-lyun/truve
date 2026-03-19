@@ -21,6 +21,7 @@ public class ShowResponse {
 		private String posterUrl;
 		private List<String> noticeImgs;
 		private List<String> detailImgs;
+		private String date;
 		private LocalDateTime startTime;
 		private LocalDateTime endTime;
 		private Venue venue;

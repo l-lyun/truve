@@ -1,5 +1,7 @@
 package com.truve.platform.musical.show.service;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -29,6 +31,8 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class ShowDetailService {
+	private static final DateTimeFormatter DATE_LABEL_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+	private static final String DEFAULT_DATE = "기간 미정";
 
 	private final ShowRepository showRepository;
 	private final ShowCastingRepository showCastingRepository;
@@ -71,6 +75,7 @@ public class ShowDetailService {
 			.posterUrl(toImageUrl(show.getPosterImg()))
 			.noticeImgs(toImageUrls(show.getNoticeImg()))
 			.detailImgs(toImageUrls(show.getDetailImg()))
+			.date(toDateRange(show.getStartTime(), show.getEndTime()))
 			.startTime(show.getStartTime())
 			.endTime(show.getEndTime())
 			.venue(toVenueResponse(show))
@@ -158,5 +163,12 @@ public class ShowDetailService {
 			return casting.getProfileImg();
 		}
 		return casting.getArtist().getProfileImg();
+	}
+
+	private String toDateRange(LocalDateTime startTime, LocalDateTime endTime) {
+		if (startTime == null || endTime == null) {
+			return DEFAULT_DATE;
+		}
+		return startTime.format(DATE_LABEL_FORMATTER) + " ~ " + endTime.format(DATE_LABEL_FORMATTER);
 	}
 }
