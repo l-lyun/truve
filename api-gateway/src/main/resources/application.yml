@@ -58,10 +58,14 @@ spring:
               uri: ${QUEUE_SERVER_URI:http://localhost:8083}
               predicates:
                 - Path=/api/queue/**
+              filters:
+                - JwtAuthenticationFilter
             - id: ticketing
               uri: ${TICKETING_SERVER_URI:http://localhost:8084}
               predicates:
                 - Path=/api/ticketing/**
+              filters:
+                - JwtAuthenticationFilter
             - id: booking
               uri: ${TICKETING_SERVER_URI:http://localhost:8084}
               predicates:
