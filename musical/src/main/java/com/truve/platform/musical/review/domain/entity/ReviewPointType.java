@@ -31,7 +31,7 @@ public class ReviewPointType extends BaseEntity {
 	private String code;
 
 	@Column(nullable = false)
-	private Long order;
+	private Long sortOrder;
 
 	public boolean isEmotionPoint() {
 		return this.category == ReviewPointCategory.EMOTION;

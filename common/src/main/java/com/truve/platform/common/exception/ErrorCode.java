@@ -57,6 +57,7 @@ public enum ErrorCode {
 	ALREADY_EXIST_REVIEW(HttpStatus.BAD_REQUEST, "이미 유저가 리뷰를 작성했습니다.", "MR01"),
 	NOT_CHARM_POINT(HttpStatus.BAD_REQUEST, "매력 포인트가 아닙니다.", "MR02"),
 	NOT_EMOTION_POINT(HttpStatus.BAD_REQUEST, "감정 포인트가 아닙니다.", "MR03"),
+	NOT_FOUND_REVIEW_USER(HttpStatus.BAD_REQUEST, "잘못된 리뷰 정보입니다.", "MR04"),
 
 	EVENT_SERIALIZATION_FAILED(HttpStatus.BAD_REQUEST, "이벤트 직렬화 오류입니다.", "I01"),
 	EVENT_PUBLISH_FAILED(HttpStatus.BAD_REQUEST, "이벤트 발행 실패입니다.", "I02"),

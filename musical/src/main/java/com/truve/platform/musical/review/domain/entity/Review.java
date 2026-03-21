@@ -26,6 +26,9 @@ public class Review extends BaseEntity {
 	private UUID userId;
 
 	@Column(nullable = false)
+	private String title;
+
+	@Column(nullable = false)
 	private String content;
 
 	@Column(nullable = false)
@@ -38,9 +41,10 @@ public class Review extends BaseEntity {
 	private LocalDateTime deletedAt;
 
 	@Builder
-	public Review(Long showId, UUID userId, String content, Boolean isPositive, LocalDateTime watchedAt) {
+	public Review(Long showId, UUID userId, String title, String content, Boolean isPositive, LocalDateTime watchedAt) {
 		this.showId = showId;
 		this.userId = userId;
+		this.title = title;
 		this.content = content;
 		this.isPositive = isPositive;
 		this.watchedAt = watchedAt;
