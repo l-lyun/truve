@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -23,4 +24,17 @@ public class ReviewPoint extends BaseEntity {
 	@ManyToOne
 	@JoinColumn(name = "review_point_type_id")
 	private ReviewPointType reviewPointType;
+
+	@Builder
+	private ReviewPoint(Review review, ReviewPointType reviewPointType) {
+		this.review = review;
+		this.reviewPointType = reviewPointType;
+	}
+
+	public static ReviewPoint create(Review review, ReviewPointType reviewPointType) {
+		return ReviewPoint.builder()
+			.review(review)
+			.reviewPointType(reviewPointType)
+			.build();
+	}
 }

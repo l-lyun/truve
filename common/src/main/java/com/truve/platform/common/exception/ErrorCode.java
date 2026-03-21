@@ -54,6 +54,10 @@ public enum ErrorCode {
 	NOT_FOUND_ARTIST(HttpStatus.NOT_FOUND, "존재하지 않는 배우입니다.", "M02"),
 	ALREADY_LIKED_ARTIST(HttpStatus.BAD_REQUEST, "이미 좋아요한 배우입니다.", "M03"),
 
+	ALREADY_EXIST_REVIEW(HttpStatus.BAD_REQUEST, "이미 유저가 리뷰를 작성했습니다.", "MR01"),
+	NOT_CHARM_POINT(HttpStatus.BAD_REQUEST, "매력 포인트가 아닙니다.", "MR02"),
+	NOT_EMOTION_POINT(HttpStatus.BAD_REQUEST, "감정 포인트가 아닙니다.", "MR03"),
+
 	EVENT_SERIALIZATION_FAILED(HttpStatus.BAD_REQUEST, "이벤트 직렬화 오류입니다.", "I01"),
 	EVENT_PUBLISH_FAILED(HttpStatus.BAD_REQUEST, "이벤트 발행 실패입니다.", "I02"),
 	EVENT_USER_SIGNED_UP_FAILED(HttpStatus.BAD_REQUEST, "유저 회원가입 이벤트 소비 실패입니다.", "I03"),

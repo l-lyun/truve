@@ -1,0 +1,152 @@
+package com.truve.platform.musical.review.service;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import com.truve.platform.common.exception.CustomException;
+import com.truve.platform.common.exception.ErrorCode;
+import com.truve.platform.musical.review.domain.constant.ReviewPointName;
+import com.truve.platform.musical.review.domain.entity.Review;
+import com.truve.platform.musical.review.domain.entity.ReviewPoint;
+import com.truve.platform.musical.review.domain.entity.ReviewPointType;
+import com.truve.platform.musical.review.dto.ReviewRequest;
+import com.truve.platform.musical.review.repository.ReviewPointRepository;
+import com.truve.platform.musical.review.repository.ReviewPointTypeRepository;
+import com.truve.platform.musical.review.repository.ReviewRepository;
+
+@ExtendWith(MockitoExtension.class)
+class ReviewServiceTest {
+
+	@Mock
+	private ReviewRepository reviewRepository;
+	@Mock
+	private ReviewPointTypeRepository reviewPointTypeRepository;
+	@Mock
+	private ReviewPointRepository reviewPointRepository;
+
+	@InjectMocks
+	private ReviewService reviewService;
+
+	@Test
+	@DisplayName("리뷰 저장에 성공하면 카테고리를 저장한다.")
+	void 리뷰_저장_성공() {
+		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+		Long showId = 1L;
+		ReviewRequest.Create request = new ReviewRequest.Create(
+			true,
+			List.of(ReviewPointName.IMMERSION, ReviewPointName.TOUCHING),
+			List.of(ReviewPointName.STORY, ReviewPointName.ACTING),
+			"재밌게 봤어요"
+		);
+
+		ReviewPointType immersion = reviewPointType(ReviewPointName.IMMERSION);
+		ReviewPointType touching = reviewPointType(ReviewPointName.TOUCHING);
+		ReviewPointType story = reviewPointType(ReviewPointName.STORY);
+		ReviewPointType acting = reviewPointType(ReviewPointName.ACTING);
+
+		given(reviewRepository.existsByUserIdAndShowId(userId, showId)).willReturn(false);
+		given(reviewPointTypeRepository.findByPoint(ReviewPointName.IMMERSION)).willReturn(Optional.of(immersion));
+		given(reviewPointTypeRepository.findByPoint(ReviewPointName.TOUCHING)).willReturn(Optional.of(touching));
+		given(reviewPointTypeRepository.findByPoint(ReviewPointName.STORY)).willReturn(Optional.of(story));
+		given(reviewPointTypeRepository.findByPoint(ReviewPointName.ACTING)).willReturn(Optional.of(acting));
+		given(reviewRepository.save(any(Review.class))).willAnswer(invocation -> {
+			Review review = invocation.getArgument(0);
+			ReflectionTestUtils.setField(review, "id", 100L);
+			return review;
+		});
+
+		reviewService.create(userId, showId, request);
+
+		ArgumentCaptor<Review> reviewCaptor = ArgumentCaptor.forClass(Review.class);
+		ArgumentCaptor<List<ReviewPoint>> reviewPointsCaptor = ArgumentCaptor.forClass(List.class);
+
+		verify(reviewRepository).save(reviewCaptor.capture());
+		verify(reviewPointRepository).saveAll(reviewPointsCaptor.capture());
+
+		Review savedReview = reviewCaptor.getValue();
+		List<ReviewPoint> savedPoints = reviewPointsCaptor.getValue();
+
+		assertAll(
+			() -> assertThat(savedReview.getShowId()).isEqualTo(showId),
+			() -> assertThat(savedReview.getUserId()).isEqualTo(userId),
+			() -> assertThat(savedReview.getContent()).isEqualTo("재밌게 봤어요"),
+			() -> assertThat(savedReview.getIsPositive()).isTrue(),
+			() -> assertThat(savedReview.getWatchedAt()).isNotNull(),
+			() -> assertThat(savedPoints).hasSize(4),
+			() -> assertThat(savedPoints).extracting(point -> point.getReviewPointType().getPoint())
+				.containsExactly(ReviewPointName.IMMERSION, ReviewPointName.TOUCHING, ReviewPointName.STORY, ReviewPointName.ACTING)
+		);
+	}
+
+	@Test
+	@DisplayName("이미 같은 공연의 리뷰가 존재하면 예외가 발생한다.")
+	void 리뷰_중복_실패() {
+		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+		Long showId = 1L;
+		ReviewRequest.Create request = new ReviewRequest.Create(
+			true,
+			List.of(ReviewPointName.IMMERSION),
+			List.of(ReviewPointName.STORY),
+			"재밌게 봤어요"
+		);
+
+		given(reviewRepository.existsByUserIdAndShowId(userId, showId)).willReturn(true);
+
+		CustomException exception = assertThrows(
+			CustomException.class,
+			() -> reviewService.create(userId, showId, request)
+		);
+
+		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ALREADY_EXIST_REVIEW);
+		verify(reviewRepository, never()).save(any());
+		verify(reviewPointRepository, never()).saveAll(any());
+	}
+
+	@Test
+	@DisplayName("감정 포인트 자리에 매력 포인트가 들어오면 예외가 발생한다.")
+	void 감정포인트_검증_실패() {
+		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+		ReviewRequest.Create request = new ReviewRequest.Create(
+			true,
+			List.of(ReviewPointName.STORY),
+			List.of(ReviewPointName.ACTING),
+			"재밌게 봤어요"
+		);
+
+		given(reviewRepository.existsByUserIdAndShowId(userId, 1L)).willReturn(false);
+
+		CustomException exception = assertThrows(
+			CustomException.class,
+			() -> reviewService.create(userId, 1L, request)
+		);
+
+		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.NOT_EMOTION_POINT);
+		verify(reviewRepository, never()).save(any());
+	}
+
+	private ReviewPointType reviewPointType(ReviewPointName point) {
+		ReviewPointType reviewPointType = mock(ReviewPointType.class);
+		when(reviewPointType.getPoint()).thenReturn(point);
+		return reviewPointType;
+	}
+}
