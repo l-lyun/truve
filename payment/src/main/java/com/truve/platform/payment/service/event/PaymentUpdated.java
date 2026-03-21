@@ -18,6 +18,7 @@ public class PaymentUpdated {
 	@NoArgsConstructor
 	public static class Confirmed {
 		private String orderId;
+		private LocalDateTime requestedAt;
 		private LocalDateTime approvedAt;
 		private PaymentMethod method;
 		private VirtualAccount virtualAccount;
@@ -26,6 +27,7 @@ public class PaymentUpdated {
 		public static Confirmed of(Payment payment) {
 			return new Confirmed(
 				payment.getOrderId(),
+				payment.getRequestedAt(),
 				payment.getApprovedAt(),
 				payment.getMethod(),
 				payment.getVirtualAccount(),

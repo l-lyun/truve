@@ -20,6 +20,7 @@ public class PaymentUpdatedListener {
 		bookingPublisher.publish(
 			new BookingEventCommand.Confirmed(
 				event.getOrderId(),
+				event.getRequestedAt(),
 				event.getApprovedAt(),
 				event.getMethod().getDisplayName(),
 				event.getVirtualAccount() == null ? null

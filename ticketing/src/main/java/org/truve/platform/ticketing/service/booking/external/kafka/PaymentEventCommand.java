@@ -18,7 +18,7 @@ public class PaymentEventCommand {
 		public static Create of(Reservation reservation) {
 			return Create.builder()
 				.orderId(reservation.getNumber())
-				.amount(reservation.getTotalAmount() + reservation.getServiceFee())
+				.amount(reservation.getTotalAmount())
 				.build();
 		}
 	}

@@ -24,6 +24,8 @@ public class BookingEventCommand {
 	public static class Confirmed implements BookingEvent {
 		private String reservationNumber;
 		@JsonFormat(shape = JsonFormat.Shape.ARRAY)
+		private LocalDateTime bookedAt;
+		@JsonFormat(shape = JsonFormat.Shape.ARRAY)
 		private LocalDateTime paidAt;
 		private String method;
 		private VirtualAccount virtualAccount;
