@@ -32,6 +32,33 @@ spring:
       server:
         webflux:
           routes:
+            # api-docs (Swagger)
+            - id: auth-docs
+              uri: ${AUTH_SERVER_URI:http://localhost:8081}
+              predicates:
+                - Path=/api/auth/v3/api-docs
+            - id: payment-docs
+              uri: ${PAYMENT_SERVER_URI:http://localhost:8082}
+              predicates:
+                - Path=/api/payments/v3/api-docs
+            - id: queue-docs
+              uri: ${QUEUE_SERVER_URI:http://localhost:8083}
+              predicates:
+                - Path=/api/queue/v3/api-docs
+            - id: ticketing-docs
+              uri: ${TICKETING_SERVER_URI:http://localhost:8084}
+              predicates:
+                - Path=/api/ticketing/v3/api-docs/ticketing
+            - id: booking-docs
+              uri: ${TICKETING_SERVER_URI:http://localhost:8084}
+              predicates:
+                - Path=/api/ticketing/v3/api-docs/booking
+            - id: musical-docs
+              uri: ${MUSICAL_SERVER_URI:http://localhost:8085}
+              predicates:
+                - Path=/api/musical/v3/api-docs
+
+            # service
             - id: auth-jwt
               uri: ${AUTH_SERVER_URI:http://localhost:8081}
               predicates:
@@ -42,7 +69,7 @@ spring:
               uri: ${AUTH_SERVER_URI:http://localhost:8081}
               predicates:
                 - Path=/api/auth/**
-            - id: auth
+            - id: auth-test
               uri: ${AUTH_SERVER_URI:http://localhost:8081}
               predicates:
                 - Path=/test/**
