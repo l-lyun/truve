@@ -32,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class ShowCastingService {
+	private static final String DEFAULT_UNASSIGNED_CAST_NAME = "미정";
 	private static final DateTimeFormatter SHOW_DATE_LABEL_FORMATTER =
 		DateTimeFormatter.ofPattern("MM/dd(E)", Locale.KOREAN);
 	private static final DateTimeFormatter SHOW_TIME_LABEL_FORMATTER =
@@ -53,8 +54,12 @@ public class ShowCastingService {
 	) {
 		Show show = showRepository.findByIdOrThrow(showId);
 
-		LocalDateTime fromTime = from != null ? from.atStartOfDay() : null;
-		LocalDateTime toTime = to != null ? to.atTime(LocalTime.MAX) : null;
+		LocalDate effectiveFrom = from != null ? from : LocalDate.now();
+		LocalDate effectiveTo = to != null
+			? to
+			: (show.getEndTime() != null ? show.getEndTime().toLocalDate() : null);
+		LocalDateTime fromTime = effectiveFrom != null ? effectiveFrom.atStartOfDay() : null;
+		LocalDateTime toTime = effectiveTo != null ? effectiveTo.atTime(LocalTime.MAX) : null;
 		List<Long> filterArtistIds = artistIds == null ? List.of() : artistIds;
 		boolean artistFilterOff = filterArtistIds.isEmpty();
 		List<Long> queryArtistIds = artistFilterOff ? List.of(-1L) : filterArtistIds;
@@ -93,22 +98,15 @@ public class ShowCastingService {
 				.showTime(schedule.getShowTime())
 				.showDateLabel(toShowDateLabel(schedule.getShowTime()))
 				.showTimeLabel(toShowTimeLabel(schedule.getShowTime()))
-				.casts(castsByScheduleId.getOrDefault(schedule.getId(), Map.of()))
+				.casts(buildRowCasts(schedule.getId(), roles, castsByScheduleId))
 				.build())
 			.toList();
-
-		LocalDate rangeFrom = from != null
-			? from
-			: (show.getStartTime() != null ? show.getStartTime().toLocalDate() : null);
-		LocalDate rangeTo = to != null
-			? to
-			: (show.getEndTime() != null ? show.getEndTime().toLocalDate() : null);
 
 		return ShowCastingResponse.Detail.builder()
 			.showId(show.getId())
 			.range(ShowCastingResponse.Range.builder()
-				.from(rangeFrom)
-				.to(rangeTo)
+				.from(effectiveFrom)
+				.to(effectiveTo)
 				.build())
 			.filters(ShowCastingResponse.Filters.builder()
 				.artists(filterArtists)
@@ -175,6 +173,25 @@ public class ShowCastingService {
 			result.put(scheduleId, casts);
 		});
 		return result;
+	}
+
+	private Map<String, ShowCastingResponse.CastArtist> buildRowCasts(
+		Long scheduleId,
+		List<ShowCastingResponse.Role> roles,
+		Map<Long, Map<String, ShowCastingResponse.CastArtist>> castsByScheduleId
+	) {
+		Map<String, ShowCastingResponse.CastArtist> assignedCasts = castsByScheduleId.getOrDefault(scheduleId, Map.of());
+		Map<String, ShowCastingResponse.CastArtist> rowCasts = new LinkedHashMap<>();
+		roles.forEach(role -> rowCasts.put(role.getRoleName(), createUnassignedCast()));
+		rowCasts.putAll(assignedCasts);
+		return rowCasts;
+	}
+
+	private ShowCastingResponse.CastArtist createUnassignedCast() {
+		return ShowCastingResponse.CastArtist.builder()
+			.artistId(null)
+			.artistName(DEFAULT_UNASSIGNED_CAST_NAME)
+			.build();
 	}
 
 	private String toShowDateLabel(LocalDateTime showTime) {

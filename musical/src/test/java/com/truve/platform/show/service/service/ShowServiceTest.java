@@ -4,6 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
@@ -286,5 +289,125 @@ class ShowServiceTest {
 
 		assertEquals(requestFrom, result.getRange().getFrom());
 		assertEquals(requestTo, result.getRange().getTo());
+	}
+
+	@Test
+	@DisplayName("캐스팅 미확정 역할은 미정으로 채워 응답한다.")
+	void 캐스팅_일정_조회_미확정_역할은_미정으로_응답() {
+		Long showId = 1L;
+		Show show = org.mockito.Mockito.mock(Show.class);
+		when(show.getId()).thenReturn(showId);
+
+		ShowSchedule schedule1 = org.mockito.Mockito.mock(ShowSchedule.class);
+		when(schedule1.getId()).thenReturn(101L);
+		when(schedule1.getShowTime()).thenReturn(LocalDateTime.of(2026, 1, 2, 19, 0));
+
+		Artist artistCharlie = org.mockito.Mockito.mock(Artist.class);
+		when(artistCharlie.getId()).thenReturn(1L);
+		when(artistCharlie.getName()).thenReturn("김호영");
+
+		Artist artistLola = org.mockito.Mockito.mock(Artist.class);
+		when(artistLola.getId()).thenReturn(10L);
+		when(artistLola.getName()).thenReturn("강홍석");
+
+		Artist artistLauren = org.mockito.Mockito.mock(Artist.class);
+		when(artistLauren.getId()).thenReturn(20L);
+		when(artistLauren.getName()).thenReturn("허윤슬");
+
+		ShowCasting charlieCasting = org.mockito.Mockito.mock(ShowCasting.class);
+		when(charlieCasting.getId()).thenReturn(1001L);
+		when(charlieCasting.getRoleName()).thenReturn("찰리");
+		when(charlieCasting.getCastingOrder()).thenReturn(1);
+		when(charlieCasting.getArtist()).thenReturn(artistCharlie);
+
+		ShowCasting lolaCasting = org.mockito.Mockito.mock(ShowCasting.class);
+		when(lolaCasting.getId()).thenReturn(1002L);
+		when(lolaCasting.getRoleName()).thenReturn("롤라");
+		when(lolaCasting.getCastingOrder()).thenReturn(2);
+		when(lolaCasting.getArtist()).thenReturn(artistLola);
+
+		ShowCasting laurenCasting = org.mockito.Mockito.mock(ShowCasting.class);
+		when(laurenCasting.getId()).thenReturn(1003L);
+		when(laurenCasting.getRoleName()).thenReturn("로렌");
+		when(laurenCasting.getCastingOrder()).thenReturn(3);
+		when(laurenCasting.getArtist()).thenReturn(artistLauren);
+
+		ShowScheduleCasting sc1 = org.mockito.Mockito.mock(ShowScheduleCasting.class);
+		when(sc1.getShowSchedule()).thenReturn(schedule1);
+		when(sc1.getShowCasting()).thenReturn(charlieCasting);
+
+		ShowScheduleCasting sc2 = org.mockito.Mockito.mock(ShowScheduleCasting.class);
+		when(sc2.getShowSchedule()).thenReturn(schedule1);
+		when(sc2.getShowCasting()).thenReturn(lolaCasting);
+
+		when(showRepository.findByIdOrThrow(showId)).thenReturn(show);
+		when(showScheduleRepository.findCastingSchedules(
+			org.mockito.ArgumentMatchers.eq(showId),
+			org.mockito.ArgumentMatchers.any(),
+			org.mockito.ArgumentMatchers.any(),
+			org.mockito.ArgumentMatchers.eq(true),
+			org.mockito.ArgumentMatchers.anyList(),
+			org.mockito.ArgumentMatchers.any(PageRequest.class)
+		)).thenReturn(new PageImpl<>(List.of(schedule1), PageRequest.of(0, 50), 1));
+		when(showCastingRepository.findAllByShowId(showId))
+			.thenReturn(List.of(charlieCasting, lolaCasting, laurenCasting));
+		when(showScheduleCastingRepository.findAllByScheduleIds(List.of(101L))).thenReturn(List.of(sc1, sc2));
+
+		ShowCastingResponse.Detail result = showCastingService.getCastingSchedules(
+			showId,
+			LocalDate.of(2025, 12, 17),
+			LocalDate.of(2026, 3, 29),
+			List.of(),
+			0,
+			50
+		);
+
+		assertEquals("김호영", result.getRows().get(0).getCasts().get("찰리").getArtistName());
+		assertEquals("강홍석", result.getRows().get(0).getCasts().get("롤라").getArtistName());
+		assertNull(result.getRows().get(0).getCasts().get("로렌").getArtistId());
+		assertEquals("미정", result.getRows().get(0).getCasts().get("로렌").getArtistName());
+	}
+
+	@Test
+	@DisplayName("캐스팅 일정 조회는 기간이 없으면 오늘부터 공연 종료일까지 조회한다.")
+	void 캐스팅_일정_조회_기본기간은_오늘부터_공연종료일() {
+		Long showId = 1L;
+		LocalDate today = LocalDate.now();
+		LocalDate showEndDate = today.plusDays(7);
+
+		Show show = org.mockito.Mockito.mock(Show.class);
+		when(show.getId()).thenReturn(showId);
+		when(show.getEndTime()).thenReturn(showEndDate.atStartOfDay());
+
+		when(showRepository.findByIdOrThrow(showId)).thenReturn(show);
+		when(showScheduleRepository.findCastingSchedules(
+			eq(showId),
+			eq(today.atStartOfDay()),
+			eq(showEndDate.atTime(23, 59, 59, 999999999)),
+			eq(true),
+			any(),
+			any(PageRequest.class)
+		)).thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 50), 0));
+		when(showCastingRepository.findAllByShowId(showId)).thenReturn(List.of());
+
+		ShowCastingResponse.Detail result = showCastingService.getCastingSchedules(
+			showId,
+			null,
+			null,
+			List.of(),
+			0,
+			50
+		);
+
+		assertEquals(today, result.getRange().getFrom());
+		assertEquals(showEndDate, result.getRange().getTo());
+		verify(showScheduleRepository).findCastingSchedules(
+			eq(showId),
+			eq(today.atStartOfDay()),
+			eq(showEndDate.atTime(23, 59, 59, 999999999)),
+			eq(true),
+			any(),
+			any(PageRequest.class)
+		);
 	}
 }

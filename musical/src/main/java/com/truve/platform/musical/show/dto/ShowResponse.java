@@ -3,6 +3,7 @@ package com.truve.platform.musical.show.dto;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,6 +13,7 @@ public class ShowResponse {
 	@Getter
 	@AllArgsConstructor
 	@Builder
+	@Schema(name = "ShowDetailResponse")
 	public static class Detail {
 		private Long showId;
 		private String title;

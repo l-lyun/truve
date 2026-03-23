@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,6 +15,7 @@ public class ShowCastingResponse {
 	@Getter
 	@AllArgsConstructor
 	@Builder
+	@Schema(name = "ShowCastingScheduleDetailResponse")
 	public static class Detail {
 		private Long showId;
 		private Range range;
