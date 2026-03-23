@@ -72,4 +72,8 @@ public class Ticket extends BaseEntity {
 			.seatDetail(seatDetail)
 			.build();
 	}
+
+	public boolean isCanceled() {
+		return status == TicketStatus.CANCELED;
+	}
 }

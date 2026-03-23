@@ -2,8 +2,11 @@ package org.truve.platform.ticketing.service.booking.domain.entity;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.truve.platform.ticketing.service.booking.domain.constant.ReservationStatus;
 
@@ -42,6 +45,9 @@ public class Reservation extends BaseEntity {
 	private Long serviceFee;
 
 	@Column(nullable = false)
+	private Long refundFee;
+
+	@Column(nullable = false)
 	private String gradeSummary;
 
 	@Column(nullable = false)
@@ -53,6 +59,9 @@ public class Reservation extends BaseEntity {
 
 	@Column
 	private LocalDateTime paidAt;
+
+	@Column
+	private LocalDateTime canceledAt;
 
 	@Embedded
 	private VirtualAccount virtualAccount;
@@ -70,12 +79,14 @@ public class Reservation extends BaseEntity {
 	private List<Ticket> tickets = new ArrayList<>();
 
 	@Builder
-	private Reservation(UUID userId, String number, String gradeSummary, ShowInfo showInfo) {
+	private Reservation(UUID userId, String number, String gradeSummary,
+		ShowInfo showInfo) {
 
 		this.userId = userId;
 		this.number = number;
 		this.totalAmount = 0L;
 		this.serviceFee = 0L;
+		this.refundFee = 0L;
 		this.gradeSummary = gradeSummary;
 		this.showInfo = showInfo;
 		this.status = ReservationStatus.CREATED;
@@ -132,5 +143,52 @@ public class Reservation extends BaseEntity {
 	public void depositReceive(LocalDateTime paidAt) {
 		this.paidAt = paidAt;
 		this.status = ReservationStatus.CONFIRMED;
+	}
+
+	public boolean isCancelable() {
+		return status == ReservationStatus.CONFIRMED;
+	}
+
+	public boolean isCanceled() {
+		return status == ReservationStatus.CANCELED || status == ReservationStatus.PARTIAL_CANCELED;
+	}
+
+	public boolean isReviewable() {
+		return status == ReservationStatus.COMPLETED;
+	}
+
+	public boolean isWaitingDeposit() {
+		return status == ReservationStatus.PENDING_DEPOSIT;
+	}
+
+	public List<Long> getTicketPrices() {
+		return tickets.stream().map(Ticket::getPriceSnapshot).toList();
+	}
+
+	public Map<String, List<Ticket>> getTicketsGroupedByGrade() {
+		return Collections.unmodifiableMap(
+			tickets.stream().collect(Collectors.groupingBy(Ticket::getGrade))
+		);
+	}
+
+	public List<Ticket> getCancelTickets() {
+		return tickets.stream().filter(Ticket::isCanceled).toList();
+	}
+
+	public List<String> getCanceledSeatDetails() {
+		return getCancelTickets().stream().map(Ticket::getSeatDetail).toList();
+	}
+
+	public Long getRefundAmount() {
+		Long canceledTicketPrice = getCancelTickets().stream().mapToLong(Ticket::getPriceSnapshot).sum();
+		return canceledTicketPrice - refundFee;
+	}
+
+	public LocalDateTime getDeadline() {
+		if (isCancelable())
+			return showInfo.getStartAt();
+		if (isWaitingDeposit())
+			return virtualAccount.getDueDate();
+		return null;
 	}
 }

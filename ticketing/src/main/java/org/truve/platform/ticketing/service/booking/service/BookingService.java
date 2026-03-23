@@ -1,5 +1,6 @@
 package org.truve.platform.ticketing.service.booking.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.LinkedHashMap;
@@ -21,7 +22,7 @@ import org.truve.platform.ticketing.service.booking.external.kafka.BookingEventC
 import org.truve.platform.ticketing.service.booking.external.kafka.PaymentEventCommand;
 import org.truve.platform.ticketing.service.booking.external.kafka.PaymentPublisher;
 import org.truve.platform.ticketing.service.booking.repository.ReservationRepository;
-import org.truve.platform.ticketing.service.booking.service.util.NumberGenerator;
+import org.truve.platform.ticketing.service.booking.util.NumberGenerator;
 
 import lombok.RequiredArgsConstructor;
 
@@ -34,7 +35,6 @@ public class BookingService {
 
 	private final ReservationRepository reservationRepository;
 	private final TicketingClient ticketingClient;
-	private final NumberGenerator numberGenerator;
 	private final PaymentPublisher paymentPublisher;
 
 	@Transactional
@@ -52,7 +52,7 @@ public class BookingService {
 	private Reservation createReservation(UUID userId, TicketingResponse.SeatInfo seatInfo) {
 		return Reservation.create(
 			userId,
-			numberGenerator.generateReservationNumber(),
+			NumberGenerator.generateReservationNumber(),
 			createGradeSummary(seatInfo),
 			createShowInfo(seatInfo)
 		);
@@ -62,7 +62,7 @@ public class BookingService {
 		return seatInfo.getSeats().stream().map(
 			seat -> Ticket.create(
 				reservation,
-				numberGenerator.generateTicketNumber(),
+				NumberGenerator.generateTicketNumber(),
 				seat.getGradeName(),
 				seat.getPrice(),
 				createSeatDetail(seat)
@@ -99,6 +99,28 @@ public class BookingService {
 			seat.getSeatRow(),
 			seat.getSeatNumber()
 		);
+	}
+
+	@Transactional(readOnly = true)
+	public BookingResponse.Order getOrder(String reservationNumber) {
+		Reservation reservation = reservationRepository.findByNumber(reservationNumber);
+		return BookingResponse.Order.from(reservation);
+	}
+
+	@Transactional(readOnly = true)
+	public BookingResponse.ReservationDetail getDetail(String reservationNumber) {
+		Reservation reservation = reservationRepository.findByNumber(reservationNumber);
+		return BookingResponse.ReservationDetail.from(reservation);
+	}
+
+	@Transactional(readOnly = true)
+	public List<BookingResponse.Summary> getSummaries(UUID userId, LocalDate from, LocalDate to) {
+		LocalDateTime fromDt = from == null ? null : from.atStartOfDay();
+		LocalDateTime toDt = to == null ? null : to.atTime(LocalTime.MAX);
+
+		List<Reservation> reservations = reservationRepository
+			.findByUserIdAndDateRange(userId, fromDt, toDt);
+		return reservations.stream().map(BookingResponse.Summary::from).toList();
 	}
 
 	@Transactional
