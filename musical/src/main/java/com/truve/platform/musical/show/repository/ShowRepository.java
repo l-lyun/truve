@@ -1,6 +1,8 @@
 package com.truve.platform.musical.show.repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +15,19 @@ import com.truve.platform.common.exception.ErrorCode;
 import com.truve.platform.musical.show.domain.entity.Show;
 
 public interface ShowRepository extends JpaRepository<Show, Long> {
+	interface ShowSearchProjection {
+		Long getShowId();
+
+		String getPosterImg();
+
+		String getTitle();
+
+		String getVenueName();
+
+		LocalDateTime getStartTime();
+
+		LocalDateTime getEndTime();
+	}
 
 	@Query("""
 		select s
@@ -126,11 +141,41 @@ public interface ShowRepository extends JpaRepository<Show, Long> {
 		from Show p
 		where p.id = :showId
 		""")
-	java.util.Optional<Show> findDetailById(@Param("showId") Long showId);
+	Optional<Show> findDetailById(@Param("showId") Long showId);
 
 	default Show findByIdOrThrow(Long showId) {
 		return findDetailById(showId).orElseThrow(
 			() -> new CustomException(ErrorCode.NOT_FOUND_SHOW)
 		);
 	}
+
+	@Query("""
+		select
+			s.id as showId,
+			s.posterImg as posterImg,
+			s.title as title,
+			v.name as venueName,
+			s.startTime as startTime,
+			s.endTime as endTime
+		from Show s
+		left join Venue v on v.id = s.venueId
+		where s.title like concat('%', :keyword, '%')
+		and (s.endTime is null or s.endTime >= :now)
+		order by
+			case
+				when lower(s.title) = lower(:keyword) then 0
+				else 1
+			end asc,
+			case
+				when s.startTime is null then 1
+				else 0
+			end asc,
+			s.startTime desc,
+			s.id desc
+		""")
+	List<ShowSearchProjection> searchShows(
+		@Param("keyword") String keyword,
+		@Param("now") LocalDateTime now
+	);
+
 }
