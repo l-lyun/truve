@@ -64,6 +64,7 @@ services:
     ports:
       - "8080:8080"
     environment:
+      - TZ=Asia/Seoul
       - AUTH_SERVER_URI=http://auth-server:8081
       - PAYMENT_SERVER_URI=http://payment:8082
       - QUEUE_SERVER_URI=http://queue:8083
@@ -86,6 +87,7 @@ services:
     ports:
       - "8081:8081"
     environment:
+      - TZ=Asia/Seoul
       - USER_MYSQL_URL=jdbc:mysql://db:3306/user_db
       - USER_MYSQL_USERNAME=root
       - USER_MYSQL_PASSWORD=1234
@@ -124,6 +126,7 @@ services:
     ports:
       - "8082:8082"
     environment:
+      - TZ=Asia/Seoul
       - PAYMENT_MYSQL_URL=jdbc:mysql://db:3306/payment_db
       - PAYMENT_MYSQL_USERNAME=root
       - PAYMENT_MYSQL_PASSWORD=1234
@@ -149,6 +152,7 @@ services:
     ports:
       - "8083:8083"
     environment:
+      - TZ=Asia/Seoul
       - SPRING_PROFILES_ACTIVE=local
       - USER_REDIS_HOST=user-redis
       - USER_REDIS_PORT=6379
@@ -170,6 +174,7 @@ services:
     ports:
       - "8084:8084"
     environment:
+      - TZ=Asia/Seoul
       - TICKETING_MYSQL_URL=jdbc:mysql://db:3306/ticketing_db
       - TICKETING_MYSQL_USERNAME=root
       - TICKETING_MYSQL_PASSWORD=1234
@@ -199,6 +204,7 @@ services:
     ports:
       - "8085:8085"
     environment:
+      - TZ=Asia/Seoul
       - SPRING_PROFILES_ACTIVE=local
       - MUSICAL_MYSQL_URL=jdbc:mysql://db:3306/musical_db
       - MUSICAL_MYSQL_USERNAME=root
