@@ -1,5 +1,6 @@
 package com.truve.platform.auth.service.domain.entity;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.truve.platform.common.constants.AuthProvider;
@@ -63,6 +64,11 @@ public class User extends BaseEntity {
 	private boolean marketingInfoAgreed;
 
 	@Column(nullable = false)
+	private boolean emailNotificationAgreed;
+
+	private LocalDateTime withdrawnAt;
+
+	@Column(nullable = false)
 	private boolean over14Agreed;
 
 
@@ -81,6 +87,7 @@ public class User extends BaseEntity {
 		boolean electronicFinanceTermsAgreed,
 		boolean privacyCollectionAgreed,
 		boolean marketingInfoAgreed,
+		boolean emailNotificationAgreed,
 		boolean over14Agreed
 	) {
 		this.publicId = publicId;
@@ -96,6 +103,7 @@ public class User extends BaseEntity {
 		this.electronicFinanceTermsAgreed = electronicFinanceTermsAgreed;
 		this.privacyCollectionAgreed = privacyCollectionAgreed;
 		this.marketingInfoAgreed = marketingInfoAgreed;
+		this.emailNotificationAgreed = emailNotificationAgreed;
 		this.over14Agreed = over14Agreed;
 	}
 
@@ -107,6 +115,7 @@ public class User extends BaseEntity {
 		boolean electronicFinanceTermsAgreed,
 		boolean privacyCollectionAgreed,
 		boolean marketingInfoAgreed,
+		boolean emailNotificationAgreed,
 		boolean over14Agreed
 	) {
 		return User.builder()
@@ -120,6 +129,7 @@ public class User extends BaseEntity {
 			.electronicFinanceTermsAgreed(electronicFinanceTermsAgreed)
 			.privacyCollectionAgreed(privacyCollectionAgreed)
 			.marketingInfoAgreed(marketingInfoAgreed)
+			.emailNotificationAgreed(emailNotificationAgreed)
 			.over14Agreed(over14Agreed)
 			.build();
 	}
@@ -144,7 +154,28 @@ public class User extends BaseEntity {
 			.electronicFinanceTermsAgreed(false)
 			.privacyCollectionAgreed(false)
 			.marketingInfoAgreed(false)
+			.emailNotificationAgreed(false)
 			.over14Agreed(false)
 			.build();
+	}
+
+	public void updateNickname(String nickname) {
+		this.nickname = nickname;
+	}
+
+	public void updateMarketingInfoAgreed(boolean marketingInfoAgreed) {
+		this.marketingInfoAgreed = marketingInfoAgreed;
+	}
+
+	public void updateEmailNotificationAgreed(boolean emailNotificationAgreed) {
+		this.emailNotificationAgreed = emailNotificationAgreed;
+	}
+
+	public void withdraw() {
+		this.withdrawnAt = LocalDateTime.now();
+	}
+
+	public boolean isWithdrawn() {
+		return withdrawnAt != null;
 	}
 }

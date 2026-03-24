@@ -43,8 +43,45 @@ public class AuthService {
 	}
 
 	@Transactional
+	public void changeNickname(String accessToken, String nickname) {
+		User user = getUserByAccessToken(accessToken);
+
+		validateNickname(nickname, user.getNickname());
+		user.updateNickname(nickname);
+	}
+
+	@Transactional
+	public void updateMarketingConsent(String accessToken, boolean marketingInfoAgreed) {
+		User user = getUserByAccessToken(accessToken);
+		user.updateMarketingInfoAgreed(marketingInfoAgreed);
+	}
+
+	@Transactional
+	public void updateEmailNotificationConsent(String accessToken, boolean emailNotificationAgreed) {
+		User user = getUserByAccessToken(accessToken);
+		user.updateEmailNotificationAgreed(emailNotificationAgreed);
+	}
+
+	@Transactional
+	public void withdraw(String accessToken) {
+		User user = getUserByAccessToken(accessToken);
+
+		try {
+			String jti = jwtService.parseJti(accessToken);
+			var exp = jwtService.parseExpiration(accessToken);
+
+			user.withdraw();
+			refreshTokenService.delete(user.getPublicId());
+			blacklistAccessToken(jti, exp.getTime());
+		} catch (JwtException | IllegalArgumentException e) {
+			throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
+		}
+	}
+
+	@Transactional
 	public Pair<String, String> login(String email, String password) {
 		User user = userRepository.findByEmailOrThrow(email);
+		validateNotWithdrawn(user);
 
 		Preconditions.validate(passwordEncoder.matches(password, user.getPassword()), ErrorCode.NOT_CORRECT_PASSWORD);
 
@@ -76,6 +113,7 @@ public class AuthService {
 
 		User user = userRepository.findByPublicId(userPublicId)
 			.orElseThrow(() -> new CustomException(ErrorCode.INVALID_REFRESH_TOKEN));
+		validateNotWithdrawn(user);
 		var newAccessExp = jwtService.getAccessExpiration();
 		var newRefreshExp = jwtService.getRefreshExpiration();
 
@@ -98,11 +136,7 @@ public class AuthService {
 			String jti = jwtService.parseJti(accessToken);
 			var exp = jwtService.parseExpiration(accessToken);
 			refreshTokenService.delete(userPublicId);
-
-			long ttlMs = exp.getTime() - System.currentTimeMillis();
-			if (ttlMs > 0) {
-				accessTokenBlacklistService.save(jti, ttlMs);
-			}
+			blacklistAccessToken(jti, exp.getTime());
 		} catch (JwtException | IllegalArgumentException e) {
 			throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
 		}
@@ -128,17 +162,11 @@ public class AuthService {
 			ErrorCode.ALREADY_EXISTS_EMAIL
 		);
 		Preconditions.validate(
-			nickname != null && NICKNAME_PATTERN.matcher(nickname).matches(),
-			ErrorCode.INVALID_NICKNAME
-		);
-		Preconditions.validate(
-			!userRepository.existsByNickname(nickname),
-			ErrorCode.ALREADY_EXISTS_NICKNAME
-		);
-		Preconditions.validate(
 			serviceTermsAgreed && electronicFinanceTermsAgreed && privacyCollectionAgreed && over14Agreed,
 			ErrorCode.REQUIRED_TERMS_NOT_AGREED
 		);
+
+		validateNickname(nickname, null);
 
 		String encodedPassword = passwordEncoder.encode(password);
 
@@ -150,6 +178,7 @@ public class AuthService {
 			electronicFinanceTermsAgreed,
 			privacyCollectionAgreed,
 			marketingInfoAgreed,
+			false,
 			over14Agreed
 		);
 
@@ -164,11 +193,41 @@ public class AuthService {
 		try {
 			UUID userPublicId = jwtService.parsePublicId(accessToken);
 
-			return userRepository.findByPublicId(userPublicId)
+			User user = userRepository.findByPublicId(userPublicId)
 				.orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
+			validateNotWithdrawn(user);
+
+			return user;
 		} catch (JwtException | IllegalArgumentException e) {
 			throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
 		}
+	}
+
+	private void validateNotWithdrawn(User user) {
+		Preconditions.validate(!user.isWithdrawn(), ErrorCode.ALREADY_WITHDRAWN_USER);
+	}
+
+	private void blacklistAccessToken(String jti, long expirationTimeMs) {
+		long ttlMs = expirationTimeMs - System.currentTimeMillis();
+		if (ttlMs > 0) {
+			accessTokenBlacklistService.save(jti, ttlMs);
+		}
+	}
+
+	private void validateNickname(String nickname, String currentNickname) {
+		Preconditions.validate(
+			nickname != null && NICKNAME_PATTERN.matcher(nickname).matches(),
+			ErrorCode.INVALID_NICKNAME
+		);
+
+		if (nickname.equals(currentNickname)) {
+			return;
+		}
+
+		Preconditions.validate(
+			!userRepository.existsByNickname(nickname),
+			ErrorCode.ALREADY_EXISTS_NICKNAME
+		);
 	}
 
 }

@@ -56,7 +56,7 @@ class AuthServiceTest {
 	private static final String NICKNAME = "tester";
 
 	private User createUser(Long id, String email, String encodedPassword) {
-		User user = User.createLocalUser(email, NICKNAME, encodedPassword, true, true, true, false, true);
+		User user = User.createLocalUser(email, NICKNAME, encodedPassword, true, true, true, false, false, true);
 		ReflectionTestUtils.setField(user, "id", id);
 		return user;
 	}
@@ -82,6 +82,7 @@ class AuthServiceTest {
 			assertThat(result.getEmail()).isEqualTo(user.getEmail());
 			assertThat(result.getNickname()).isEqualTo(user.getNickname());
 			assertThat(result.isMarketingInfoAgreed()).isEqualTo(user.isMarketingInfoAgreed());
+			assertThat(result.isEmailNotificationAgreed()).isEqualTo(user.isEmailNotificationAgreed());
 		}
 
 		@Test
@@ -114,6 +115,290 @@ class AuthServiceTest {
 
 			// then
 			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.NOT_FOUND_USER);
+		}
+
+		@Test
+		@DisplayName("탈퇴한 회원이면 예외가 발생한다.")
+		void 내정보조회_실패_탈퇴회원() {
+			// given
+			String accessToken = "access-token";
+			User user = createUser(1L, "user@test.com", "encoded");
+			user.withdraw();
+
+			given(jwtService.parsePublicId(accessToken)).willReturn(user.getPublicId());
+			given(userRepository.findByPublicId(user.getPublicId())).willReturn(java.util.Optional.of(user));
+
+			// when
+			CustomException exception = assertThrows(CustomException.class, () -> authService.getMe(accessToken));
+
+			// then
+			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ALREADY_WITHDRAWN_USER);
+		}
+	}
+
+	@Nested
+	@DisplayName("닉네임 변경 테스트")
+	class ChangeNicknameTest {
+
+		@Test
+		@DisplayName("유효한 닉네임이면 변경한다.")
+		void 닉네임변경_성공() {
+			// given
+			String accessToken = "access-token";
+			String newNickname = "newtester";
+			User user = createUser(1L, "user@test.com", "encoded");
+
+			given(jwtService.parsePublicId(accessToken)).willReturn(user.getPublicId());
+			given(userRepository.findByPublicId(user.getPublicId())).willReturn(java.util.Optional.of(user));
+			given(userRepository.existsByNickname(newNickname)).willReturn(false);
+
+			// when
+			authService.changeNickname(accessToken, newNickname);
+
+			// then
+			assertThat(user.getNickname()).isEqualTo(newNickname);
+		}
+
+		@Test
+		@DisplayName("현재 닉네임과 같으면 중복 조회 없이 유지한다.")
+		void 닉네임변경_성공_동일닉네임() {
+			// given
+			String accessToken = "access-token";
+			User user = createUser(1L, "user@test.com", "encoded");
+
+			given(jwtService.parsePublicId(accessToken)).willReturn(user.getPublicId());
+			given(userRepository.findByPublicId(user.getPublicId())).willReturn(java.util.Optional.of(user));
+
+			// when
+			authService.changeNickname(accessToken, user.getNickname());
+
+			// then
+			assertThat(user.getNickname()).isEqualTo(NICKNAME);
+			verify(userRepository, never()).existsByNickname(anyString());
+		}
+
+		@Test
+		@DisplayName("닉네임 형식이 유효하지 않으면 예외가 발생한다.")
+		void 닉네임변경_실패_형식오류() {
+			// given
+			String accessToken = "access-token";
+			User user = createUser(1L, "user@test.com", "encoded");
+
+			given(jwtService.parsePublicId(accessToken)).willReturn(user.getPublicId());
+			given(userRepository.findByPublicId(user.getPublicId())).willReturn(java.util.Optional.of(user));
+
+			// when
+			CustomException exception = assertThrows(
+				CustomException.class,
+				() -> authService.changeNickname(accessToken, "a b")
+			);
+
+			// then
+			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_NICKNAME);
+			verify(userRepository, never()).existsByNickname(anyString());
+		}
+
+		@Test
+		@DisplayName("이미 사용 중인 닉네임이면 예외가 발생한다.")
+		void 닉네임변경_실패_중복닉네임() {
+			// given
+			String accessToken = "access-token";
+			String newNickname = "dupname";
+			User user = createUser(1L, "user@test.com", "encoded");
+
+			given(jwtService.parsePublicId(accessToken)).willReturn(user.getPublicId());
+			given(userRepository.findByPublicId(user.getPublicId())).willReturn(java.util.Optional.of(user));
+			given(userRepository.existsByNickname(newNickname)).willReturn(true);
+
+			// when
+			CustomException exception = assertThrows(
+				CustomException.class,
+				() -> authService.changeNickname(accessToken, newNickname)
+			);
+
+			// then
+			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ALREADY_EXISTS_NICKNAME);
+		}
+
+		@Test
+		@DisplayName("탈퇴한 회원이면 예외가 발생한다.")
+		void 닉네임변경_실패_탈퇴회원() {
+			// given
+			String accessToken = "access-token";
+			User user = createUser(1L, "user@test.com", "encoded");
+			user.withdraw();
+
+			given(jwtService.parsePublicId(accessToken)).willReturn(user.getPublicId());
+			given(userRepository.findByPublicId(user.getPublicId())).willReturn(java.util.Optional.of(user));
+
+			// when
+			CustomException exception = assertThrows(
+				CustomException.class,
+				() -> authService.changeNickname(accessToken, "newtester")
+			);
+
+			// then
+			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ALREADY_WITHDRAWN_USER);
+		}
+	}
+
+	@Nested
+	@DisplayName("마케팅 정보 수신 동의 변경 테스트")
+	class UpdateMarketingConsentTest {
+
+		@Test
+		@DisplayName("마케팅 정보 수신 동의 상태를 변경한다.")
+		void 마케팅수신동의변경_성공() {
+			// given
+			String accessToken = "access-token";
+			User user = createUser(1L, "user@test.com", "encoded");
+
+			given(jwtService.parsePublicId(accessToken)).willReturn(user.getPublicId());
+			given(userRepository.findByPublicId(user.getPublicId())).willReturn(java.util.Optional.of(user));
+
+			// when
+			authService.updateMarketingConsent(accessToken, true);
+
+			// then
+			assertThat(user.isMarketingInfoAgreed()).isTrue();
+		}
+
+		@Test
+		@DisplayName("마케팅 정보 수신 동의를 철회할 수 있다.")
+		void 마케팅수신동의변경_성공_철회() {
+			// given
+			String accessToken = "access-token";
+			User user = createUser(1L, "user@test.com", "encoded");
+			user.updateMarketingInfoAgreed(true);
+
+			given(jwtService.parsePublicId(accessToken)).willReturn(user.getPublicId());
+			given(userRepository.findByPublicId(user.getPublicId())).willReturn(java.util.Optional.of(user));
+
+			// when
+			authService.updateMarketingConsent(accessToken, false);
+
+			// then
+			assertThat(user.isMarketingInfoAgreed()).isFalse();
+		}
+
+		@Test
+		@DisplayName("탈퇴한 회원이면 예외가 발생한다.")
+		void 마케팅수신동의변경_실패_탈퇴회원() {
+			// given
+			String accessToken = "access-token";
+			User user = createUser(1L, "user@test.com", "encoded");
+			user.withdraw();
+
+			given(jwtService.parsePublicId(accessToken)).willReturn(user.getPublicId());
+			given(userRepository.findByPublicId(user.getPublicId())).willReturn(java.util.Optional.of(user));
+
+			// when
+			CustomException exception = assertThrows(
+				CustomException.class,
+				() -> authService.updateMarketingConsent(accessToken, true)
+			);
+
+			// then
+			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ALREADY_WITHDRAWN_USER);
+		}
+	}
+
+	@Nested
+	@DisplayName("이메일 알림 수신 동의 변경 테스트")
+	class UpdateEmailNotificationConsentTest {
+
+		@Test
+		@DisplayName("이메일 알림 수신 동의 상태를 변경한다.")
+		void 이메일알림수신동의변경_성공() {
+			// given
+			String accessToken = "access-token";
+			User user = createUser(1L, "user@test.com", "encoded");
+
+			given(jwtService.parsePublicId(accessToken)).willReturn(user.getPublicId());
+			given(userRepository.findByPublicId(user.getPublicId())).willReturn(java.util.Optional.of(user));
+
+			// when
+			authService.updateEmailNotificationConsent(accessToken, true);
+
+			// then
+			assertThat(user.isEmailNotificationAgreed()).isTrue();
+		}
+
+		@Test
+		@DisplayName("이메일 알림 수신 동의를 철회할 수 있다.")
+		void 이메일알림수신동의변경_성공_철회() {
+			// given
+			String accessToken = "access-token";
+			User user = createUser(1L, "user@test.com", "encoded");
+			user.updateEmailNotificationAgreed(true);
+
+			given(jwtService.parsePublicId(accessToken)).willReturn(user.getPublicId());
+			given(userRepository.findByPublicId(user.getPublicId())).willReturn(java.util.Optional.of(user));
+
+			// when
+			authService.updateEmailNotificationConsent(accessToken, false);
+
+			// then
+			assertThat(user.isEmailNotificationAgreed()).isFalse();
+		}
+
+		@Test
+		@DisplayName("토큰은 유효하지만 사용자가 없으면 예외가 발생한다.")
+		void 이메일알림수신동의변경_실패_사용자없음() {
+			// given
+			String accessToken = "access-token";
+			UUID userPublicId = UUID.randomUUID();
+
+			given(jwtService.parsePublicId(accessToken)).willReturn(userPublicId);
+			given(userRepository.findByPublicId(userPublicId)).willReturn(java.util.Optional.empty());
+
+			// when
+			CustomException exception = assertThrows(
+				CustomException.class,
+				() -> authService.updateEmailNotificationConsent(accessToken, true)
+			);
+
+			// then
+			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.NOT_FOUND_USER);
+		}
+
+		@Test
+		@DisplayName("유효하지 않은 액세스 토큰이면 예외가 발생한다.")
+		void 이메일알림수신동의변경_실패_유효하지_않은_토큰() {
+			// given
+			String accessToken = "invalid-access-token";
+			given(jwtService.parsePublicId(accessToken)).willThrow(new JwtException("invalid"));
+
+			// when
+			CustomException exception = assertThrows(
+				CustomException.class,
+				() -> authService.updateEmailNotificationConsent(accessToken, true)
+			);
+
+			// then
+			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_REFRESH_TOKEN);
+			verify(userRepository, never()).findByPublicId(any());
+		}
+
+		@Test
+		@DisplayName("탈퇴한 회원이면 예외가 발생한다.")
+		void 이메일알림수신동의변경_실패_탈퇴회원() {
+			// given
+			String accessToken = "access-token";
+			User user = createUser(1L, "user@test.com", "encoded");
+			user.withdraw();
+
+			given(jwtService.parsePublicId(accessToken)).willReturn(user.getPublicId());
+			given(userRepository.findByPublicId(user.getPublicId())).willReturn(java.util.Optional.of(user));
+
+			// when
+			CustomException exception = assertThrows(
+				CustomException.class,
+				() -> authService.updateEmailNotificationConsent(accessToken, true)
+			);
+
+			// then
+			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ALREADY_WITHDRAWN_USER);
 		}
 	}
 
@@ -168,6 +453,50 @@ class AuthServiceTest {
 			verify(jwtService, never()).issue(any(), anyLong(), anyString(), any(), any(), anyString());
 			verify(refreshTokenService, never()).save(any(), anyString(), anyLong());
 		}
+
+		@Test
+		@DisplayName("탈퇴한 회원이면 예외가 발생한다.")
+		void 로그인_실패_탈퇴회원() {
+			// given
+			String email = "user@test.com";
+			String password = "plain";
+			User user = createUser(1L, email, "encoded");
+			user.withdraw();
+
+			given(userRepository.findByEmailOrThrow(email)).willReturn(user);
+
+			// when
+			CustomException exception = assertThrows(CustomException.class, () -> authService.login(email, password));
+
+			// then
+			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ALREADY_WITHDRAWN_USER);
+			verify(passwordEncoder, never()).matches(anyString(), anyString());
+		}
+	}
+
+	@Nested
+	@DisplayName("이메일 알림 수신 동의 기본값 테스트")
+	class EmailNotificationConsentDefaultTest {
+
+		@Test
+		@DisplayName("로컬 회원가입 유저의 이메일 알림 수신 동의 기본값은 false다.")
+		void 로컬회원_이메일알림기본값_false() {
+			User user = User.createLocalUser("user@test.com", NICKNAME, "encoded", true, true, true, false, false, true);
+
+			assertThat(user.isEmailNotificationAgreed()).isFalse();
+		}
+
+		@Test
+		@DisplayName("OAuth 회원의 이메일 알림 수신 동의 기본값은 false다.")
+		void OAuth회원_이메일알림기본값_false() {
+			User user = User.createOAuthUser("user@test.com",
+				com.truve.platform.common.constants.AuthProvider.KAKAO,
+				"oauth-user-id",
+				"oauth-access-token",
+				"oauth-refresh-token");
+
+			assertThat(user.isEmailNotificationAgreed()).isFalse();
+		}
 	}
 
 	@Nested
@@ -216,6 +545,24 @@ class AuthServiceTest {
 			// then
 			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_REFRESH_TOKEN);
 			verify(userRepository, never()).findByPublicId(any());
+		}
+
+		@Test
+		@DisplayName("탈퇴한 회원이면 예외가 발생한다.")
+		void 재발급_실패_탈퇴회원() {
+			// given
+			String refreshToken = "refresh-token";
+			User user = createUser(1L, "user@test.com", "encoded");
+			user.withdraw();
+
+			given(jwtService.parsePublicId(refreshToken)).willReturn(user.getPublicId());
+			given(userRepository.findByPublicId(user.getPublicId())).willReturn(java.util.Optional.of(user));
+
+			// when
+			CustomException exception = assertThrows(CustomException.class, () -> authService.reissue(refreshToken));
+
+			// then
+			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ALREADY_WITHDRAWN_USER);
 		}
 	}
 
@@ -280,6 +627,68 @@ class AuthServiceTest {
 			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_REFRESH_TOKEN);
 			verify(refreshTokenService, never()).delete(any());
 			verify(accessTokenBlacklistService, never()).save(anyString(), anyLong());
+		}
+	}
+
+	@Nested
+	@DisplayName("회원 탈퇴 테스트")
+	class WithdrawTest {
+
+		@Test
+		@DisplayName("유효한 액세스 토큰이면 회원 탈퇴를 처리한다.")
+		void 회원탈퇴_성공() {
+			// given
+			String accessToken = "access-token";
+			String jti = "jti-123";
+			Date exp = new Date(System.currentTimeMillis() + 60_000L);
+			User user = createUser(1L, "user@test.com", "encoded");
+
+			given(jwtService.parsePublicId(accessToken)).willReturn(user.getPublicId());
+			given(userRepository.findByPublicId(user.getPublicId())).willReturn(java.util.Optional.of(user));
+			given(jwtService.parseJti(accessToken)).willReturn(jti);
+			given(jwtService.parseExpiration(accessToken)).willReturn(exp);
+
+			// when
+			authService.withdraw(accessToken);
+
+			// then
+			assertThat(user.isWithdrawn()).isTrue();
+			verify(refreshTokenService).delete(user.getPublicId());
+			verify(accessTokenBlacklistService).save(eq(jti), anyLong());
+		}
+
+		@Test
+		@DisplayName("액세스 토큰 파싱에 실패하면 예외가 발생한다.")
+		void 회원탈퇴_실패_유효하지_않은_토큰() {
+			// given
+			String accessToken = "invalid-access-token";
+			given(jwtService.parsePublicId(accessToken)).willThrow(new JwtException("invalid"));
+
+			// when
+			CustomException exception = assertThrows(CustomException.class, () -> authService.withdraw(accessToken));
+
+			// then
+			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_REFRESH_TOKEN);
+			verify(refreshTokenService, never()).delete(any());
+		}
+
+		@Test
+		@DisplayName("이미 탈퇴한 회원이면 예외가 발생한다.")
+		void 회원탈퇴_실패_이미탈퇴회원() {
+			// given
+			String accessToken = "access-token";
+			User user = createUser(1L, "user@test.com", "encoded");
+			user.withdraw();
+
+			given(jwtService.parsePublicId(accessToken)).willReturn(user.getPublicId());
+			given(userRepository.findByPublicId(user.getPublicId())).willReturn(java.util.Optional.of(user));
+
+			// when
+			CustomException exception = assertThrows(CustomException.class, () -> authService.withdraw(accessToken));
+
+			// then
+			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ALREADY_WITHDRAWN_USER);
+			verify(refreshTokenService, never()).delete(any());
 		}
 	}
 
@@ -384,7 +793,6 @@ class AuthServiceTest {
 
 			given(emailVerificationRepository.isVerifiedEmail(email)).willReturn("1700000000000");
 			given(userRepository.existsByEmail(email)).willReturn(false);
-			given(userRepository.existsByNickname(NICKNAME)).willReturn(false);
 
 			// when
 			CustomException exception = assertThrows(

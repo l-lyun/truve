@@ -29,11 +29,15 @@ public class AuthResponse {
 		@Schema(description = "마케팅 정보 수신 동의 여부")
 		private final boolean marketingInfoAgreed;
 
+		@Schema(description = "이메일 알림 수신 동의 여부")
+		private final boolean emailNotificationAgreed;
+
 		public static Me from(User user) {
 			return new Me(
 				user.getEmail(),
 				user.getNickname(),
-				user.isMarketingInfoAgreed()
+				user.isMarketingInfoAgreed(),
+				user.isEmailNotificationAgreed()
 			);
 		}
 	}
