@@ -59,13 +59,13 @@ spring:
                 - Path=/api/musical/v3/api-docs
 
             # service
-            - id: auth-jwt
+            - id: auth-protected
               uri: ${AUTH_SERVER_URI:http://localhost:8081}
               predicates:
-                - Path=/api/auth/logout
+                - Path=/api/auth/me,/api/auth/me/**,/api/auth/logout
               filters:
                 - JwtAuthenticationFilter
-            - id: auth
+            - id: auth-public
               uri: ${AUTH_SERVER_URI:http://localhost:8081}
               predicates:
                 - Path=/api/auth/**

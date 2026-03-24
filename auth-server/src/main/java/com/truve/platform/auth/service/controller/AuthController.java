@@ -3,10 +3,8 @@ package com.truve.platform.auth.service.controller;
 import org.springframework.data.util.Pair;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -113,27 +111,4 @@ public class AuthController {
 
 		return ApiResult.ok(response);
 	}
-
-
-	@Operation(summary = "로그아웃")
-	@ApiResponses({
-		@ApiResponse(
-			responseCode = "200",
-			description = "로그아웃 성공"
-		),
-	})
-	@DeleteMapping("/logout")
-	public ApiResult<Void> logout(
-		@RequestHeader("X-Token") String accessToken,
-		HttpServletResponse httpServletResponse
-	) {
-
-		authService.logout(accessToken);
-
-		authCookieManager.clearRefreshToken(httpServletResponse);
-
-		return ApiResult.ok();
-	}
-
-
 }

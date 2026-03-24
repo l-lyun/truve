@@ -20,6 +20,7 @@ import org.springframework.data.util.Pair;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.truve.platform.auth.service.domain.dto.response.AuthResponse;
 import com.truve.platform.auth.service.domain.entity.User;
 import com.truve.platform.auth.service.event.UserSignedUpEvent;
 import com.truve.platform.auth.service.repository.EmailVerificationRepository;
@@ -58,6 +59,62 @@ class AuthServiceTest {
 		User user = User.createLocalUser(email, NICKNAME, encodedPassword, true, true, true, false, true);
 		ReflectionTestUtils.setField(user, "id", id);
 		return user;
+	}
+
+	@Nested
+	@DisplayName("내 정보 조회 테스트")
+	class GetMeTest {
+
+		@Test
+		@DisplayName("유효한 액세스 토큰이면 내 정보를 반환한다.")
+		void 내정보조회_성공() {
+			// given
+			String accessToken = "access-token";
+			User user = createUser(1L, "user@test.com", "encoded");
+
+			given(jwtService.parsePublicId(accessToken)).willReturn(user.getPublicId());
+			given(userRepository.findByPublicId(user.getPublicId())).willReturn(java.util.Optional.of(user));
+
+			// when
+			AuthResponse.Me result = authService.getMe(accessToken);
+
+			// then
+			assertThat(result.getEmail()).isEqualTo(user.getEmail());
+			assertThat(result.getNickname()).isEqualTo(user.getNickname());
+			assertThat(result.isMarketingInfoAgreed()).isEqualTo(user.isMarketingInfoAgreed());
+		}
+
+		@Test
+		@DisplayName("액세스 토큰 파싱에 실패하면 예외가 발생한다.")
+		void 내정보조회_실패_유효하지_않은_토큰() {
+			// given
+			String accessToken = "invalid-access-token";
+			given(jwtService.parsePublicId(accessToken)).willThrow(new JwtException("invalid"));
+
+			// when
+			CustomException exception = assertThrows(CustomException.class, () -> authService.getMe(accessToken));
+
+			// then
+			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_REFRESH_TOKEN);
+			verify(userRepository, never()).findByPublicId(any());
+		}
+
+		@Test
+		@DisplayName("토큰은 유효하지만 사용자가 없으면 예외가 발생한다.")
+		void 내정보조회_실패_사용자없음() {
+			// given
+			String accessToken = "access-token";
+			UUID userPublicId = UUID.randomUUID();
+
+			given(jwtService.parsePublicId(accessToken)).willReturn(userPublicId);
+			given(userRepository.findByPublicId(userPublicId)).willReturn(java.util.Optional.empty());
+
+			// when
+			CustomException exception = assertThrows(CustomException.class, () -> authService.getMe(accessToken));
+
+			// then
+			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.NOT_FOUND_USER);
+		}
 	}
 
 	@Nested

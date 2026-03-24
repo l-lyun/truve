@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.truve.platform.auth.service.event.UserSignedUpEvent;
+import com.truve.platform.auth.service.domain.dto.response.AuthResponse;
 import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
 import com.truve.platform.common.support.Preconditions;
@@ -33,6 +34,13 @@ public class AuthService {
 	private final RefreshTokenService refreshTokenService;
 	private final AccessTokenBlacklistService accessTokenBlacklistService;
 	private final UserSignedUpEventPublisher  userSignedUpEventPublisher;
+
+	@Transactional(readOnly = true)
+	public AuthResponse.Me getMe(String accessToken) {
+		User user = getUserByAccessToken(accessToken);
+
+		return AuthResponse.Me.from(user);
+	}
 
 	@Transactional
 	public Pair<String, String> login(String email, String password) {
@@ -150,6 +158,17 @@ public class AuthService {
 
 		UserSignedUpEvent event = UserSignedUpEvent.from(user);
 		userSignedUpEventPublisher.publish(user.getPublicId().toString(), event);
+	}
+
+	private User getUserByAccessToken(String accessToken) {
+		try {
+			UUID userPublicId = jwtService.parsePublicId(accessToken);
+
+			return userRepository.findByPublicId(userPublicId)
+				.orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
+		} catch (JwtException | IllegalArgumentException e) {
+			throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
+		}
 	}
 
 }

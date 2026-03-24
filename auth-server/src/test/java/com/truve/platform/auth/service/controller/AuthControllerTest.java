@@ -23,7 +23,6 @@ import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
 
 import jakarta.servlet.http.HttpServletResponse;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(controllers = AuthController.class)
 @Import(SecurityConfig.class)
@@ -198,17 +197,4 @@ class AuthControllerTest {
 		verify(authCookieManager).setRefreshToken(any(HttpServletResponse.class), eq("new-refresh-token"), eq(1209600L));
 	}
 
-	@Test
-	@DisplayName("로그아웃에 성공하면 200 OK를 반환하고 refreshToken 쿠키를 제거한다.")
-	void 로그아웃_성공() throws Exception {
-		// when
-		ResultActions resultActions = mockMvc.perform(delete("/api/auth/logout")
-			.header("X-Token", "access-token"));
-
-		// then
-		resultActions.andExpect(status().isOk())
-			.andExpect(jsonPath("$.code").value("ok"));
-		verify(authService).logout("access-token");
-		verify(authCookieManager).clearRefreshToken(any(HttpServletResponse.class));
-	}
 }
