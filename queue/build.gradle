@@ -1,4 +1,6 @@
 dependencies {
+    implementation project(':common-observability')
+
     // [Core]
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
@@ -20,4 +22,11 @@ dependencies {
 
     // [OpenApi]
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui'
+
+    // [Observability - Logging]
+    api 'net.logstash.logback:logstash-logback-encoder:8.0'
+
+    // [Observability - Metrics]
+    api 'org.springframework.boot:spring-boot-starter-actuator'
+    api 'io.micrometer:micrometer-registry-prometheus'
 }

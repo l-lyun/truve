@@ -2,6 +2,12 @@ server:
   port: ${QUEUE_SERVER_PORT:8083}
 
 spring:
+  application:
+    name: queue
+
+  config:
+    import: "classpath:application-observability.yml"
+
   data:
     redis:
       host: ${USER_REDIS_HOST:localhost}

@@ -1,0 +1,20 @@
+package config;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.micrometer.metrics.autoconfigure.MeterRegistryCustomizer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import io.micrometer.core.instrument.MeterRegistry;
+
+@Configuration
+public class MetricsConfig {
+
+	@Value("${spring.application.name:unknown-service}")
+	private String applicationName;
+
+	@Bean
+	MeterRegistryCustomizer<MeterRegistry> metricsCommonTags() {
+		return registry -> registry.config().commonTags("application", applicationName);
+	}
+}

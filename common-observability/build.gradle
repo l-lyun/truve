@@ -1,0 +1,11 @@
+bootJar { enabled = false }
+jar { enabled = true }
+
+dependencies {
+    // [Observability - Logging]
+    api 'net.logstash.logback:logstash-logback-encoder:8.0'
+
+    // [Observability - Metrics]
+    api 'org.springframework.boot:spring-boot-starter-actuator'
+    api 'io.micrometer:micrometer-registry-prometheus'
+}

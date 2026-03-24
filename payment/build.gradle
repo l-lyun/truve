@@ -1,5 +1,6 @@
 dependencies {
     implementation project(':common')
+    implementation project(':common-observability')
 
     // [Core]
     implementation 'org.springframework.boot:spring-boot-starter-web'
