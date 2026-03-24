@@ -18,6 +18,9 @@ public enum ErrorCode {
 	ALREADY_VERIFIED_EMAIL(HttpStatus.BAD_REQUEST, "이미 인증된 이메일입니다.", "A07"),
 	INVALID_REFRESH_TOKEN(HttpStatus.BAD_REQUEST, "리프레시 토큰이 올바르지 않습니다.", "A08"),
 	KAKAO_USERINFO_FAILED(HttpStatus.BAD_REQUEST, "카카오 사용자 정보를 가져오지 못했습니다.", "A09"),
+	REQUIRED_TERMS_NOT_AGREED(HttpStatus.BAD_REQUEST, "필수 약관 동의가 필요합니다.", "A10"),
+	INVALID_NICKNAME(HttpStatus.BAD_REQUEST, "유효하지 않은 닉네임입니다.", "A11"),
+	ALREADY_EXISTS_NICKNAME(HttpStatus.BAD_REQUEST, "중복된 닉네임입니다.", "A12"),
 
 	NOT_FOUND_PAYMENT(HttpStatus.BAD_REQUEST, "존재하지 않는 결제입니다.", "P01"),
 	INVALID_PAYMENT_AMOUNT(HttpStatus.BAD_REQUEST, "유효하지 않은 결제 금액입니다.", "P02"),

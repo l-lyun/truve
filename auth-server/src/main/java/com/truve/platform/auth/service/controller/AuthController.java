@@ -38,7 +38,16 @@ public class AuthController {
 	public ApiResult<Void> signUp(
 		@RequestBody  @Valid AuthRequest.SignUp request
 	) {
-		authService.signUp(request.getEmail(), request.getPassword());
+		authService.signUp(
+			request.getEmail(),
+			request.getNickname(),
+			request.getPassword(),
+			request.isServiceTermsAgreed(),
+			request.isElectronicFinanceTermsAgreed(),
+			request.isPrivacyCollectionAgreed(),
+			request.isMarketingInfoAgreed(),
+			request.isOver14Agreed()
+		);
 
 		return ApiResult.ok();
 	}

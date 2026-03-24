@@ -30,6 +30,9 @@ public class User extends BaseEntity {
 	@Column(nullable = false, unique = true)
 	private String email;
 
+	@Column(unique = true)
+	private String nickname;
+
 	// TODO: 기획 논의 이후 비밀번호 정책 정규식 설정
 	private String password;
 
@@ -47,27 +50,77 @@ public class User extends BaseEntity {
 
 	private String oAuthRefreshToken;
 
+	@Column(nullable = false)
+	private boolean serviceTermsAgreed;
+
+	@Column(nullable = false)
+	private boolean electronicFinanceTermsAgreed;
+
+	@Column(nullable = false)
+	private boolean privacyCollectionAgreed;
+
+	@Column(nullable = false)
+	private boolean marketingInfoAgreed;
+
+	@Column(nullable = false)
+	private boolean over14Agreed;
+
 
 	@Builder
-	private User(UUID publicId, String email, String password, AuthProvider provider,
-		UserRole role,  String oAuthUserId, String oAuthAccessToken, String oAuthRefreshToken) {
+	private User(
+		UUID publicId,
+		String email,
+		String nickname,
+		String password,
+		AuthProvider provider,
+		UserRole role,
+		String oAuthUserId,
+		String oAuthAccessToken,
+		String oAuthRefreshToken,
+		boolean serviceTermsAgreed,
+		boolean electronicFinanceTermsAgreed,
+		boolean privacyCollectionAgreed,
+		boolean marketingInfoAgreed,
+		boolean over14Agreed
+	) {
 		this.publicId = publicId;
 		this.email = email;
+		this.nickname = nickname;
 		this.password = password;
 		this.provider = provider;
 		this.role = role;
 		this.oAuthUserId = oAuthUserId;
 		this.oAuthAccessToken = oAuthAccessToken;
 		this.oAuthRefreshToken = oAuthRefreshToken;
+		this.serviceTermsAgreed = serviceTermsAgreed;
+		this.electronicFinanceTermsAgreed = electronicFinanceTermsAgreed;
+		this.privacyCollectionAgreed = privacyCollectionAgreed;
+		this.marketingInfoAgreed = marketingInfoAgreed;
+		this.over14Agreed = over14Agreed;
 	}
 
-	public static User createLocalUser(String email, String password) {
+	public static User createLocalUser(
+		String email,
+		String nickname,
+		String password,
+		boolean serviceTermsAgreed,
+		boolean electronicFinanceTermsAgreed,
+		boolean privacyCollectionAgreed,
+		boolean marketingInfoAgreed,
+		boolean over14Agreed
+	) {
 		return User.builder()
 			.publicId(UUID.randomUUID())
 			.email(email)
+			.nickname(nickname)
 			.password(password)
 			.provider(AuthProvider.LOCAL)
 			.role(UserRole.MEMBER)
+			.serviceTermsAgreed(serviceTermsAgreed)
+			.electronicFinanceTermsAgreed(electronicFinanceTermsAgreed)
+			.privacyCollectionAgreed(privacyCollectionAgreed)
+			.marketingInfoAgreed(marketingInfoAgreed)
+			.over14Agreed(over14Agreed)
 			.build();
 	}
 
@@ -81,11 +134,17 @@ public class User extends BaseEntity {
 		return User.builder()
 			.publicId(UUID.randomUUID())
 			.email(email)
+			.nickname(null)
 			.provider(provider)
 			.role(UserRole.MEMBER)
 			.oAuthUserId(oAuthUserId)
 			.oAuthAccessToken(oAuthAccessToken)
 			.oAuthRefreshToken(oAuthRefreshToken)
+			.serviceTermsAgreed(false)
+			.electronicFinanceTermsAgreed(false)
+			.privacyCollectionAgreed(false)
+			.marketingInfoAgreed(false)
+			.over14Agreed(false)
 			.build();
 	}
 }

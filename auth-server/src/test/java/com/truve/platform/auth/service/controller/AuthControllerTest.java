@@ -45,7 +45,13 @@ class AuthControllerTest {
 		String body = """
 			{
 			  "email": "new@test.com",
-			  "password": "password123"
+			  "password": "password123",
+			  "nickname": "tester",
+			  "serviceTermsAgreed": true,
+			  "electronicFinanceTermsAgreed": true,
+			  "privacyCollectionAgreed": true,
+			  "marketingInfoAgreed": false,
+			  "over14Agreed": true
 			}
 			""";
 
@@ -57,7 +63,7 @@ class AuthControllerTest {
 		// then
 		resultActions.andExpect(status().isOk())
 			.andExpect(jsonPath("$.code").value("ok"));
-		verify(authService).signUp("new@test.com", "password123");
+		verify(authService).signUp("new@test.com", "tester", "password123", true, true, true, false, true);
 	}
 
 	@Test
@@ -67,11 +73,17 @@ class AuthControllerTest {
 		String body = """
 			{
 			  "email": "dup@test.com",
-			  "password": "password123"
+			  "password": "password123",
+			  "nickname": "tester",
+			  "serviceTermsAgreed": true,
+			  "electronicFinanceTermsAgreed": true,
+			  "privacyCollectionAgreed": true,
+			  "marketingInfoAgreed": false,
+			  "over14Agreed": true
 			}
 			""";
 		willThrow(new CustomException(ErrorCode.ALREADY_EXISTS_EMAIL))
-			.given(authService).signUp(anyString(), anyString());
+			.given(authService).signUp(anyString(), anyString(), anyString(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean());
 
 		// when
 		ResultActions resultActions = mockMvc.perform(post("/api/auth/sign-up")
@@ -82,6 +94,66 @@ class AuthControllerTest {
 		resultActions.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.errorType").value("CLIENT_ERROR"))
 			.andExpect(jsonPath("$.code").value(ErrorCode.ALREADY_EXISTS_EMAIL.getCode()));
+	}
+
+	@Test
+	@DisplayName("필수 약관 미동의로 회원가입 요청하면 400을 반환한다.")
+	void 회원가입_실패_필수_약관_미동의() throws Exception {
+		// given
+		String body = """
+			{
+			  "email": "new@test.com",
+			  "password": "password123",
+			  "nickname": "tester",
+			  "serviceTermsAgreed": true,
+			  "electronicFinanceTermsAgreed": false,
+			  "privacyCollectionAgreed": true,
+			  "marketingInfoAgreed": false,
+			  "over14Agreed": true
+			}
+			""";
+		willThrow(new CustomException(ErrorCode.REQUIRED_TERMS_NOT_AGREED))
+			.given(authService).signUp(anyString(), anyString(), anyString(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean());
+
+		// when
+		ResultActions resultActions = mockMvc.perform(post("/api/auth/sign-up")
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(body));
+
+		// then
+		resultActions.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.errorType").value("CLIENT_ERROR"))
+			.andExpect(jsonPath("$.code").value(ErrorCode.REQUIRED_TERMS_NOT_AGREED.getCode()));
+	}
+
+	@Test
+	@DisplayName("닉네임 형식 오류로 회원가입 요청하면 400을 반환한다.")
+	void 회원가입_실패_닉네임_형식_오류() throws Exception {
+		// given
+		String body = """
+			{
+			  "email": "new@test.com",
+			  "password": "password123",
+			  "nickname": "a b",
+			  "serviceTermsAgreed": true,
+			  "electronicFinanceTermsAgreed": true,
+			  "privacyCollectionAgreed": true,
+			  "marketingInfoAgreed": false,
+			  "over14Agreed": true
+			}
+			""";
+		willThrow(new CustomException(ErrorCode.INVALID_NICKNAME))
+			.given(authService).signUp(anyString(), anyString(), anyString(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean());
+
+		// when
+		ResultActions resultActions = mockMvc.perform(post("/api/auth/sign-up")
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(body));
+
+		// then
+		resultActions.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.errorType").value("CLIENT_ERROR"))
+			.andExpect(jsonPath("$.code").value(ErrorCode.INVALID_NICKNAME.getCode()));
 	}
 
 	@Test

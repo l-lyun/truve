@@ -52,8 +52,10 @@ class AuthServiceTest {
 	@InjectMocks
 	private AuthService authService;
 
+	private static final String NICKNAME = "tester";
+
 	private User createUser(Long id, String email, String encodedPassword) {
-		User user = User.createLocalUser(email, encodedPassword);
+		User user = User.createLocalUser(email, NICKNAME, encodedPassword, true, true, true, false, true);
 		ReflectionTestUtils.setField(user, "id", id);
 		return user;
 	}
@@ -238,6 +240,7 @@ class AuthServiceTest {
 
 			given(emailVerificationRepository.isVerifiedEmail(email)).willReturn(verifiedAt);
 			given(userRepository.existsByEmail(email)).willReturn(false);
+			given(userRepository.existsByNickname(NICKNAME)).willReturn(false);
 			given(passwordEncoder.encode(password)).willReturn("encoded");
 			given(userRepository.save(any(User.class))).willAnswer(invocation -> {
 				User savedUser = invocation.getArgument(0);
@@ -246,7 +249,7 @@ class AuthServiceTest {
 			});
 
 			// when
-			authService.signUp(email, password);
+			authService.signUp(email, NICKNAME, password, true, true, true, false, true);
 
 			// then
 			ArgumentCaptor<User> savedUserCaptor = ArgumentCaptor.forClass(User.class);
@@ -258,8 +261,14 @@ class AuthServiceTest {
 			verify(userSignedUpEventPublisher).publish(keyCaptor.capture(), eventCaptor.capture());
 
 			assertThat(savedUserCaptor.getValue().getEmail()).isEqualTo(email);
+			assertThat(savedUserCaptor.getValue().getNickname()).isEqualTo(NICKNAME);
 			assertThat(savedUserCaptor.getValue().getPassword()).isEqualTo("encoded");
 			assertThat(savedUserCaptor.getValue().getRole()).isEqualTo(UserRole.MEMBER);
+			assertThat(savedUserCaptor.getValue().isServiceTermsAgreed()).isTrue();
+			assertThat(savedUserCaptor.getValue().isElectronicFinanceTermsAgreed()).isTrue();
+			assertThat(savedUserCaptor.getValue().isPrivacyCollectionAgreed()).isTrue();
+			assertThat(savedUserCaptor.getValue().isMarketingInfoAgreed()).isFalse();
+			assertThat(savedUserCaptor.getValue().isOver14Agreed()).isTrue();
 			assertThat(savedUserCaptor.getValue().getPublicId()).isInstanceOf(UUID.class);
 			assertThat(keyCaptor.getValue()).isEqualTo(savedUserCaptor.getValue().getPublicId().toString());
 			assertThat(eventCaptor.getValue()).isInstanceOf(UserSignedUpEvent.class);
@@ -275,7 +284,10 @@ class AuthServiceTest {
 			given(emailVerificationRepository.isVerifiedEmail(email)).willReturn("");
 
 			// when
-			CustomException exception = assertThrows(CustomException.class, () -> authService.signUp(email, password));
+			CustomException exception = assertThrows(
+				CustomException.class,
+				() -> authService.signUp(email, NICKNAME, password, true, true, true, false, true)
+			);
 
 			// then
 			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.NOT_VERIFIED_EMAIL);
@@ -294,13 +306,84 @@ class AuthServiceTest {
 			given(userRepository.existsByEmail(email)).willReturn(true);
 
 			// when
-			CustomException exception = assertThrows(CustomException.class, () -> authService.signUp(email, password));
+			CustomException exception = assertThrows(
+				CustomException.class,
+				() -> authService.signUp(email, NICKNAME, password, true, true, true, false, true)
+			);
 
 			// then
 			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ALREADY_EXISTS_EMAIL);
 			verify(userRepository, never()).save(any(User.class));
 			verify(emailVerificationRepository, never()).deleteVerifiedEmail(anyString());
 			verify(userSignedUpEventPublisher, never()).publish(anyString(), any());
+		}
+
+		@Test
+		@DisplayName("필수 약관에 동의하지 않으면 예외가 발생한다.")
+		void 회원가입_실패_필수_약관_미동의() {
+			// given
+			String email = "new@test.com";
+			String password = "plain";
+
+			given(emailVerificationRepository.isVerifiedEmail(email)).willReturn("1700000000000");
+			given(userRepository.existsByEmail(email)).willReturn(false);
+			given(userRepository.existsByNickname(NICKNAME)).willReturn(false);
+
+			// when
+			CustomException exception = assertThrows(
+				CustomException.class,
+				() -> authService.signUp(email, NICKNAME, password, true, false, true, false, true)
+			);
+
+			// then
+			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.REQUIRED_TERMS_NOT_AGREED);
+			verify(passwordEncoder, never()).encode(anyString());
+			verify(userRepository, never()).save(any(User.class));
+			verify(emailVerificationRepository, never()).deleteVerifiedEmail(anyString());
+			verify(userSignedUpEventPublisher, never()).publish(anyString(), any());
+		}
+
+		@Test
+		@DisplayName("닉네임 형식이 유효하지 않으면 예외가 발생한다.")
+		void 회원가입_실패_닉네임_형식_오류() {
+			// given
+			String email = "new@test.com";
+			String password = "plain";
+
+			given(emailVerificationRepository.isVerifiedEmail(email)).willReturn("1700000000000");
+			given(userRepository.existsByEmail(email)).willReturn(false);
+
+			// when
+			CustomException exception = assertThrows(
+				CustomException.class,
+				() -> authService.signUp(email, "a b", password, true, true, true, false, true)
+			);
+
+			// then
+			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_NICKNAME);
+			verify(userRepository, never()).save(any(User.class));
+		}
+
+		@Test
+		@DisplayName("이미 사용 중인 닉네임이면 예외가 발생한다.")
+		void 회원가입_실패_중복_닉네임() {
+			// given
+			String email = "new@test.com";
+			String password = "plain";
+
+			given(emailVerificationRepository.isVerifiedEmail(email)).willReturn("1700000000000");
+			given(userRepository.existsByEmail(email)).willReturn(false);
+			given(userRepository.existsByNickname(NICKNAME)).willReturn(true);
+
+			// when
+			CustomException exception = assertThrows(
+				CustomException.class,
+				() -> authService.signUp(email, NICKNAME, password, true, true, true, false, true)
+			);
+
+			// then
+			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ALREADY_EXISTS_NICKNAME);
+			verify(userRepository, never()).save(any(User.class));
 		}
 	}
 }

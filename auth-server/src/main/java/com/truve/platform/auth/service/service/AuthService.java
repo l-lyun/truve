@@ -1,6 +1,7 @@
 package com.truve.platform.auth.service.service;
 
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import org.springframework.data.util.Pair;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+	private static final Pattern NICKNAME_PATTERN = Pattern.compile("^[a-zA-Z0-9가-힣]{2,10}$");
 
 	private final UserRepository userRepository;
 	private final EmailVerificationRepository emailVerificationRepository;
@@ -99,7 +101,16 @@ public class AuthService {
 	}
 
 	@Transactional
-	public void signUp(String email, String password) {
+	public void signUp(
+		String email,
+		String nickname,
+		String password,
+		boolean serviceTermsAgreed,
+		boolean electronicFinanceTermsAgreed,
+		boolean privacyCollectionAgreed,
+		boolean marketingInfoAgreed,
+		boolean over14Agreed
+	) {
 
 		String verifiedAt = emailVerificationRepository.isVerifiedEmail(email);
 		Preconditions.validate(!(verifiedAt == null || verifiedAt.isBlank()), ErrorCode.NOT_VERIFIED_EMAIL);
@@ -108,10 +119,31 @@ public class AuthService {
 			!userRepository.existsByEmail(email),
 			ErrorCode.ALREADY_EXISTS_EMAIL
 		);
+		Preconditions.validate(
+			nickname != null && NICKNAME_PATTERN.matcher(nickname).matches(),
+			ErrorCode.INVALID_NICKNAME
+		);
+		Preconditions.validate(
+			!userRepository.existsByNickname(nickname),
+			ErrorCode.ALREADY_EXISTS_NICKNAME
+		);
+		Preconditions.validate(
+			serviceTermsAgreed && electronicFinanceTermsAgreed && privacyCollectionAgreed && over14Agreed,
+			ErrorCode.REQUIRED_TERMS_NOT_AGREED
+		);
 
 		String encodedPassword = passwordEncoder.encode(password);
 
-		User user = User.createLocalUser(email, encodedPassword);
+		User user = User.createLocalUser(
+			email,
+			nickname,
+			encodedPassword,
+			serviceTermsAgreed,
+			electronicFinanceTermsAgreed,
+			privacyCollectionAgreed,
+			marketingInfoAgreed,
+			over14Agreed
+		);
 
 		userRepository.save(user);
 		emailVerificationRepository.deleteVerifiedEmail(email);

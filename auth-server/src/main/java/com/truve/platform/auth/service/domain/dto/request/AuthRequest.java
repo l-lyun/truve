@@ -18,6 +18,19 @@ public class AuthRequest {
 
 		@NotBlank
 		private String password;
+
+		@NotBlank
+		private String nickname;
+
+		private boolean serviceTermsAgreed;
+
+		private boolean electronicFinanceTermsAgreed;
+
+		private boolean privacyCollectionAgreed;
+
+		private boolean marketingInfoAgreed;
+
+		private boolean over14Agreed;
 	}
 
 	@Getter

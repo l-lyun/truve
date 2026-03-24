@@ -17,6 +17,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 	boolean existsByEmail(String email);
 
+	boolean existsByNickname(String nickname);
+
 	default User findByEmailOrThrow(String email) {
 		return findByEmail(email).orElseThrow(
 			() -> new CustomException(ErrorCode.NOT_FOUND_EMAIL)

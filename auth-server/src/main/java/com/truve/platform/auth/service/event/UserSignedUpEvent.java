@@ -27,8 +27,7 @@ public class UserSignedUpEvent {
 			EVENT_TYPE,
 			LocalDateTime.now(),
 			user.getPublicId(),
-			// TODO: 닉네임으로 변경 예정
-			user.getEmail()
+			user.getNickname()
 		);
 	}
 }
