@@ -148,4 +148,14 @@ public class BookingService {
 		Reservation reservation = reservationRepository.findByNumber(event.getReservationNumber());
 		reservation.depositReceive(event.getPaidAt());
 	}
+
+	@Transactional
+	public BookingResponse.Cancel getCancel(String reservationNumber, List<Long> ticketIds) {
+		Reservation reservation = reservationRepository.findByNumber(reservationNumber);
+
+		List<Long> resolvedTicketIds = ticketIds != null ? ticketIds
+			: reservation.getTickets().stream().map(Ticket::getId).toList();
+
+		return BookingResponse.Cancel.from(reservation, resolvedTicketIds, LocalDateTime.now());
+	}
 }

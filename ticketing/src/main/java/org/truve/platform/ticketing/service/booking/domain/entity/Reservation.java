@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.truve.platform.ticketing.service.booking.domain.constant.ReservationStatus;
+import org.truve.platform.ticketing.service.booking.domain.policy.CancellationPolicy;
 
 import com.truve.platform.common.support.BaseEntity;
 
@@ -45,7 +46,7 @@ public class Reservation extends BaseEntity {
 	private Long serviceFee;
 
 	@Column(nullable = false)
-	private Long refundFee;
+	private Long cancelFee;
 
 	@Column(nullable = false)
 	private String gradeSummary;
@@ -86,7 +87,7 @@ public class Reservation extends BaseEntity {
 		this.number = number;
 		this.totalAmount = 0L;
 		this.serviceFee = 0L;
-		this.refundFee = 0L;
+		this.cancelFee = 0L;
 		this.gradeSummary = gradeSummary;
 		this.showInfo = showInfo;
 		this.status = ReservationStatus.CREATED;
@@ -181,7 +182,7 @@ public class Reservation extends BaseEntity {
 
 	public Long getRefundAmount() {
 		Long canceledTicketPrice = getCancelTickets().stream().mapToLong(Ticket::getPriceSnapshot).sum();
-		return canceledTicketPrice - refundFee;
+		return canceledTicketPrice - cancelFee;
 	}
 
 	public LocalDateTime getDeadline() {
@@ -190,5 +191,27 @@ public class Reservation extends BaseEntity {
 		if (isWaitingDeposit())
 			return virtualAccount.getDueDate();
 		return null;
+	}
+
+	public Long calculateCancelFee(LocalDateTime canceledAt, List<Long> ticketIds) {
+		return CancellationPolicy.calculate(this, getTicketsByIds(ticketIds), canceledAt);
+	}
+
+	public Long calculateRefundAmount(LocalDateTime canceledAt, List<Long> ticketIds) {
+		boolean isBookedDay = bookedAt.toLocalDate().isEqual(canceledAt.toLocalDate());
+		return (isBookedDay ? getTicketTotalAmount(ticketIds) : getTicketAmount(ticketIds))
+			- calculateCancelFee(canceledAt, ticketIds);
+	}
+
+	private List<Ticket> getTicketsByIds(List<Long> ticketIds) {
+		return tickets.stream().filter(t -> ticketIds.contains(t.getId())).toList();
+	}
+
+	private Long getTicketAmount(List<Long> ticketIds) {
+		return getTicketsByIds(ticketIds).stream().mapToLong(Ticket::getPriceSnapshot).sum();
+	}
+
+	public Long getTicketTotalAmount(List<Long> ticketIds) {
+		return getTicketAmount(ticketIds) + TICKET_SERVICE_FEE * ticketIds.size();
 	}
 }

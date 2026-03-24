@@ -74,4 +74,15 @@ public class BookingController {
 		bookingService.paymentReady(reservationNumber, request);
 		return ApiResult.ok();
 	}
+
+	@Operation(summary = "예매 취소 정보 조회",
+		description = "전체 티켓 정보와 선택된 티켓의 취소 수수료를 조회합니다. "
+			+ "선택된 티켓이 없을 경우, ticketIds를 null로 요청하면 전체 취소 수수료를 조회합니다.")
+	@GetMapping("/{reservation_number}/cancel")
+	public ApiResult<BookingResponse.Cancel> getCancel(
+		@PathVariable("reservation_number") String reservationNumber,
+		@RequestParam(required = false) List<Long> ticketIds
+	) {
+		return ApiResult.ok(bookingService.getCancel(reservationNumber, ticketIds));
+	}
 }

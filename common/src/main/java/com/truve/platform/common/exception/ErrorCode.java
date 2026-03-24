@@ -53,6 +53,7 @@ public enum ErrorCode {
 	INVALID_HOLD_SEAT(HttpStatus.BAD_REQUEST, "타인이 점유한 좌석입니다.", "T11"),
 
 	INVALID_RESERVATION_STATUS(HttpStatus.BAD_REQUEST, "유효하지 않은 예약 상태입니다.", "B01"),
+	CANCEL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "관람일 당일에는 취소가 불가능합니다.", "B02"),
 
 	NOT_FOUND_SHOW(HttpStatus.NOT_FOUND, "존재하지 않는 공연입니다.", "M01"),
 	NOT_FOUND_ARTIST(HttpStatus.NOT_FOUND, "존재하지 않는 배우입니다.", "M02"),
