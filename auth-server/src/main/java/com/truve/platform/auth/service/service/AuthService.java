@@ -154,8 +154,9 @@ public class AuthService {
 		boolean over14Agreed
 	) {
 
-		String verifiedAt = emailVerificationRepository.isVerifiedEmail(email);
-		Preconditions.validate(!(verifiedAt == null || verifiedAt.isBlank()), ErrorCode.NOT_VERIFIED_EMAIL);
+		// TODO: 프론트 연동 이후 이메일 인증 검증 로직 주석 해제
+		// String verifiedAt = emailVerificationRepository.isVerifiedEmail(email);
+		// Preconditions.validate(!(verifiedAt == null || verifiedAt.isBlank()), ErrorCode.NOT_VERIFIED_EMAIL);
 
 		Preconditions.validate(
 			!userRepository.existsByEmail(email),

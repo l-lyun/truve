@@ -34,10 +34,10 @@ public class TicketingService {
 	private final ShowScheduledRepository showScheduledRepository;
 
 	public TicketingResponse.Enter enter(Long showScheduleId, UUID userId, String admissionToken) {
-		AdmissionTokenClaimsDTO claims = admissionTokenService.parseAdmissionToken(admissionToken, showScheduleId, userId);
-
-		boolean consumedAdmissionToken = ticketingRedisRepository.consumeAdmissionToken(claims.getShowId(), claims.getUserId(), admissionToken);
-		Preconditions.validate(consumedAdmissionToken, ErrorCode.INVALID_ADMISSION_TOKEN);
+		// TODO: 프론트 연동 이후 입장 토큰 검증 로직 주석 해제
+		// AdmissionTokenClaimsDTO claims = admissionTokenService.parseAdmissionToken(admissionToken, showScheduleId, userId);
+		// boolean consumedAdmissionToken = ticketingRedisRepository.consumeAdmissionToken(claims.getShowId(), claims.getUserId(), admissionToken);
+		// Preconditions.validate(consumedAdmissionToken, ErrorCode.INVALID_ADMISSION_TOKEN);
 
 		String sessionToken = UUID.randomUUID().toString();
 
