@@ -1,0 +1,48 @@
+name: dev-ecr-ci
+
+on:
+  push:
+    branches: [ "dev" ]
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REPO: ${{ secrets.ECR_REPO }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service: [ api-gateway, auth-server, payment, queue, ticketing, musical ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push to ECR
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ env.ECR_REPOSITORY }}:${{ matrix.service }}-latest
+            ${{ env.ECR_REPOSITORY }}:${{ matrix.service }}-${{ github.sha }}
+          build-args: |
+            SERVICE_NAME=${{ matrix.service }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
