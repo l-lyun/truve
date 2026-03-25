@@ -1,12 +1,17 @@
 package com.truve.platform.show.service.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.doThrow;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
@@ -16,12 +21,21 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
+import com.truve.platform.common.response.Paging;
+import com.truve.platform.musical.s3.S3Service;
 import com.truve.platform.musical.show.domain.entity.Artist;
+import com.truve.platform.musical.show.dto.ArtistResponse;
 import com.truve.platform.musical.show.repository.ArtistLikeRepository;
+import com.truve.platform.musical.show.repository.ArtistMembershipRepository;
+import com.truve.platform.musical.show.repository.ArtistNoticeRepository;
 import com.truve.platform.musical.show.repository.ArtistRepository;
+import com.truve.platform.musical.show.repository.ShowCastingRepository;
 import com.truve.platform.musical.show.service.ArtistService;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,6 +45,14 @@ class ArtistServiceTest {
 	private ArtistRepository artistRepository;
 	@Mock
 	private ArtistLikeRepository artistLikeRepository;
+	@Mock
+	private ArtistMembershipRepository artistMembershipRepository;
+	@Mock
+	private ArtistNoticeRepository artistNoticeRepository;
+	@Mock
+	private ShowCastingRepository showCastingRepository;
+	@Mock
+	private S3Service s3Service;
 
 	@InjectMocks
 	private ArtistService artistService;
@@ -46,7 +68,7 @@ class ArtistServiceTest {
 
 		artistService.likeArtist(101L, userId);
 
-		verify(artistLikeRepository).save(org.mockito.ArgumentMatchers.any());
+		verify(artistLikeRepository).save(any());
 	}
 
 	@Test
@@ -59,7 +81,7 @@ class ArtistServiceTest {
 		CustomException exception = assertThrows(CustomException.class, () -> artistService.likeArtist(101L, userId));
 
 		assertEquals(ErrorCode.ALREADY_LIKED_ARTIST, exception.getErrorCode());
-		verify(artistLikeRepository, never()).save(org.mockito.ArgumentMatchers.any());
+		verify(artistLikeRepository, never()).save(any());
 	}
 
 	@Test
@@ -80,7 +102,7 @@ class ArtistServiceTest {
 		CustomException exception = assertThrows(CustomException.class, () -> artistService.likeArtist(999L, userId));
 
 		assertEquals(ErrorCode.NOT_FOUND_ARTIST, exception.getErrorCode());
-		verify(artistLikeRepository, never()).save(org.mockito.ArgumentMatchers.any());
+		verify(artistLikeRepository, never()).save(any());
 	}
 
 	@Test
@@ -92,11 +114,66 @@ class ArtistServiceTest {
 		when(artistRepository.getReferenceById(101L)).thenReturn(artist);
 		when(artistLikeRepository.existsByUserIdAndArtistId(userId, 101L)).thenReturn(false, true);
 		doThrow(new DataIntegrityViolationException("duplicate"))
-			.when(artistLikeRepository).save(org.mockito.ArgumentMatchers.any());
+			.when(artistLikeRepository).save(any());
 
 		CustomException exception = assertThrows(CustomException.class, () -> artistService.likeArtist(101L, userId));
 
 		assertEquals(ErrorCode.ALREADY_LIKED_ARTIST, exception.getErrorCode());
-		verify(artistLikeRepository).save(org.mockito.ArgumentMatchers.any());
+		verify(artistLikeRepository).save(any());
+	}
+
+	@Test
+	@DisplayName("비로그인 아티스트 상세 조회는 liked, joined를 false로 응답한다.")
+	void 아티스트_상세_조회_비로그인_성공() {
+		ArtistRepository.ArtistDetailProjection artist = org.mockito.Mockito.mock(ArtistRepository.ArtistDetailProjection.class);
+		ShowCastingRepository.ArtistShowSummaryProjection currentShow = org.mockito.Mockito.mock(ShowCastingRepository.ArtistShowSummaryProjection.class);
+		when(artist.getArtistId()).thenReturn(1L);
+		when(artist.getArtistName()).thenReturn("이재환");
+		when(artist.getProfileImg()).thenReturn("artists/lee.png");
+		when(artistRepository.findDetailById(1L)).thenReturn(Optional.of(artist));
+		when(artistNoticeRepository.findNoticesByArtistId(1L)).thenReturn(List.of());
+		when(showCastingRepository.findCurrentShowsByArtistId(1L, any(LocalDateTime.class))).thenReturn(List.of(currentShow));
+		when(showCastingRepository.findPastShowsByArtistId(any(Long.class), any(LocalDateTime.class), any(Pageable.class)))
+			.thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 13), 0));
+		when(currentShow.getShowId()).thenReturn(10L);
+		when(currentShow.getShowTitle()).thenReturn("킹키부츠");
+		when(currentShow.getPosterImg()).thenReturn("shows/current.png");
+		when(currentShow.getVenueName()).thenReturn("샤롯데씨어터");
+		when(currentShow.getStartTime()).thenReturn(LocalDateTime.of(2026, 3, 11, 0, 0));
+		when(currentShow.getEndTime()).thenReturn(LocalDateTime.of(2026, 6, 21, 0, 0));
+		when(s3Service.getImageUrl("artists/lee.png")).thenReturn("https://img.example/lee.png");
+		when(s3Service.getImageUrl("shows/current.png")).thenReturn("https://img.example/current.png");
+
+		ArtistResponse.Detail response = artistService.getDetail(1L, null);
+
+		assertThat(response.getArtist().getIsLiked()).isFalse();
+		assertThat(response.getMembership().getJoined()).isFalse();
+		assertThat(response.getArtist().getProfileImageUrl()).isEqualTo("https://img.example/lee.png");
+		assertThat(response.getCurrentShows()).hasSize(1);
+		assertThat(response.getCurrentShows().get(0).getPosterUrl()).isEqualTo("https://img.example/current.png");
+	}
+
+	@Test
+	@DisplayName("아티스트 지난 출연 작품 조회는 페이지 데이터를 응답한다.")
+	void 아티스트_지난출연작품_조회_성공() {
+		Paging paging = new Paging();
+		ShowCastingRepository.ArtistShowSummaryProjection show = org.mockito.Mockito.mock(ShowCastingRepository.ArtistShowSummaryProjection.class);
+		when(artistRepository.existsById(1L)).thenReturn(true);
+		when(showCastingRepository.findPastShowsByArtistId(any(Long.class), any(LocalDateTime.class), any(Pageable.class)))
+			.thenReturn(new PageImpl<>(List.of(show), PageRequest.of(0, 10), 1));
+		when(show.getShowId()).thenReturn(21L);
+		when(show.getShowTitle()).thenReturn("지난 공연");
+		when(show.getPosterImg()).thenReturn("shows/past.png");
+		when(show.getVenueName()).thenReturn("샤롯데씨어터");
+		when(show.getStartTime()).thenReturn(LocalDateTime.of(2024, 1, 5, 0, 0));
+		when(show.getEndTime()).thenReturn(LocalDateTime.of(2024, 2, 18, 0, 0));
+		when(s3Service.getImageUrl("shows/past.png")).thenReturn("https://img.example/past.png");
+
+		var response = artistService.getPastShows(1L, paging);
+
+		assertThat(response.getContent()).hasSize(1);
+		assertThat(response.getContent().get(0).getShowId()).isEqualTo(21L);
+		assertThat(response.getContent().get(0).getPosterUrl()).isEqualTo("https://img.example/past.png");
+		assertThat(response.getTotalElements()).isEqualTo(1L);
 	}
 }

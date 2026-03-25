@@ -1,0 +1,67 @@
+package com.truve.platform.musical.show.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+public class ArtistResponse {
+	@Getter
+	@AllArgsConstructor
+	@Builder
+	public static class Detail {
+		private Artist artist;
+		private Membership membership;
+		private List<Notice> notices;
+		private List<ShowSummary> currentShows;
+		private PastShowSection pastShows;
+	}
+
+	@Getter
+	@AllArgsConstructor
+	@Builder
+	public static class Artist {
+		private Long artistId;
+		private String artistName;
+		private String profileImageUrl;
+		private Boolean isLiked;
+	}
+
+	@Getter
+	@AllArgsConstructor
+	@Builder
+	public static class Membership {
+		private Boolean joined;
+	}
+
+	@Getter
+	@AllArgsConstructor
+	@Builder
+	public static class Notice {
+		private Long noticeId;
+		private String content;
+	}
+
+	@Getter
+	@AllArgsConstructor
+	@Builder
+	public static class ShowSummary {
+		private Long showId;
+		private String showTitle;
+		private String posterUrl;
+		private String venueName;
+		private LocalDateTime startTime;
+		private LocalDateTime endTime;
+		private String date;
+	}
+
+	@Getter
+	@AllArgsConstructor
+	@Builder
+	public static class PastShowSection {
+		private List<ShowSummary> shows;
+		private Boolean hasMore;
+	}
+}
