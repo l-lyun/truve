@@ -137,7 +137,7 @@ class TicketingServiceTest {
 			assertAll(
 				() -> verify(ticketingRedisRepository).addActiveTicketingUser(showScheduleId, sessionToken),
 				() -> verify(ticketingRedisRepository).removeInactiveTicketingUsers(eq(showScheduleId), anyLong()),
-				() -> verify(ticketingRedisRepository).refreshSessionTokenTtl(sessionToken, 300L)
+				() -> verify(ticketingRedisRepository).refreshSessionTokenTtl(sessionToken, 3600L)
 			);
 		}
 

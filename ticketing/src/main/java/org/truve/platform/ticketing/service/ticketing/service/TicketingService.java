@@ -41,8 +41,8 @@ public class TicketingService {
 
 		String sessionToken = UUID.randomUUID().toString();
 
-		// TODO: 만료시간 기획측과 논의
-		ticketingRedisRepository.saveSessionToken(sessionToken, userId, showScheduleId, Duration.ofMinutes(5));
+		// TODO: 만료시간 기획측과 논의, 현재 60분으로 연동 편의성 확보
+		ticketingRedisRepository.saveSessionToken(sessionToken, userId, showScheduleId, Duration.ofMinutes(60));
 		ticketingRedisRepository.addActiveTicketingUser(showScheduleId, sessionToken);
 		long sessionTokenTtl = ticketingRedisRepository.getSessionTokenTtl(sessionToken);
 
@@ -58,7 +58,9 @@ public class TicketingService {
 		long activeWindowMs = ticketingProperties.getActiveWindowMs();
 		ticketingRedisRepository.removeInactiveTicketingUsers(showScheduleId, nowMs - activeWindowMs);
 
-		boolean extended = ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, ticketingProperties.getSessionTtlSec());
+		// TODO: 프론트 연동 이후 세션 만료시간 설정값 기반 갱신 로직 주석 해제
+		// boolean extended = ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, ticketingProperties.getSessionTtlSec());
+		boolean extended = ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, Duration.ofMinutes(60).toSeconds());
 		Preconditions.validate(extended, ErrorCode.INVALID_SESSION_TOKEN);
 	}
 
