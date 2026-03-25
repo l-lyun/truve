@@ -12,7 +12,7 @@ public class SeatSectionsDto {
 	String sectionName;
 	String grade;
 	Long price;
-	Long seatId;
+	Long scheduledSeatId;
 	String row;
 	Long col;
 	SeatStatus status;

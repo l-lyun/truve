@@ -124,6 +124,7 @@ class TicketingControllerTest {
 		resultActions.andExpect(status().isOk())
 			.andExpect(jsonPath("$.data.sections[0].sectionId").value(1L))
 			.andExpect(jsonPath("$.data.sections[0].rows[0].row").value("A"))
+			.andExpect(jsonPath("$.data.sections[0].rows[0].seats[0].scheduledSeatId").value(10L))
 			.andExpect(jsonPath("$.data.sections[0].rows[0].seats[1].status").value("SOLD"));
 		verify(ticketingService).getSeats(1L, userId, "session-token");
 	}

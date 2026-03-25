@@ -89,7 +89,7 @@ public class TicketingResponse {
 	@Getter
 	@AllArgsConstructor
 	public static class Seat {
-		Long seatId;
+		Long scheduledSeatId;
 		Long col;
 		SeatStatus status;
 	}
@@ -138,12 +138,12 @@ public class TicketingResponse {
 
 		private void addSeat(SeatSectionsDto seatSectionDto) {
 			seats.add(new Seat(
-				seatSectionDto.getSeatId(),
+				seatSectionDto.getScheduledSeatId(),
 				seatSectionDto.getCol(),
 				seatSectionDto.getStatus()
 			));
 		}
-
+		
 		private Row toRow() {
 			return new Row(row, seats);
 		}

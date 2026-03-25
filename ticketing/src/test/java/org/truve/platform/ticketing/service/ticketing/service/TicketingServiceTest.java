@@ -396,6 +396,9 @@ class TicketingServiceTest {
 		@DisplayName("같은 세션이 점유한 좌석이면 점유를 해제한다.")
 		void 좌석선점취소_성공() {
 			// given
+			ScheduledSeat scheduledSeat1 = createScheduledSeat(10L, showScheduleId, SeatStatus.AVAILABLE);
+			ScheduledSeat scheduledSeat2 = createScheduledSeat(11L, showScheduleId, SeatStatus.AVAILABLE);
+			given(scheduledSeatRepository.findAllById(List.of(10L, 11L))).willReturn(List.of(scheduledSeat1, scheduledSeat2));
 			given(ticketingRedisRepository.getHoldSeatSessionToken(showScheduleId, 10L)).willReturn(sessionToken);
 			given(ticketingRedisRepository.getHoldSeatSessionToken(showScheduleId, 11L)).willReturn(sessionToken);
 
@@ -413,6 +416,8 @@ class TicketingServiceTest {
 		@DisplayName("다른 세션이 점유한 좌석이면 INVALID_HOLD_SEAT 예외가 발생한다.")
 		void 좌석선점취소_타세션점유() {
 			// given
+			ScheduledSeat scheduledSeat = createScheduledSeat(10L, showScheduleId, SeatStatus.AVAILABLE);
+			given(scheduledSeatRepository.findAllById(List.of(10L))).willReturn(List.of(scheduledSeat));
 			given(ticketingRedisRepository.getHoldSeatSessionToken(showScheduleId, 10L)).willReturn("other-session");
 
 			// when
@@ -552,6 +557,7 @@ class TicketingServiceTest {
 			.seat(seat)
 			.showScheduleId(scheduledShowId)
 			.build();
+		ReflectionTestUtils.setField(scheduledSeat, "id", seatId);
 		ReflectionTestUtils.setField(scheduledSeat, "status", status);
 
 		return scheduledSeat;

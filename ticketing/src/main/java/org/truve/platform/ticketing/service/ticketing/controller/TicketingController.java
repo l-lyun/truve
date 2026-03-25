@@ -119,7 +119,7 @@ public class TicketingController {
 		@RequestHeader(value = SESSION_HEADER) String sessionToken,
 		@RequestBody @Valid TicketingRequest.HoldSeat request
 	) {
-		ticketingService.holdSeat(showScheduleId, userId, sessionToken, request.getSeatIds());
+		ticketingService.holdSeat(showScheduleId, userId, sessionToken, request.getScheduledSeatIds());
 		return ApiResult.ok();
 	}
 
@@ -165,7 +165,7 @@ public class TicketingController {
 		@RequestHeader(value = SESSION_HEADER) String sessionToken,
 		@RequestBody @Valid TicketingRequest.DeleteHoldSeat request
 	) {
-		ticketingService.cancelHoldSeat(showScheduleId, userId, sessionToken, request.getSeatIds());
+		ticketingService.cancelHoldSeat(showScheduleId, userId, sessionToken, request.getScheduledSeatIds());
 		return ApiResult.ok();
 	}
 

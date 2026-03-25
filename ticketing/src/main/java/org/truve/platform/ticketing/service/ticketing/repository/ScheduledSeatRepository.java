@@ -18,7 +18,7 @@ public interface ScheduledSeatRepository extends JpaRepository<ScheduledSeat, Lo
  			sc.name,
  			sc.gradeName,
  			sc.price,
- 			s.id,
+ 			ss.id,
  			s.seatRow,
  			s.seatNumber,
  			ss.status

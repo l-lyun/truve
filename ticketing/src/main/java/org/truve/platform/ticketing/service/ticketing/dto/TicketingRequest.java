@@ -12,13 +12,13 @@ public class TicketingRequest {
 	@AllArgsConstructor
 	public static class HoldSeat {
 		@NotEmpty
-		List<Long> seatIds;
+		List<Long> scheduledSeatIds;
 	}
 
 	@Getter
 	@AllArgsConstructor
 	public static class DeleteHoldSeat {
 		@NotEmpty
-		List<Long> seatIds;
+		List<Long> scheduledSeatIds;
 	}
 }
