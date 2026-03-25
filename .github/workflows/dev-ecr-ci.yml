@@ -33,6 +33,11 @@ jobs:
       - name: Login to ECR
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker-container
+
       - name: Build and push to ECR
         uses: docker/build-push-action@v5
         with:
@@ -40,8 +45,8 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ env.ECR_REPOSITORY }}:${{ matrix.service }}-latest
-            ${{ env.ECR_REPOSITORY }}:${{ matrix.service }}-${{ github.sha }}
+            ${{ env.ECR_REPO }}:${{ matrix.service }}-latest
+            ${{ env.ECR_REPO }}:${{ matrix.service }}-${{ github.sha }}
           build-args: |
             SERVICE_NAME=${{ matrix.service }}
           cache-from: type=gha
