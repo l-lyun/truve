@@ -6,8 +6,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.truve.platform.ticketing.service.booking.external.client.TicketingResponse;
+import org.truve.platform.ticketing.service.ticketing.constant.SeatStatus;
 import org.truve.platform.ticketing.service.ticketing.domain.entity.ScheduledSeat;
 import org.truve.platform.ticketing.service.ticketing.dto.SeatSectionsDto;
+import org.truve.platform.ticketing.service.ticketing.dto.TicketingInternalResponse;
 
 public interface ScheduledSeatRepository extends JpaRepository<ScheduledSeat, Long> {
 
@@ -51,4 +53,27 @@ public interface ScheduledSeatRepository extends JpaRepository<ScheduledSeat, Lo
 		WHERE s.id IN :ids
 		""")
 	List<TicketingResponse.FlatSeatInfo> findFlatInfoById(List<Long> ids);
+
+	/*
+	[백엔드 내부 통신 용도 Repository 메서드]
+	*/
+
+	@Query("""
+	select
+		sc.gradeName as gradeName,
+		sum(case when ss.status = :status then 1L else 0L end) as remainingSeatCount,
+		count(ss) as totalCount
+	from ScheduledSeat ss
+	join ss.seat s
+	join s.seatSection sc
+	where ss.showScheduleId = :showScheduleId
+	group by sc.gradeName
+	order by sc.gradeName asc
+	""")
+	List<TicketingInternalResponse.FlatRemainingSeatInfo> findGradeRemainingSeats(
+		@Param("showScheduleId") Long showScheduleId,
+		@Param("status") SeatStatus status
+	);
+
+
 }

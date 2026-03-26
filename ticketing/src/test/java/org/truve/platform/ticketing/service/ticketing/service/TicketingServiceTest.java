@@ -125,10 +125,9 @@ class TicketingServiceTest {
 		void 하트비트_성공() {
 			// given
 			given(ticketingProperties.getActiveWindowMs()).willReturn(30_000L);
-			given(ticketingProperties.getSessionTtlSec()).willReturn(300L);
 			given(ticketingRedisRepository.getSessionTokenValue(sessionToken))
 				.willReturn(SessionTicketValueDTO.of(userId, showScheduleId));
-			given(ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, 300L)).willReturn(true);
+			given(ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, 3600L)).willReturn(true);
 
 			// when
 			ticketingService.heartbeat(showScheduleId, userId, sessionToken);
@@ -197,10 +196,9 @@ class TicketingServiceTest {
 		void 하트비트_TTL연장실패() {
 			// given
 			given(ticketingProperties.getActiveWindowMs()).willReturn(30_000L);
-			given(ticketingProperties.getSessionTtlSec()).willReturn(300L);
 			given(ticketingRedisRepository.getSessionTokenValue(sessionToken))
 				.willReturn(SessionTicketValueDTO.of(userId, showScheduleId));
-			given(ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, 300L)).willReturn(false);
+			given(ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, 3600L)).willReturn(false);
 
 			// when
 			CustomException exception = assertThrows(
@@ -224,10 +222,9 @@ class TicketingServiceTest {
 		@BeforeEach
 		void setUpHoldSeat() {
 			given(ticketingProperties.getActiveWindowMs()).willReturn(30_000L);
-			given(ticketingProperties.getSessionTtlSec()).willReturn(300L);
 			given(ticketingRedisRepository.getSessionTokenValue(sessionToken))
 				.willReturn(SessionTicketValueDTO.of(userId, showScheduleId));
-			given(ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, 300L)).willReturn(true);
+			given(ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, 3600L)).willReturn(true);
 
 			showScheduled = ShowScheduled.builder()
 				.title("공연")
@@ -386,10 +383,9 @@ class TicketingServiceTest {
 		@BeforeEach
 		void setUpCancelHoldSeat() {
 			given(ticketingProperties.getActiveWindowMs()).willReturn(30_000L);
-			given(ticketingProperties.getSessionTtlSec()).willReturn(300L);
 			given(ticketingRedisRepository.getSessionTokenValue(sessionToken))
 				.willReturn(SessionTicketValueDTO.of(userId, showScheduleId));
-			given(ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, 300L)).willReturn(true);
+			given(ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, 3600L)).willReturn(true);
 		}
 
 		@Test
@@ -441,10 +437,9 @@ class TicketingServiceTest {
 		@BeforeEach
 		void setUpShow() {
 			given(ticketingProperties.getActiveWindowMs()).willReturn(30_000L);
-			given(ticketingProperties.getSessionTtlSec()).willReturn(300L);
 			given(ticketingRedisRepository.getSessionTokenValue(sessionToken))
 				.willReturn(SessionTicketValueDTO.of(userId, showScheduleId));
-			given(ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, 300L)).willReturn(true);
+			given(ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, 3600L)).willReturn(true);
 		}
 
 		@Test
@@ -465,7 +460,7 @@ class TicketingServiceTest {
 			// then
 			assertAll(
 				() -> assertThat(response.getTitle()).isEqualTo("지킬앤하이드"),
-				() -> assertThat(response.getVenueName()).isEqualTo("지킬앤하이드"),
+				() -> assertThat(response.getVenueName()).isEqualTo("블루스퀘어"),
 				() -> assertThat(response.getStartAt()).isEqualTo(startAt)
 			);
 		}
@@ -494,10 +489,9 @@ class TicketingServiceTest {
 		@BeforeEach
 		void setUpSeats() {
 			given(ticketingProperties.getActiveWindowMs()).willReturn(30_000L);
-			given(ticketingProperties.getSessionTtlSec()).willReturn(300L);
 			given(ticketingRedisRepository.getSessionTokenValue(sessionToken))
 				.willReturn(SessionTicketValueDTO.of(userId, showScheduleId));
-			given(ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, 300L)).willReturn(true);
+			given(ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, 3600L)).willReturn(true);
 		}
 
 		@Test
