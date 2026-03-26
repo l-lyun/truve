@@ -162,7 +162,7 @@ public class ReviewService {
 
 	private ReviewResponse.ReviewItem toReviewItem(Review review){
 
-		User user = userRepository.findById(review.getUserId()).orElseThrow(
+		User user = userRepository.findByUserId(review.getUserId()).orElseThrow(
 			() -> new CustomException(ErrorCode.NOT_FOUND_REVIEW_USER)
 		);
 

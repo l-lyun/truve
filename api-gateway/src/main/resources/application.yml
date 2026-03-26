@@ -64,6 +64,8 @@ spring:
                 - Path=/api/musical/v3/api-docs
 
             # service
+
+            # 1. auth
             - id: auth-protected
               uri: ${AUTH_SERVER_URI:http://localhost:8081}
               predicates:
@@ -74,10 +76,8 @@ spring:
               uri: ${AUTH_SERVER_URI:http://localhost:8081}
               predicates:
                 - Path=/api/auth/**
-            - id: auth-test
-              uri: ${AUTH_SERVER_URI:http://localhost:8081}
-              predicates:
-                - Path=/test/**
+
+            # 2. payment
             - id: payment
               uri: ${PAYMENT_SERVER_URI:http://localhost:8082}
               predicates:
@@ -86,22 +86,30 @@ spring:
               uri: ${PAYMENT_SERVER_URI:http://localhost:8082}
               predicates:
                 - Path=/api/webhooks/**
+
+            # 3. queue
             - id: queue
               uri: ${QUEUE_SERVER_URI:http://localhost:8083}
               predicates:
                 - Path=/api/queue/**
               filters:
                 - JwtAuthenticationFilter
+
+            # 4. ticketing
             - id: ticketing
               uri: ${TICKETING_SERVER_URI:http://localhost:8084}
               predicates:
                 - Path=/api/ticketing/**
               filters:
                 - JwtAuthenticationFilter
+
+            # 5. booking
             - id: booking
               uri: ${TICKETING_SERVER_URI:http://localhost:8084}
               predicates:
                 - Path=/api/bookings/**
+
+            # 6. review
             - id: review-protected
               uri: ${MUSICAL_SERVER_URI:http://localhost:8085}
               predicates:
@@ -113,6 +121,21 @@ spring:
               uri: ${MUSICAL_SERVER_URI:http://localhost:8085}
               predicates:
                 - Path=/api/musical/reviews/**
+
+            # 7. artist
+            - id: artist-protected
+              uri: ${MUSICAL_SERVER_URI:http://localhost:8085}
+              predicates:
+                - Path=/api/musical/artists/**
+                - Method=POST,PUT,PATCH,DELETE
+              filters:
+                - JwtAuthenticationFilter
+            - id: artist-public
+              uri: ${MUSICAL_SERVER_URI:http://localhost:8085}
+              predicates:
+                - Path=/api/musical/artists/**
+
+            # 8. musical
             - id: musical
               uri: ${MUSICAL_SERVER_URI:http://localhost:8085}
               predicates:
