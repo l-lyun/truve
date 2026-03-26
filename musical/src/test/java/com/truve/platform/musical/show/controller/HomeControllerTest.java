@@ -133,6 +133,31 @@ class HomeControllerTest {
 	}
 
 	@Test
+	@DisplayName("홈 프로모션 배너 조회에 성공하면 200과 프로모션 배너 목록을 응답한다.")
+	void 홈_프로모션_배너_조회_성공() throws Exception {
+		HomeResponse.PromotionShowList response = HomeResponse.PromotionShowList.builder()
+			.totalCount(2)
+			.shows(List.of(
+				HomeResponse.PromotionShow.builder()
+					.displayOrder(1)
+					.showId(1L)
+					.posterUrl("https://img.example/promotion/banner1.jpg")
+					.build()
+			))
+			.build();
+
+		given(homeService.getPromotionShows()).willReturn(response);
+
+		mockMvc.perform(get("/api/musical/home/promotions"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.code").value("ok"))
+			.andExpect(jsonPath("$.data.totalCount").value(2))
+			.andExpect(jsonPath("$.data.shows[0].displayOrder").value(1))
+			.andExpect(jsonPath("$.data.shows[0].showId").value(1))
+			.andExpect(jsonPath("$.data.shows[0].posterUrl").value("https://img.example/promotion/banner1.jpg"));
+	}
+
+	@Test
 	@DisplayName("홈 공연 목록 조회에서 size가 0 이하면 400(C02)을 응답한다.")
 	void 홈_공연_목록_조회_검증_실패() throws Exception {
 		mockMvc.perform(get("/api/musical/home/shows")

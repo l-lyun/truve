@@ -56,4 +56,21 @@ public class HomeResponse {
 		private String posterUrl;
 		private Integer displayOrder;
 	}
+
+	@Getter
+	@AllArgsConstructor
+	@Builder
+	public static class PromotionShowList {
+		private int totalCount;
+		private List<PromotionShow> shows;
+	}
+
+	@Getter
+	@AllArgsConstructor
+	@Builder
+	public static class PromotionShow {
+		private Integer displayOrder;
+		private Long showId;
+		private String posterUrl;
+	}
 }

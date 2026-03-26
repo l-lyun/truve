@@ -23,9 +23,11 @@ import com.truve.platform.musical.seat.domain.repository.VenueRepository;
 import com.truve.platform.musical.show.domain.constant.HomeShowOrder;
 import com.truve.platform.musical.show.domain.constant.HomeRegion;
 import com.truve.platform.musical.show.domain.entity.HomeBanner;
+import com.truve.platform.musical.show.domain.entity.PromotionBanner;
 import com.truve.platform.musical.show.domain.entity.Show;
 import com.truve.platform.musical.show.dto.HomeResponse;
 import com.truve.platform.musical.show.repository.HomeBannerRepository;
+import com.truve.platform.musical.show.repository.PromotionBannerRepository;
 import com.truve.platform.musical.show.repository.ShowRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -35,6 +37,8 @@ import lombok.RequiredArgsConstructor;
 public class HomeService {
 
 	private static final int MAX_BANNERS = 5;
+	private static final int MAX_PROMOTION_SHOWS = 8;
+	private static final int MIN_PROMOTION_SHOWS = 2;
 	private static final HomeShowOrder DEFAULT_ORDER = HomeShowOrder.DAILY_BOOKING;
 	private static final HomeRegion DEFAULT_REGION = HomeRegion.ALL;
 	private static final DateTimeFormatter BANNER_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd");
@@ -43,6 +47,7 @@ public class HomeService {
 	private static final String DEFAULT_DATE = "기간 미정";
 
 	private final HomeBannerRepository homeBannerRepository;
+	private final PromotionBannerRepository promotionBannerRepository;
 	private final ShowRepository showRepository;
 	private final VenueRepository venueRepository;
 	private final S3Service s3Service;
@@ -91,6 +96,32 @@ public class HomeService {
 			.build();
 	}
 
+	@Transactional(readOnly = true)
+	public HomeResponse.PromotionShowList getPromotionShows() {
+		LocalDate today = LocalDate.now();
+		List<PromotionBanner> banners = promotionBannerRepository.findActiveBanners(
+			PageRequest.of(0, MAX_PROMOTION_SHOWS)
+		);
+		Map<Long, Show> showsById = getShowsByPromotionBanner(banners);
+
+		List<HomeResponse.PromotionShow> responses = banners.stream()
+			.filter(banner -> isVisiblePromotionBanner(banner, showsById, today))
+			.map(this::toPromotionShowResponse)
+			.toList();
+
+		if (responses.size() < MIN_PROMOTION_SHOWS) {
+			return HomeResponse.PromotionShowList.builder()
+				.totalCount(0)
+				.shows(Collections.emptyList())
+				.build();
+		}
+
+		return HomeResponse.PromotionShowList.builder()
+			.totalCount(responses.size())
+			.shows(responses)
+			.build();
+	}
+
 	private HomeResponse.Banner toBannerResponse(
 		HomeBanner banner,
 		Map<Long, Show> showsById,
@@ -109,6 +140,14 @@ public class HomeService {
 			.build();
 	}
 
+	private HomeResponse.PromotionShow toPromotionShowResponse(PromotionBanner banner) {
+		return HomeResponse.PromotionShow.builder()
+			.displayOrder(banner.getDisplayOrder())
+			.showId(banner.getShowId())
+			.posterUrl(toImageUrl(banner.getImageKey()))
+			.build();
+	}
+
 	private String toDateRange(Show show) {
 		if (show == null || show.getStartTime() == null || show.getEndTime() == null) {
 			return DEFAULT_DATE;
@@ -123,6 +162,18 @@ public class HomeService {
 		}
 		List<Long> showIds = banners.stream()
 			.map(HomeBanner::getShowId)
+			.distinct()
+			.toList();
+		return showRepository.findAllById(showIds).stream()
+			.collect(Collectors.toMap(Show::getId, show -> show, (left, right) -> left, LinkedHashMap::new));
+	}
+
+	private Map<Long, Show> getShowsByPromotionBanner(List<PromotionBanner> banners) {
+		if (banners.isEmpty()) {
+			return Collections.emptyMap();
+		}
+		List<Long> showIds = banners.stream()
+			.map(PromotionBanner::getShowId)
 			.distinct()
 			.toList();
 		return showRepository.findAllById(showIds).stream()
@@ -187,6 +238,14 @@ public class HomeService {
 	}
 
 	private boolean isVisibleBanner(HomeBanner banner, Map<Long, Show> showsById, LocalDate today) {
+		Show show = showsById.get(banner.getShowId());
+		if (show == null) {
+			return true;
+		}
+		return show.getEndTime() == null || !show.getEndTime().toLocalDate().isBefore(today);
+	}
+
+	private boolean isVisiblePromotionBanner(PromotionBanner banner, Map<Long, Show> showsById, LocalDate today) {
 		Show show = showsById.get(banner.getShowId());
 		if (show == null) {
 			return true;

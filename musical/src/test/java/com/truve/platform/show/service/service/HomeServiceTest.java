@@ -22,9 +22,11 @@ import com.truve.platform.musical.s3.S3Service;
 import com.truve.platform.musical.seat.domain.entity.Venue;
 import com.truve.platform.musical.seat.domain.repository.VenueRepository;
 import com.truve.platform.musical.show.domain.entity.HomeBanner;
+import com.truve.platform.musical.show.domain.entity.PromotionBanner;
 import com.truve.platform.musical.show.domain.entity.Show;
 import com.truve.platform.musical.show.dto.HomeResponse;
 import com.truve.platform.musical.show.repository.HomeBannerRepository;
+import com.truve.platform.musical.show.repository.PromotionBannerRepository;
 import com.truve.platform.musical.show.repository.ShowRepository;
 import com.truve.platform.musical.show.service.HomeService;
 
@@ -33,6 +35,8 @@ class HomeServiceTest {
 
 	@Mock
 	private HomeBannerRepository homeBannerRepository;
+	@Mock
+	private PromotionBannerRepository promotionBannerRepository;
 	@Mock
 	private ShowRepository showRepository;
 	@Mock
@@ -175,5 +179,64 @@ class HomeServiceTest {
 		HomeResponse.BannerList result = homeService.getHomeBanners();
 
 		assertEquals(0, result.getBanners().size());
+	}
+
+	@Test
+	@DisplayName("홈 프로모션 배너 조회는 관리자 큐레이션 배너를 응답한다.")
+	void 홈_프로모션_배너_조회_성공() {
+		Show show1 = org.mockito.Mockito.mock(Show.class);
+		when(show1.getId()).thenReturn(1L);
+		when(show1.getEndTime()).thenReturn(LocalDateTime.of(2026, 5, 31, 23, 59));
+
+		Show show2 = org.mockito.Mockito.mock(Show.class);
+		when(show2.getId()).thenReturn(2L);
+		when(show2.getEndTime()).thenReturn(LocalDateTime.of(2026, 6, 30, 23, 59));
+
+		PromotionBanner banner1 = org.mockito.Mockito.mock(PromotionBanner.class);
+		when(banner1.getShowId()).thenReturn(1L);
+		when(banner1.getImageKey()).thenReturn("promotion/banner1.jpg");
+		when(banner1.getDisplayOrder()).thenReturn(1);
+
+		PromotionBanner banner2 = org.mockito.Mockito.mock(PromotionBanner.class);
+		when(banner2.getShowId()).thenReturn(2L);
+		when(banner2.getImageKey()).thenReturn("promotion/banner2.jpg");
+		when(banner2.getDisplayOrder()).thenReturn(2);
+
+		when(promotionBannerRepository.findActiveBanners(any(PageRequest.class)))
+			.thenReturn(List.of(banner1, banner2));
+		when(showRepository.findAllById(List.of(1L, 2L))).thenReturn(List.of(show1, show2));
+		when(s3Service.getImageUrl("promotion/banner1.jpg")).thenReturn("https://img.example/promotion/banner1.jpg");
+		when(s3Service.getImageUrl("promotion/banner2.jpg")).thenReturn("https://img.example/promotion/banner2.jpg");
+
+		HomeResponse.PromotionShowList result = homeService.getPromotionShows();
+
+		assertEquals(2, result.getTotalCount());
+		assertEquals(2, result.getShows().size());
+		assertEquals(1, result.getShows().get(0).getDisplayOrder());
+		assertEquals(1L, result.getShows().get(0).getShowId());
+		assertEquals("https://img.example/promotion/banner1.jpg", result.getShows().get(0).getPosterUrl());
+		verify(promotionBannerRepository).findActiveBanners(any(PageRequest.class));
+	}
+
+	@Test
+	@DisplayName("홈 프로모션 배너는 2개 미만이면 비노출 응답을 반환한다.")
+	void 홈_프로모션_배너_2개미만_비노출() {
+		Show show = org.mockito.Mockito.mock(Show.class);
+		when(show.getId()).thenReturn(1L);
+		when(show.getEndTime()).thenReturn(LocalDateTime.of(2026, 5, 31, 23, 59));
+
+		PromotionBanner banner = org.mockito.Mockito.mock(PromotionBanner.class);
+		when(banner.getShowId()).thenReturn(1L);
+		when(banner.getImageKey()).thenReturn("promotion/banner1.jpg");
+		when(banner.getDisplayOrder()).thenReturn(1);
+
+		when(promotionBannerRepository.findActiveBanners(any(PageRequest.class))).thenReturn(List.of(banner));
+		when(showRepository.findAllById(List.of(1L))).thenReturn(List.of(show));
+		when(s3Service.getImageUrl("promotion/banner1.jpg")).thenReturn("https://img.example/promotion/banner1.jpg");
+
+		HomeResponse.PromotionShowList result = homeService.getPromotionShows();
+
+		assertEquals(0, result.getTotalCount());
+		assertEquals(0, result.getShows().size());
 	}
 }

@@ -56,4 +56,10 @@ public class HomeController {
 	public ApiResult<HomeResponse.BannerList> getHomeBanners() {
 		return ApiResult.ok(homeService.getHomeBanners());
 	}
+
+	@Operation(summary = "홈 프로모션 배너 조회", description = "홈 화면 프로모션 배너 목록을 조회합니다.")
+	@GetMapping("/promotions")
+	public ApiResult<HomeResponse.PromotionShowList> getPromotions() {
+		return ApiResult.ok(homeService.getPromotionShows());
+	}
 }
