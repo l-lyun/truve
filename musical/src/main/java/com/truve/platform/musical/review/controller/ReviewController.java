@@ -47,7 +47,6 @@ public class ReviewController {
 	@GetMapping("/{showId}")
 	public ApiResult<PageResponse<ReviewResponse.ReviewItem>> getReviews(
 		@Parameter(hidden = true)
-		@RequestHeader(value = USER_ID_HEADER) UUID userId,
 		@PathVariable Long showId,
 		@RequestParam(required = false, defaultValue = "LATEST") ReviewSortType sort,
 		@Valid Paging paging
@@ -60,7 +59,6 @@ public class ReviewController {
 	@GetMapping("/{showId}/meta")
 	public ApiResult<ReviewResponse.Search> getReviewMeta(
 		@Parameter(hidden = true)
-		@RequestHeader(value = USER_ID_HEADER) UUID userId,
 		@PathVariable Long showId
 	) {
 		var response = reviewService.getReviewMeta(showId);

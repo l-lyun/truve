@@ -65,7 +65,7 @@ class ReviewControllerTest {
 
 		given(reviewService.getReviewMeta(showId)).willReturn(search);
 
-		ApiResult<ReviewResponse.Search> response = reviewController.getReviewMeta(userId, showId);
+		ApiResult<ReviewResponse.Search> response = reviewController.getReviewMeta(showId);
 
 		verify(reviewService).getReviewMeta(showId);
 		assertThat(response.getCode()).isEqualTo("ok");

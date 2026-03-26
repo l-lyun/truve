@@ -9,11 +9,13 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 public class ReviewRequest {
 
 	@AllArgsConstructor
 	@Getter
+	@NoArgsConstructor
 	public static class Create {
 
 		@NotNull
