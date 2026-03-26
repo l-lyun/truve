@@ -25,6 +25,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
+import com.truve.platform.musical.review.dao.ReviewPointCountDao;
 import com.truve.platform.musical.review.domain.constant.ReviewPointName;
 import com.truve.platform.musical.review.domain.entity.Review;
 import com.truve.platform.musical.review.domain.entity.ReviewPoint;
@@ -56,7 +57,8 @@ class ReviewServiceTest {
 			true,
 			List.of(ReviewPointName.IMMERSION, ReviewPointName.TOUCHING),
 			List.of(ReviewPointName.STORY, ReviewPointName.ACTING),
-			"재밌게 봤어요"
+			"재밌게 봤어요",
+			"최고였어요"
 		);
 
 		ReviewPointType immersion = reviewPointType(ReviewPointName.IMMERSION);
@@ -89,6 +91,7 @@ class ReviewServiceTest {
 		assertAll(
 			() -> assertThat(savedReview.getShowId()).isEqualTo(showId),
 			() -> assertThat(savedReview.getUserId()).isEqualTo(userId),
+			() -> assertThat(savedReview.getTitle()).isEqualTo("최고였어요"),
 			() -> assertThat(savedReview.getContent()).isEqualTo("재밌게 봤어요"),
 			() -> assertThat(savedReview.getIsPositive()).isTrue(),
 			() -> assertThat(savedReview.getWatchedAt()).isNotNull(),
@@ -107,7 +110,8 @@ class ReviewServiceTest {
 			true,
 			List.of(ReviewPointName.IMMERSION),
 			List.of(ReviewPointName.STORY),
-			"재밌게 봤어요"
+			"재밌게 봤어요",
+			"중복 테스트"
 		);
 
 		given(reviewRepository.existsByUserIdAndShowId(userId, showId)).willReturn(true);
@@ -130,7 +134,8 @@ class ReviewServiceTest {
 			true,
 			List.of(ReviewPointName.STORY),
 			List.of(ReviewPointName.ACTING),
-			"재밌게 봤어요"
+			"재밌게 봤어요",
+			"포인트 검증"
 		);
 
 		given(reviewRepository.existsByUserIdAndShowId(userId, 1L)).willReturn(false);
@@ -142,6 +147,31 @@ class ReviewServiceTest {
 
 		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.NOT_EMOTION_POINT);
 		verify(reviewRepository, never()).save(any());
+	}
+
+	@Test
+	@DisplayName("리뷰 메타 조회 시 포인트 집계와 점수를 반환한다.")
+	void 리뷰_메타_조회_성공() {
+		// given
+		Long showId = 1L;
+		given(reviewRepository.countByShowIdAndDeletedAtIsNull(showId)).willReturn(20L);
+		given(reviewRepository.countByShowIdAndDeletedAtIsNullAndIsPositiveTrue(showId)).willReturn(15L);
+		given(reviewPointRepository.countPointsByShowId(showId)).willReturn(List.of(
+			new ReviewPointCountDao(ReviewPointName.STORY, 10L),
+			new ReviewPointCountDao(ReviewPointName.IMMERSION, 8L)
+		));
+
+		// when
+		var response = reviewService.getReviewMeta(showId);
+
+		// then
+		assertAll(
+			() -> assertThat(response.getShowId()).isEqualTo(showId),
+			() -> assertThat(response.getWeeklyRanking()).isEqualTo(1L),
+			() -> assertThat(response.getTruveScore()).isEqualTo(75L),
+			() -> assertThat(response.getCharmPointScores()).isNotEmpty(),
+			() -> assertThat(response.getEmotionPointScores()).isNotEmpty()
+		);
 	}
 
 	private ReviewPointType reviewPointType(ReviewPointName point) {

@@ -14,7 +14,7 @@ public interface ReviewPointRepository extends JpaRepository<ReviewPoint, Long> 
 
 	@Query(
 		"""
-	select ReviewPointDao(
+	select new com.truve.platform.musical.review.dao.ReviewPointCountDao(
 		rp.reviewPointType.point,
 		count(rp)
 		)

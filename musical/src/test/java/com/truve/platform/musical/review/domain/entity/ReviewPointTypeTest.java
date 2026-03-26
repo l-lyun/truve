@@ -19,13 +19,13 @@ class ReviewPointTypeTest {
 		ReflectionTestUtils.setField(reviewPointType, "category", ReviewPointCategory.EMOTION);
 		ReflectionTestUtils.setField(reviewPointType, "point", ReviewPointName.TOUCHING);
 		ReflectionTestUtils.setField(reviewPointType, "code", "E05");
-		ReflectionTestUtils.setField(reviewPointType, "order", 5L);
+		ReflectionTestUtils.setField(reviewPointType, "sortOrder", 5L);
 
 		assertAll(
 			() -> assertThat(reviewPointType.getCategory()).isEqualTo(ReviewPointCategory.EMOTION),
 			() -> assertThat(reviewPointType.getPoint()).isEqualTo(ReviewPointName.TOUCHING),
 			() -> assertThat(reviewPointType.getCode()).isEqualTo("E05"),
-			() -> assertThat(reviewPointType.getOrder()).isEqualTo(5L),
+			() -> assertThat(reviewPointType.getSortOrder()).isEqualTo(5L),
 			() -> assertThat(reviewPointType.isEmotionPoint()).isTrue(),
 			() -> assertThat(reviewPointType.isCharmPoint(ReviewPointName.STORY)).isFalse()
 		);

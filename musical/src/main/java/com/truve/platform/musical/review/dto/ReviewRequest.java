@@ -30,5 +30,8 @@ public class ReviewRequest {
 		@NotBlank
 		String content;
 
+		@NotBlank
+		String title;
+
 	}
 }

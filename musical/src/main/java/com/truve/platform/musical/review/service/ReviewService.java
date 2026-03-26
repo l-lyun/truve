@@ -60,6 +60,7 @@ public class ReviewService {
 		Review review = Review.builder().
 			showId(showId).
 			userId(userId).
+			title(request.getTitle()).
 			content(request.getContent()).
 			isPositive(request.getIsPositive()).
 			// TODO: 티켓 및 예매 완료 시 연동

@@ -25,7 +25,7 @@ public class ReviewResponse {
 		private LocalDateTime createdAt;
 
 		public static ReviewItem create(Long reviewId, UUID userId, String userNickname, String title, String content, boolean isPositive, LocalDateTime createdAt) {
-			return new ReviewItem(reviewId, userId, userNickname, content, title, isPositive, createdAt);
+			return new ReviewItem(reviewId, userId, userNickname, title, content, isPositive, createdAt);
 		}
 
 	}
