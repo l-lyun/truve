@@ -209,10 +209,10 @@ services:
       - MUSICAL_MYSQL_URL=jdbc:mysql://db:3306/musical_db
       - MUSICAL_MYSQL_USERNAME=root
       - MUSICAL_MYSQL_PASSWORD=1234
-      - AWS_S3_BUCKET=truve-media
-      - AWS_REGION=us-east-1
-      - AWS_ACCESS_KEY=test
-      - AWS_SECRET_KEY=test
+      - AWS_S3_BUCKET=truve-dev-bucket
+      - AWS_REGION=ap-northeast-2
+      - AWS_ACCESS_KEY=${AWS_ACCESS_KEY}
+      - AWS_SECRET_KEY=${AWS_SECRET_KEY}
       - AWS_S3_ENDPOINT=http://localstack:4566
       - KAFKA_SERVERS=kafka:9092
     depends_on:

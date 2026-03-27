@@ -8,12 +8,16 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class S3Service {
-	@Value("${spring.cloud.aws.s3.endpoint}")
-	private String endpoint;
-	@Value("${spring.cloud.aws.s3.bucket}")
+	@Value("${s3.region}")
+	private String region;
+	@Value("${s3.bucket}")
 	private String bucketName;
 
 	public String getImageUrl(String fileName) {
-		return String.format("%s/%s/%s", endpoint, bucketName, fileName);
+		if (fileName == null || fileName.isEmpty()) {
+			return null;
+		}
+
+		return String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, region, fileName);
 	}
 }

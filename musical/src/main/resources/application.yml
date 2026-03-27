@@ -38,18 +38,9 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
-  cloud:
-    aws:
-      s3:
-        bucket: ${AWS_S3_BUCKET:truve-media}
-        endpoint: ${AWS_S3_ENDPOINT:http://localstack:4566}
-      region:
-        static: ${AWS_REGION:us-east-1}
-      credentials:
-        access-key: ${AWS_ACCESS_KEY:test}
-        secret-key: ${AWS_SECRET_KEY:test}
-      stack:
-        auto: false
+s3:
+  bucket: ${AWS_S3_BUCKET:-truve-dev-bucket}
+  region: ${AWS_REGION:-ap-northeast-2}
 
 springdoc:
   api-docs:

@@ -1,13 +1,8 @@
 package com.truve.platform.show.service.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -315,25 +310,25 @@ class ShowServiceTest {
 		when(artistLauren.getName()).thenReturn("허윤슬");
 
 		ShowCasting charlieCasting = org.mockito.Mockito.mock(ShowCasting.class);
-		when(charlieCasting.getId()).thenReturn(1001L);
+		lenient().when(charlieCasting.getId()).thenReturn(1001L);
 		when(charlieCasting.getRoleName()).thenReturn("찰리");
 		when(charlieCasting.getCastingOrder()).thenReturn(1);
 		when(charlieCasting.getArtist()).thenReturn(artistCharlie);
 
 		ShowCasting lolaCasting = org.mockito.Mockito.mock(ShowCasting.class);
-		when(lolaCasting.getId()).thenReturn(1002L);
+		lenient().when(lolaCasting.getId()).thenReturn(1002L);
 		when(lolaCasting.getRoleName()).thenReturn("롤라");
 		when(lolaCasting.getCastingOrder()).thenReturn(2);
 		when(lolaCasting.getArtist()).thenReturn(artistLola);
 
 		ShowCasting laurenCasting = org.mockito.Mockito.mock(ShowCasting.class);
-		when(laurenCasting.getId()).thenReturn(1003L);
+		lenient().when(laurenCasting.getId()).thenReturn(1003L);
 		when(laurenCasting.getRoleName()).thenReturn("로렌");
 		when(laurenCasting.getCastingOrder()).thenReturn(3);
 		when(laurenCasting.getArtist()).thenReturn(artistLauren);
 
 		ShowScheduleCasting sc1 = org.mockito.Mockito.mock(ShowScheduleCasting.class);
-		when(sc1.getShowSchedule()).thenReturn(schedule1);
+		lenient().when(sc1.getShowSchedule()).thenReturn(schedule1);
 		when(sc1.getShowCasting()).thenReturn(charlieCasting);
 
 		ShowScheduleCasting sc2 = org.mockito.Mockito.mock(ShowScheduleCasting.class);

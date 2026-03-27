@@ -1,13 +1,9 @@
 package com.truve.platform.show.service.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -132,7 +128,8 @@ class ArtistServiceTest {
 		when(artist.getProfileImg()).thenReturn("artists/lee.png");
 		when(artistRepository.findDetailById(1L)).thenReturn(Optional.of(artist));
 		when(artistNoticeRepository.findNoticesByArtistId(1L)).thenReturn(List.of());
-		when(showCastingRepository.findCurrentShowsByArtistId(1L, any(LocalDateTime.class))).thenReturn(List.of(currentShow));
+		when(showCastingRepository.findCurrentShowsByArtistId(eq(1L), any(LocalDateTime.class))).thenReturn(
+			List.of(currentShow));
 		when(showCastingRepository.findPastShowsByArtistId(any(Long.class), any(LocalDateTime.class), any(Pageable.class)))
 			.thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 13), 0));
 		when(currentShow.getShowId()).thenReturn(10L);
