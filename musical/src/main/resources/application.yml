@@ -39,8 +39,8 @@ spring:
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
 s3:
-  bucket: ${AWS_S3_BUCKET:-truve-dev-bucket}
-  region: ${AWS_REGION:-ap-northeast-2}
+  bucket: ${AWS_S3_BUCKET:truve-dev-bucket}
+  region: ${AWS_REGION:ap-northeast-2}
 
 springdoc:
   api-docs:
