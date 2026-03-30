@@ -20,7 +20,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.truve.platform.payment.service.domain.constant.PaymentStatus;
 import com.truve.platform.payment.service.domain.entity.EasyPay;
 import com.truve.platform.payment.service.domain.entity.Payment;
-import com.truve.platform.payment.service.domain.entity.PaymentCancel;
 import com.truve.platform.payment.service.dto.PaymentRequest;
 import com.truve.platform.payment.service.external.client.TossClient;
 import com.truve.platform.payment.service.external.client.TossResponse;
@@ -133,7 +132,6 @@ class PaymentServiceTest {
 	@DisplayName("결제 취소(cancel) 테스트")
 	class CancelTest {
 		private final String idempotencyKey = "test-idempotency-key";
-		private final String transactionKey = "T12345";
 
 		PaymentRequest.Cancel request;
 
@@ -151,13 +149,12 @@ class PaymentServiceTest {
 			given(paymentRepository.getByOrderIdWithLock(orderId)).willReturn(payment);
 
 			TossResponse.Cancel tossResponse = mock(TossResponse.Cancel.class);
-			given(tossResponse.getTransactionKey()).willReturn(transactionKey);
 			given(tossResponse.getCancelAmount()).willReturn(amount);
 			given(tossResponse.getCanceledAt()).willReturn("2026-03-04T22:00:00+09:00");
 			given(tossResponse.getCancelStatus()).willReturn("DONE");
 			given(tossClient.cancel(any(), any(), any())).willReturn(tossResponse);
 
-			given(paymentCancelRepository.findByTransactionKey(transactionKey)).willReturn(Optional.empty());
+			given(paymentCancelRepository.existsByIdempotencyKey(idempotencyKey)).willReturn(false);
 
 			// when
 			paymentService.cancel(orderId, idempotencyKey, request);
@@ -172,28 +169,21 @@ class PaymentServiceTest {
 		}
 
 		@Test
-		@DisplayName("이미 취소된 건(transactionKey 존재)이면 토스 API만 호출하고 중복 저장하지 않는다.")
+		@DisplayName("이미 취소된 건(idempotencyKey 존재)이면 PG사 API를 호출하지 않고 종료한다.")
 		void 결제취소_중복요청_멱등성() {
 			// given
 			Payment payment = Payment.builder().orderId(orderId).amount(amount).build();
 			given(paymentRepository.getByOrderIdWithLock(orderId)).willReturn(payment);
 
-			TossResponse.Cancel tossResponse = mock(TossResponse.Cancel.class);
-			given(tossResponse.getTransactionKey()).willReturn(transactionKey);
-			given(tossClient.cancel(any(), any(), any())).willReturn(tossResponse);
-
-			PaymentCancel existingCancel = mock(PaymentCancel.class);
-			given(existingCancel.getCancelStatus()).willReturn("DONE");
-			given(paymentCancelRepository.findByTransactionKey(transactionKey))
-				.willReturn(Optional.of(existingCancel));
+			given(paymentCancelRepository.existsByIdempotencyKey(idempotencyKey)).willReturn(true);
 
 			// when
 			paymentService.cancel(orderId, idempotencyKey, request);
 
 			// then
 			assertAll(
-				() -> assertThat(payment.getCancels()).isEmpty(),
-				() -> verify(tossClient).cancel(any(), eq(idempotencyKey), any())
+				() -> verify(tossClient, never()).cancel(any(), any(), any()),
+				() -> assertThat(payment.getCancels()).isEmpty()
 			);
 		}
 	}

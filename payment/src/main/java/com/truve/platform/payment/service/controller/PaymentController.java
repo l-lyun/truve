@@ -28,12 +28,6 @@ import lombok.RequiredArgsConstructor;
 public class PaymentController {
 	private final PaymentService paymentService;
 
-	@Operation(summary = "결제 정보 상세 조회", description = "주문 ID로 결제 정보를 조회합니다.")
-	@GetMapping("/{orderId}")
-	public ApiResult<PaymentResponse.Details> details(@PathVariable String orderId) {
-		return ApiResult.ok(paymentService.details(orderId));
-	}
-
 	@Operation(summary = "은행 리스트 조회", description = "은행 이름, 코드 리스트를 조회합니다.")
 	@GetMapping("/banks")
 	public ApiResult<List<PaymentResponse.Bank>> getBankList() {
@@ -59,12 +53,13 @@ public class PaymentController {
 		}
 	)
 	@PostMapping("/{orderId}/cancel")
-	public ApiResult<PaymentResponse.Cancel> cancel(
+	public ApiResult<Void> cancel(
 		@PathVariable String orderId,
 		@RequestHeader("Idempotency-Key") String idempotencyKey,
 		@RequestBody @Valid PaymentRequest.Cancel request
 	) {
-		return ApiResult.ok(paymentService.cancel(orderId, idempotencyKey, request));
+		paymentService.cancel(orderId, idempotencyKey, request);
+		return ApiResult.ok();
 	}
 
 }

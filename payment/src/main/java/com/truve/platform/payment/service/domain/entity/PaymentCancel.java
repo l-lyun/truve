@@ -27,13 +27,7 @@ public class PaymentCancel extends BaseEntity {
 	private Payment payment;
 
 	@Column(nullable = false)
-	private Long requestAmount;
-
-	@Column(nullable = false)
-	private Long refundFee;
-
-	@Column(nullable = false)
-	private Long refundAmount;
+	private Long canceledAmount;
 
 	@Column(nullable = false)
 	private String cancelReason;
@@ -42,7 +36,7 @@ public class PaymentCancel extends BaseEntity {
 	private LocalDateTime canceledAt;
 
 	@Column(unique = true, nullable = false)
-	private String transactionKey;
+	private String idempotencyKey;
 
 	@Column(nullable = false)
 	private String cancelStatus;
@@ -50,12 +44,10 @@ public class PaymentCancel extends BaseEntity {
 	@Builder
 	public PaymentCancel(Payment payment, CancelCommand cancelCommand) {
 		this.payment = payment;
-		this.requestAmount = cancelCommand.getAmount();
-		this.refundFee = cancelCommand.getFee();
-		this.refundAmount = requestAmount - refundFee;
+		this.canceledAmount = cancelCommand.getAmount();
 		this.cancelReason = cancelCommand.getReason();
 		this.canceledAt = cancelCommand.getCanceledAt();
-		this.transactionKey = cancelCommand.getTransactionKey();
+		this.idempotencyKey = cancelCommand.getIdempotencyKey();
 		this.cancelStatus = cancelCommand.getStatus();
 	}
 
