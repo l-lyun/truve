@@ -1,5 +1,6 @@
 package com.truve.platform.auth.service.service;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -25,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-	private static final Pattern NICKNAME_PATTERN = Pattern.compile("^[a-zA-Z0-9가-힣]{2,10}$");
+	private static final Pattern NICKNAME_PATTERN = Pattern.compile("^(?:[가-힣]{2,10}|[a-zA-Z]{2,16})$");
 
 	private final UserRepository userRepository;
 	private final EmailVerificationRepository emailVerificationRepository;
@@ -158,18 +159,39 @@ public class AuthService {
 		// String verifiedAt = emailVerificationRepository.isVerifiedEmail(email);
 		// Preconditions.validate(!(verifiedAt == null || verifiedAt.isBlank()), ErrorCode.NOT_VERIFIED_EMAIL);
 
+		User existingUser = userRepository.findByEmail(email).orElse(null);
+
 		Preconditions.validate(
-			!userRepository.existsByEmail(email),
+			// TODO: 최종 발표 이전에는 탈퇴 유저 즉시 재가입 허용
+			// TODO: 발표 전 1주일 재가입 제한 정책으로 변경
+			// isWithdrawnAfterWeek(existingUser)
+			existingUser == null || existingUser.isWithdrawn(),
 			ErrorCode.ALREADY_EXISTS_EMAIL
 		);
+
 		Preconditions.validate(
 			serviceTermsAgreed && electronicFinanceTermsAgreed && privacyCollectionAgreed && over14Agreed,
 			ErrorCode.REQUIRED_TERMS_NOT_AGREED
 		);
 
-		validateNickname(nickname, null);
+		validateNickname(nickname, existingUser != null ? existingUser.getNickname() : null);
 
 		String encodedPassword = passwordEncoder.encode(password);
+
+		if (existingUser != null && existingUser.isWithdrawn()) {
+			existingUser.reactivate(
+				nickname,
+				encodedPassword,
+				serviceTermsAgreed,
+				electronicFinanceTermsAgreed,
+				privacyCollectionAgreed,
+				marketingInfoAgreed,
+				false,
+				over14Agreed
+			);
+			emailVerificationRepository.deleteVerifiedEmail(email);
+			return;
+		}
 
 		User user = User.createLocalUser(
 			email,
@@ -230,5 +252,20 @@ public class AuthService {
 			ErrorCode.ALREADY_EXISTS_NICKNAME
 		);
 	}
+
+	private boolean isWithdrawnAfterWeek(User user) {
+		if (user == null) {
+			return false;
+		}
+
+		if (!user.isWithdrawn() || user.getWithdrawnAt() == null) {
+			return false;
+		}
+
+		return !user.getWithdrawnAt()
+			.plusWeeks(1)
+			.isAfter(LocalDateTime.now());
+	}
+
 
 }

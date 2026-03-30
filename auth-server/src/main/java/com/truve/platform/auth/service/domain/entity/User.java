@@ -178,4 +178,25 @@ public class User extends BaseEntity {
 	public boolean isWithdrawn() {
 		return withdrawnAt != null;
 	}
+
+	public void reactivate(
+		String nickname,
+		String password,
+		boolean serviceTermsAgreed,
+		boolean electronicFinanceTermsAgreed,
+		boolean privacyCollectionAgreed,
+		boolean marketingInfoAgreed,
+		boolean emailNotificationAgreed,
+		boolean over14Agreed
+	) {
+		this.nickname = nickname;
+		this.password = password;
+		this.serviceTermsAgreed = serviceTermsAgreed;
+		this.electronicFinanceTermsAgreed = electronicFinanceTermsAgreed;
+		this.privacyCollectionAgreed = privacyCollectionAgreed;
+		this.marketingInfoAgreed = marketingInfoAgreed;
+		this.emailNotificationAgreed = emailNotificationAgreed;
+		this.over14Agreed = over14Agreed;
+		this.withdrawnAt = null;
+	}
 }
