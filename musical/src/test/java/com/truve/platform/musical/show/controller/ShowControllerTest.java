@@ -213,6 +213,13 @@ class ShowControllerTest {
 								.artistName("강홍석")
 								.build()
 						))
+					.remainingSeats(List.of(
+						ShowCastingResponse.GradeRemaining.builder()
+							.gradeName("VIP")
+							.remainingSeatCount(10L)
+							.totalCount(20L)
+							.build()
+					))
 					.build()
 			))
 			.build();
@@ -240,6 +247,8 @@ class ShowControllerTest {
 				.andExpect(jsonPath("$.data.page.currentPage").value(0))
 				.andExpect(jsonPath("$.data.rows[0].scheduleId").value(101))
 				.andExpect(jsonPath("$.data.rows[0].casts.찰리.artistName").value("김호영"))
-				.andExpect(jsonPath("$.data.rows[0].casts.찰리.profileImageUrl").doesNotExist());
+				.andExpect(jsonPath("$.data.rows[0].casts.찰리.profileImageUrl").doesNotExist())
+				.andExpect(jsonPath("$.data.rows[0].remainingSeats[0].gradeName").value("VIP"))
+				.andExpect(jsonPath("$.data.rows[0].remainingSeats[0].remainingSeatCount").value(10));
 	}
 }

@@ -76,9 +76,18 @@ public class ShowCastingResponse {
 		private String showDateLabel;
 		private String showTimeLabel;
 		private Map<String, CastArtist> casts;
+		private List<GradeRemaining> remainingSeats;
 	}
 
-    // 각 회차 배정 배우
+	@Getter
+	@AllArgsConstructor
+	@Builder
+	public static class GradeRemaining {
+		private String gradeName;
+		private Long remainingSeatCount;
+		private Long totalCount;
+	}
+
 	@Getter
 	@AllArgsConstructor
 	@Builder

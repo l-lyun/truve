@@ -16,20 +16,25 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClientException;
 
 import com.truve.platform.musical.show.domain.entity.Show;
 import com.truve.platform.musical.show.domain.entity.ShowCasting;
 import com.truve.platform.musical.show.domain.entity.ShowSchedule;
 import com.truve.platform.musical.show.domain.entity.ShowScheduleCasting;
 import com.truve.platform.musical.show.dto.ShowCastingResponse;
+import com.truve.platform.musical.show.external.client.TicketingInternalClient;
+import com.truve.platform.musical.show.external.client.TicketingInternalClientResponse;
 import com.truve.platform.musical.show.repository.ShowCastingRepository;
 import com.truve.platform.musical.show.repository.ShowRepository;
 import com.truve.platform.musical.show.repository.ShowScheduleCastingRepository;
 import com.truve.platform.musical.show.repository.ShowScheduleRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class ShowCastingService {
 	private static final String DEFAULT_UNASSIGNED_CAST_NAME = "미정";
@@ -42,6 +47,7 @@ public class ShowCastingService {
 	private final ShowScheduleRepository showScheduleRepository;
 	private final ShowCastingRepository showCastingRepository;
 	private final ShowScheduleCastingRepository showScheduleCastingRepository;
+	private final TicketingInternalClient ticketingInternalClient;
 
 	@Transactional(readOnly = true)
 	public ShowCastingResponse.Detail getCastingSchedules(
@@ -91,6 +97,9 @@ public class ShowCastingService {
 		Map<Long, Map<String, ShowCastingResponse.CastArtist>> castsByScheduleId = scheduleIds.isEmpty()
 			? Map.of()
 			: buildCastsByScheduleId(scheduleIds);
+		Map<Long, List<ShowCastingResponse.GradeRemaining>> remainingSeatsByScheduleId = scheduleIds.isEmpty()
+			? Map.of()
+			: buildRemainingSeatsByScheduleId(scheduleIds);
 
 		List<ShowCastingResponse.Row> rows = schedulePage.getContent().stream()
 			.map(schedule -> ShowCastingResponse.Row.builder()
@@ -99,6 +108,7 @@ public class ShowCastingService {
 				.showDateLabel(toShowDateLabel(schedule.getShowTime()))
 				.showTimeLabel(toShowTimeLabel(schedule.getShowTime()))
 				.casts(buildRowCasts(schedule.getId(), roles, castsByScheduleId))
+				.remainingSeats(remainingSeatsByScheduleId.getOrDefault(schedule.getId(), List.of()))
 				.build())
 			.toList();
 
@@ -185,6 +195,35 @@ public class ShowCastingService {
 		roles.forEach(role -> rowCasts.put(role.getRoleName(), createUnassignedCast()));
 		rowCasts.putAll(assignedCasts);
 		return rowCasts;
+	}
+
+	private Map<Long, List<ShowCastingResponse.GradeRemaining>> buildRemainingSeatsByScheduleId(List<Long> scheduleIds) {
+		return scheduleIds.stream()
+			.collect(Collectors.toMap(
+				scheduleId -> scheduleId,
+				this::fetchRemainingSeats,
+				(existing, replacement) -> existing,
+				LinkedHashMap::new
+			));
+	}
+
+	private List<ShowCastingResponse.GradeRemaining> fetchRemainingSeats(Long scheduleId) {
+		try {
+			return ticketingInternalClient.getRemainingSeats(scheduleId).stream()
+				.map(this::toGradeRemaining)
+				.toList();
+		} catch (RestClientException e) {
+			log.warn("Failed to fetch remaining seats from ticketing for scheduleId={}", scheduleId);
+			return List.of();
+		}
+	}
+
+	private ShowCastingResponse.GradeRemaining toGradeRemaining(TicketingInternalClientResponse.GradeRemaining gradeRemaining) {
+		return ShowCastingResponse.GradeRemaining.builder()
+			.gradeName(gradeRemaining.getGradeName())
+			.remainingSeatCount(gradeRemaining.getRemainingSeatCount())
+			.totalCount(gradeRemaining.getTotalCount())
+			.build();
 	}
 
 	private ShowCastingResponse.CastArtist createUnassignedCast() {

@@ -3,7 +3,9 @@ package com.truve.platform.musical.show.service;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -52,9 +54,10 @@ public class ShowDetailService {
 			.toList();
 
 		List<ShowCasting> showCastings = showCastingRepository.findAllByShowId(showId);
-		Set<Long> likedArtistIds = findLikedArtistIds(userId, showCastings);
+		List<ShowCasting> uniqueShowCastings = deduplicateShowCastings(showCastings);
+		Set<Long> likedArtistIds = findLikedArtistIds(userId, uniqueShowCastings);
 
-		List<ShowResponse.Casting> castings = showCastings.stream()
+		List<ShowResponse.Casting> castings = uniqueShowCastings.stream()
 			.map(casting -> toCastingResponse(
 				casting,
 				likedArtistIds.contains(casting.getArtist().getId())
@@ -83,6 +86,20 @@ public class ShowDetailService {
 			.schedules(scheduleResponses)
 			.seatGrades(seatGrades)
 			.build();
+	}
+
+	private List<ShowCasting> deduplicateShowCastings(List<ShowCasting> showCastings) {
+		Map<String, ShowCasting> uniqueShowCastings = new LinkedHashMap<>();
+
+		for (ShowCasting showCasting : showCastings) {
+			uniqueShowCastings.putIfAbsent(buildShowCastingKey(showCasting), showCasting);
+		}
+
+		return List.copyOf(uniqueShowCastings.values());
+	}
+
+	private String buildShowCastingKey(ShowCasting showCasting) {
+		return showCasting.getArtist().getId() + ":" + showCasting.getRoleName();
 	}
 
 	private Set<Long> findLikedArtistIds(UUID userId, List<ShowCasting> showCastings) {

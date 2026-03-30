@@ -45,3 +45,6 @@ s3:
 springdoc:
   api-docs:
     path: /api/musical/v3/api-docs
+
+ticketing:
+  server-uri: ${TICKETING_SERVER_URI:http://localhost:8084}
