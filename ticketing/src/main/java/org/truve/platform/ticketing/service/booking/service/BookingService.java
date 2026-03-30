@@ -16,8 +16,8 @@ import org.truve.platform.ticketing.service.booking.domain.entity.Ticket;
 import org.truve.platform.ticketing.service.booking.domain.entity.VirtualAccount;
 import org.truve.platform.ticketing.service.booking.dto.BookingRequest;
 import org.truve.platform.ticketing.service.booking.dto.BookingResponse;
-import org.truve.platform.ticketing.service.booking.external.client.TicketingClient;
-import org.truve.platform.ticketing.service.booking.external.client.TicketingResponse;
+import org.truve.platform.ticketing.service.booking.external.client.ticketing.TicketingClient;
+import org.truve.platform.ticketing.service.booking.external.client.ticketing.TicketingResponse;
 import org.truve.platform.ticketing.service.booking.external.kafka.BookingEventCommand;
 import org.truve.platform.ticketing.service.booking.external.kafka.PaymentEventCommand;
 import org.truve.platform.ticketing.service.booking.external.kafka.PaymentPublisher;
@@ -149,13 +149,28 @@ public class BookingService {
 		reservation.depositReceive(event.getPaidAt());
 	}
 
-	@Transactional
+	@Transactional(readOnly = true)
 	public BookingResponse.Cancel getCancel(String reservationNumber, List<Long> ticketIds) {
 		Reservation reservation = reservationRepository.findByNumber(reservationNumber);
 
 		List<Long> resolvedTicketIds = ticketIds != null ? ticketIds
 			: reservation.getTickets().stream().map(Ticket::getId).toList();
 
+		reservation.validateTicketId(resolvedTicketIds);
+
 		return BookingResponse.Cancel.from(reservation, resolvedTicketIds, LocalDateTime.now());
+	}
+
+	@Transactional
+	public BookingResponse.CanceledTickets cancel(String reservationNumber, BookingRequest.TicketIds request) {
+		Reservation reservation = reservationRepository.findByNumber(reservationNumber);
+		List<Long> requestedTicketIds = request.getTicketIds();
+
+		// TODO: 결제서버 취소 API 동기 호출
+		// TODO: canceledAt -> 결제 서버 응답으로 온 취소 시간으로 변경
+
+		reservation.cancel(requestedTicketIds, LocalDateTime.now());
+
+		return new BookingResponse.CanceledTickets(requestedTicketIds);
 	}
 }

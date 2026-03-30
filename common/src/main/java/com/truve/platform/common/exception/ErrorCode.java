@@ -54,6 +54,9 @@ public enum ErrorCode {
 
 	INVALID_RESERVATION_STATUS(HttpStatus.BAD_REQUEST, "유효하지 않은 예약 상태입니다.", "B01"),
 	CANCEL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "관람일 당일에는 취소가 불가능합니다.", "B02"),
+	INVALID_TICKET_ID(HttpStatus.BAD_REQUEST, "유효하지 않는 티켓 ID입니다.", "B03"),
+	ALREADY_CANCELED_OR_COMPLETED(HttpStatus.BAD_REQUEST, "이미 취소됐거나 관람이 완료된 예매입니다.", "B04"),
+	ALREADY_CANCELED_TICKET(HttpStatus.BAD_REQUEST, "이미 취소된 티켓입니다.", "B05"),
 
 	NOT_FOUND_SHOW(HttpStatus.NOT_FOUND, "존재하지 않는 공연입니다.", "M01"),
 	NOT_FOUND_ARTIST(HttpStatus.NOT_FOUND, "존재하지 않는 배우입니다.", "M02"),

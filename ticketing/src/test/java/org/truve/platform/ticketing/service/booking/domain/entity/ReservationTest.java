@@ -1,6 +1,7 @@
 package org.truve.platform.ticketing.service.booking.domain.entity;
 
-import static org.assertj.core.api.AssertionsForClassTypes.*;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDateTime;
@@ -12,8 +13,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.truve.platform.ticketing.service.booking.domain.constant.ReservationStatus;
+
+import com.truve.platform.common.exception.CustomException;
 
 public class ReservationTest {
 
@@ -117,6 +121,62 @@ public class ReservationTest {
 
 		// then
 		assertThat(refundAmount).isEqualTo(expectedRefundAmount);
+	}
+
+	@Test
+	@DisplayName("유효하지 않은 티켓 ID를 입력받으면 예외를 반환한다.")
+	void 유효하지_않은_티켓_ID() {
+		// given
+		Reservation reservation = createReservation();
+		List<Ticket> tickets = createTickets(reservation, 2);
+		ReflectionTestUtils.setField(tickets.getFirst(), "id", 1L);
+		ReflectionTestUtils.setField(tickets.getLast(), "id", 2L);
+		reservation.addTickets(tickets);
+		List<Long> ticketId = List.of(3L);
+
+		// when & then
+		assertThatThrownBy(() -> reservation.validateTicketId(ticketId))
+			.isInstanceOf(CustomException.class);
+	}
+
+	@ParameterizedTest
+	@DisplayName("취소 또는 완료된 예약을 취소하면 예외를 반환한다.")
+	@EnumSource(value = ReservationStatus.class, names = {"CANCELED", "COMPLETED"})
+	void 취소_불가_상태(ReservationStatus status) {
+		// given
+		Reservation reservation = createReservation();
+		ReflectionTestUtils.setField(reservation, "status", status);
+
+		// when & then
+		assertThatThrownBy(() -> reservation.cancel(List.of(1L), LocalDateTime.now()))
+			.isInstanceOf(CustomException.class);
+	}
+
+	@ParameterizedTest
+	@DisplayName("취소 티켓 수에 따라서 CANCELED, PARTIAL_CANCELED 상태로 변경된다.")
+	@CsvSource({
+		"1, PARTIAL_CANCELED",
+		"2, CANCELED"
+	})
+	void 취소_상태_변경(int cancelCount, ReservationStatus expectedStatus) {
+		// given
+		Reservation reservation = createReservationWithTickets();
+		List<Long> ticketIds = reservation.getTickets().stream().map(Ticket::getId).limit(cancelCount).toList();
+
+		// when
+		reservation.cancel(ticketIds, LocalDateTime.now());
+
+		// then
+		assertThat(reservation.getStatus()).isEqualTo(expectedStatus);
+	}
+
+	private Reservation createReservationWithTickets() {
+		Reservation reservation = createReservation();
+		List<Ticket> tickets = createTickets(reservation, 2);
+		ReflectionTestUtils.setField(tickets.getFirst(), "id", 1L);
+		ReflectionTestUtils.setField(tickets.getLast(), "id", 2L);
+		reservation.addTickets(tickets);
+		return reservation;
 	}
 
 	private Reservation createReservation() {

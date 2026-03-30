@@ -85,4 +85,13 @@ public class BookingController {
 	) {
 		return ApiResult.ok(bookingService.getCancel(reservationNumber, ticketIds));
 	}
+
+	@Operation(summary = "예매 취소 요청")
+	@PostMapping("/{reservation_number}/cancel")
+	public ApiResult<BookingResponse.CanceledTickets> cancel(
+		@PathVariable("reservation_number") String reservationNumber,
+		@RequestBody @Valid BookingRequest.TicketIds request
+	) {
+		return ApiResult.ok(bookingService.cancel(reservationNumber, request));
+	}
 }

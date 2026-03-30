@@ -1,6 +1,6 @@
-package org.truve.platform.ticketing.service.booking.external.client;
+package org.truve.platform.ticketing.service.booking.external.client.ticketing;
 
-import static org.truve.platform.ticketing.service.booking.external.client.TicketingResponse.*;
+import static org.truve.platform.ticketing.service.booking.external.client.ticketing.TicketingResponse.*;
 
 import java.util.List;
 

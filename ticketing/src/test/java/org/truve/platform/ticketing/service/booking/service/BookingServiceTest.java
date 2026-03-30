@@ -22,8 +22,8 @@ import org.truve.platform.ticketing.service.booking.domain.entity.ShowInfo;
 import org.truve.platform.ticketing.service.booking.domain.entity.Ticket;
 import org.truve.platform.ticketing.service.booking.dto.BookingRequest;
 import org.truve.platform.ticketing.service.booking.dto.BookingResponse;
-import org.truve.platform.ticketing.service.booking.external.client.TicketingClient;
-import org.truve.platform.ticketing.service.booking.external.client.TicketingResponse;
+import org.truve.platform.ticketing.service.booking.external.client.ticketing.TicketingClient;
+import org.truve.platform.ticketing.service.booking.external.client.ticketing.TicketingResponse;
 import org.truve.platform.ticketing.service.booking.repository.ReservationRepository;
 
 @ExtendWith(MockitoExtension.class)

@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.truve.platform.ticketing.service.booking.external.client.TicketingResponse;
+import org.truve.platform.ticketing.service.booking.external.client.ticketing.TicketingResponse;
 import org.truve.platform.ticketing.service.ticketing.constant.SeatStatus;
 import org.truve.platform.ticketing.service.ticketing.domain.entity.ScheduledSeat;
 import org.truve.platform.ticketing.service.ticketing.dto.SeatSectionsDto;

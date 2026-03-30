@@ -1,4 +1,4 @@
-package org.truve.platform.ticketing.service.booking.external.client;
+package org.truve.platform.ticketing.service.booking.external.client.ticketing;
 
 import java.time.LocalDateTime;
 import java.util.List;

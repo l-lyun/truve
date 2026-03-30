@@ -4,7 +4,9 @@ import java.time.LocalDateTime;
 
 import org.truve.platform.ticketing.service.booking.domain.constant.TicketStatus;
 
+import com.truve.platform.common.exception.ErrorCode;
 import com.truve.platform.common.support.BaseEntity;
+import com.truve.platform.common.support.Preconditions;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -46,6 +48,9 @@ public class Ticket extends BaseEntity {
 	private TicketStatus status;
 
 	@Column
+	private LocalDateTime canceledAt;
+
+	@Column
 	private LocalDateTime usedAt;
 
 	@Builder
@@ -75,5 +80,12 @@ public class Ticket extends BaseEntity {
 
 	public boolean isCanceled() {
 		return status == TicketStatus.CANCELED;
+	}
+
+	public void cancel(LocalDateTime canceledAt) {
+		Preconditions.validate(!isCanceled(), ErrorCode.ALREADY_CANCELED_TICKET);
+
+		this.status = TicketStatus.CANCELED;
+		this.canceledAt = canceledAt;
 	}
 }

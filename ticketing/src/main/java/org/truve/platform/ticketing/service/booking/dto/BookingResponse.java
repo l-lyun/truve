@@ -160,4 +160,11 @@ public class BookingResponse {
 			}
 		}
 	}
+
+	@Getter
+	@AllArgsConstructor
+	@Builder
+	public static class CanceledTickets {
+		private final List<Long> canceledTicketIds;
+	}
 }

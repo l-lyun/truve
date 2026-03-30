@@ -41,4 +41,11 @@ public class BookingRequest {
 				.build();
 		}
 	}
+
+	@Getter
+	@AllArgsConstructor
+	public static class TicketIds {
+		@NotEmpty
+		private List<Long> ticketIds;
+	}
 }
