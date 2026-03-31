@@ -4,21 +4,109 @@ on:
   push:
     branches: [ "dev" ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   id-token: write
   contents: read
 
 env:
   AWS_REGION: ap-northeast-2
-  ECR_REPO: ${{ secrets.ECR_REPO }}
 
 jobs:
-  build-and-push:
+  filter:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      services: ${{ steps.filter.outputs.changes }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          # 각 서비스별로 변경을 감지할 경로를 명확하게 나열합니다.
+          filters: |
+            api-gateway:
+              - 'api-gateway/**'
+              - 'common-observability/**'
+              - 'Dockerfile'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - '.github/workflows/dev-ecr-ci.yml'
+            auth-server:
+              - 'auth-server/**'
+              - 'common/**'
+              - 'common-observability/**'
+              - 'Dockerfile'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - '.github/workflows/dev-ecr-ci.yml'
+            payment:
+              - 'payment/**'
+              - 'common/**'
+              - 'common-observability/**'
+              - 'Dockerfile'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - '.github/workflows/dev-ecr-ci.yml'
+            queue:
+              - 'queue/**'
+              - 'common-observability/**'
+              - 'Dockerfile'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - '.github/workflows/dev-ecr-ci.yml'
+            ticketing:
+              - 'ticketing/**'
+              - 'common/**'
+              - 'common-observability/**'
+              - 'Dockerfile'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - '.github/workflows/dev-ecr-ci.yml'
+            musical:
+              - 'musical/**'
+              - 'common/**'
+              - 'common-observability/**'
+              - 'Dockerfile'
+              - 'build.gradle'
+              - 'settings.gradle'
+              - '.github/workflows/dev-ecr-ci.yml'
 
+  test:
+    needs: filter
+    if: ${{ needs.filter.outputs.services != '[]' && needs.filter.outputs.services != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
+      fail-fast: false
       matrix:
-        service: [ api-gateway, auth-server, payment, queue, ticketing, musical ]
+        service: ${{ fromJSON(needs.filter.outputs.services) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run Test
+        run: ./gradlew :${{ matrix.service }}:test --no-daemon --parallel
+
+  build-and-push:
+    needs: [filter, test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJSON(needs.filter.outputs.services) }}
 
     steps:
       - name: Checkout
@@ -31,6 +119,7 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to ECR
+        id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Set up Docker Buildx
@@ -44,10 +133,13 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
+          platforms: linux/amd64
           tags: |
-            ${{ env.ECR_REPO }}:${{ matrix.service }}-latest
-            ${{ env.ECR_REPO }}:${{ matrix.service }}-${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/truve/${{ matrix.service }}:latest
+            ${{ steps.login-ecr.outputs.registry }}/truve/${{ matrix.service }}-${{ github.sha }}
           build-args: |
             SERVICE_NAME=${{ matrix.service }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          provenance: false
+          sbom: false
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
