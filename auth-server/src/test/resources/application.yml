@@ -8,3 +8,13 @@ spring:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: create-drop
+  mail:
+    host: localhost
+    port: 25
+    username: test@test.com
+    password: test
+
+management:
+  health:
+    mail:
+      enabled: false
