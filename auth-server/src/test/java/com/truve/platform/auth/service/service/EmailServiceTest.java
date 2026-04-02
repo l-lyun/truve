@@ -5,8 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
 
-import java.util.Properties;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -14,18 +12,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.test.util.ReflectionTestUtils;
 
+import com.truve.platform.auth.service.event.EmailSendEvent;
 import com.truve.platform.auth.service.event.EmailEventService;
 import com.truve.platform.auth.service.repository.EmailVerificationRepository;
 import com.truve.platform.auth.service.repository.UserRepository;
 import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
 import com.truve.platform.common.support.VerificationCodeGenerateUtils;
-
-import jakarta.mail.Session;
-import jakarta.mail.internet.MimeMessage;
 
 @ExtendWith(MockitoExtension.class)
 class EmailServiceTest {
@@ -34,8 +28,6 @@ class EmailServiceTest {
 	private UserRepository userRepository;
 	@Mock
 	private EmailVerificationRepository emailVerificationRepository;
-	@Mock
-	private JavaMailSender mailSender;
 	@Mock
 	private VerificationCodeGenerateUtils verificationCodeGenerateUtils;
 	@Mock
@@ -49,25 +41,24 @@ class EmailServiceTest {
 	class SendMailTest {
 
 		@Test
-		@DisplayName("중복되지 않은 이메일이면 인증 코드를 저장하고 메일을 전송한다.")
+		@DisplayName("중복되지 않은 이메일이면 인증 코드를 저장하고 이메일 발송 이벤트를 발행한다.")
 		void 메일_전송_성공() {
 			// given
 			String email = "new@test.com";
 			String code = "123456";
-			MimeMessage mimeMessage = new MimeMessage(Session.getInstance(new Properties()));
-
-			ReflectionTestUtils.setField(emailService, "senderEmail", "noreply@truve.com");
 			given(userRepository.existsByEmail(email)).willReturn(false);
 			given(verificationCodeGenerateUtils.generateVerificationCode()).willReturn(code);
-			given(mailSender.createMimeMessage()).willReturn(mimeMessage);
 
 			// when
 			emailService.sendMail(email);
 
 			// then
 			verify(emailVerificationRepository).registerEmailVerificationCode(email, code);
-			verify(mailSender).send(mimeMessage);
-			verify(emailEventService).sendEmail(email);
+			verify(emailEventService).sendEmail(argThat((EmailSendEvent event) ->
+				event.getEmail().equals(email)
+					&& event.getSubject().equals("TRUVE 회원가입 인증 코드")
+					&& event.getContent().contains(code)
+			));
 		}
 
 		@Test

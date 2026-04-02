@@ -1,11 +1,9 @@
 package com.truve.platform.auth.service.service;
 
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.truve.platform.auth.service.event.EmailSendEvent;
 import com.truve.platform.auth.service.event.EmailEventService;
 import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
@@ -14,24 +12,16 @@ import com.truve.platform.common.support.VerificationCodeGenerateUtils;
 import com.truve.platform.auth.service.repository.EmailVerificationRepository;
 import com.truve.platform.auth.service.repository.UserRepository;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class EmailService {
 
 	private final UserRepository userRepository;
 	private final EmailVerificationRepository emailVerificationRepository;
-	private final JavaMailSender mailSender;
 	private final VerificationCodeGenerateUtils verificationCodeGenerateUtils;
 	private final EmailEventService emailEventService;
-
-	@Value("${spring.mail.username}")
-	private String senderEmail;
 
 	@Transactional
 	public void sendMail(String email) {
@@ -49,22 +39,7 @@ public class EmailService {
 				"<p>감사합니다.</p>", code
 		);
 
-		try {
-			MimeMessage message = mailSender.createMimeMessage();
-			message.setFrom(senderEmail);
-			MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-			helper.setFrom(senderEmail);
-			helper.setTo(email);
-			helper.setSubject(subject);
-			helper.setText(text, true);
-
-			mailSender.send(message);
-			emailEventService.sendEmail(email);
-		} catch (MessagingException e) {
-			log.error("이메일 전송 실패 - 받는 사람: {}, 제목: {}", email, subject, e);
-			throw new CustomException(ErrorCode.NOT_FOUND_EMAIL);
-		}
+		emailEventService.sendEmail(EmailSendEvent.of(email, subject, text));
 	}
 
 	@Transactional
