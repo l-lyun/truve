@@ -19,6 +19,7 @@ import com.truve.platform.common.support.Preconditions;
 import com.truve.platform.musical.s3.S3Service;
 import com.truve.platform.musical.show.domain.entity.Artist;
 import com.truve.platform.musical.show.domain.entity.ArtistLike;
+import com.truve.platform.musical.show.domain.entity.ArtistMembership;
 import com.truve.platform.musical.show.dto.ArtistResponse;
 import com.truve.platform.musical.show.repository.ArtistLikeRepository;
 import com.truve.platform.musical.show.repository.ArtistMembershipRepository;
@@ -116,7 +117,9 @@ public class ArtistService {
 	}
 
 	private ArtistResponse.Membership toMembershipResponse(Long artistId, UUID userId) {
-		boolean joined = userId != null && artistMembershipRepository.existsByUserIdAndArtistId(userId, artistId);
+		boolean joined = userId != null && artistMembershipRepository.findByUserIdAndArtistId(userId, artistId)
+			.map(ArtistMembership::hasActiveEntitlement)
+			.orElse(false);
 		return ArtistResponse.Membership.builder()
 			.joined(joined)
 			.build();

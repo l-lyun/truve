@@ -61,6 +61,7 @@ public enum ErrorCode {
 	NOT_FOUND_SHOW(HttpStatus.NOT_FOUND, "존재하지 않는 공연입니다.", "M01"),
 	NOT_FOUND_ARTIST(HttpStatus.NOT_FOUND, "존재하지 않는 배우입니다.", "M02"),
 	ALREADY_LIKED_ARTIST(HttpStatus.BAD_REQUEST, "이미 좋아요한 배우입니다.", "M03"),
+	ALREADY_JOINED_ARTIST_MEMBERSHIP(HttpStatus.BAD_REQUEST, "이미 해당 아티스트의 멤버십에 가입되어 있습니다.", "M04"),
 
 	ALREADY_EXIST_REVIEW(HttpStatus.BAD_REQUEST, "이미 유저가 리뷰를 작성했습니다.", "MR01"),
 	NOT_CHARM_POINT(HttpStatus.BAD_REQUEST, "매력 포인트가 아닙니다.", "MR02"),
