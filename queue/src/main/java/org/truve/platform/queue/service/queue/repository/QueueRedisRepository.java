@@ -75,6 +75,10 @@ public class QueueRedisRepository {
 		return redisSupport.zSetCount(key, minScore).orElse(0L);
 	}
 
+	public void removeQueueMember(String showId, String userId) {
+		redisSupport.zRem(waitKey(showId), userId);
+	}
+
 	private static String waitKey(String showId) {
 		return WAIT_KEY_PREFIX + showId;
 	}
@@ -82,4 +86,5 @@ public class QueueRedisRepository {
 	private static String readyKey(String showId, String userId) {
 		return READY_KEY_PREFIX + showId + ":" + userId;
 	}
+
 }

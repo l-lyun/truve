@@ -76,4 +76,8 @@ public class RedisSupport {
 		return Optional.ofNullable(redisTemplate.opsForZSet().count(key, minScore, Double.MAX_VALUE));
 	}
 
+	public void zRem(String key, String member) {
+		redisTemplate.opsForZSet().remove(key, member);
+	}
+
 }

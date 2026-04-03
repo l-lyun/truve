@@ -1,5 +1,6 @@
 package org.truve.platform.queue.service.queue.controller;
 
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -62,4 +63,12 @@ public class QueueController {
 		return ApiResult.ok(response);
 	}
 
+	@DeleteMapping("/{showId}/cancel")
+	public ApiResult<Void> cancel(
+		@PathVariable String showId,
+		@RequestHeader(value = USER_ID_HEADER, required = false) String userId
+	) {
+		queueService.cancel(showId, userId);
+		return ApiResult.ok();
+	}
 }
