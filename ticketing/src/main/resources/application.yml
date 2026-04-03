@@ -35,6 +35,15 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
+  cloud:
+    openfeign:
+      client:
+        config:
+          payment-service:
+            url: ${PAYMENT_SERVER_URI:http://localhost:8082}
+            connectTimeout: 3000
+            readTimeout: 5000
+
 springdoc:
   api-docs:
     path: /api/ticketing/v3/api-docs

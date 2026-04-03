@@ -4,8 +4,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.truve.platform.ticketing.service.booking.domain.entity.Reservation;
-import org.truve.platform.ticketing.service.booking.domain.entity.ShowInfo;
 import org.truve.platform.ticketing.service.booking.domain.entity.Ticket;
+import org.truve.platform.ticketing.service.booking.domain.entity.embedded.ShowInfo;
 import org.truve.platform.ticketing.service.booking.util.DateTimeUtil;
 
 import lombok.AllArgsConstructor;
@@ -125,12 +125,14 @@ public class BookingResponse {
 	public static class Cancel {
 		private final BookingDetail.RefundInfo refundInfo;
 		private final List<TicketInfo> tickets;
+		private final String status;
 
 		public static Cancel from(Reservation reservation, List<Long> ticketIds, LocalDateTime canceledAt) {
 			String title = formatTitle(reservation.getShowInfo());
 			return Cancel.builder()
 				.refundInfo(BookingDetail.RefundInfo.from(reservation, ticketIds, canceledAt))
 				.tickets(getTicketInfos(reservation.getTickets(), title))
+				.status("환불 완료")
 				.build();
 		}
 

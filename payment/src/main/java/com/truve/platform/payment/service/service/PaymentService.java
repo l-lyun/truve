@@ -14,6 +14,7 @@ import com.truve.platform.common.exception.ErrorCode;
 import com.truve.platform.common.support.Preconditions;
 import com.truve.platform.payment.service.domain.command.CancelCommand;
 import com.truve.platform.payment.service.domain.constant.Bank;
+import com.truve.platform.payment.service.domain.constant.PaymentMethod;
 import com.truve.platform.payment.service.domain.constant.PaymentStatus;
 import com.truve.platform.payment.service.domain.entity.Payment;
 import com.truve.platform.payment.service.dto.PaymentRequest;
@@ -105,6 +106,9 @@ public class PaymentService {
 			return;
 
 		payment.validateCancel(request.getCancelAmount());
+		
+		if (payment.getMethod() == PaymentMethod.VIRTUAL_ACCOUNT)
+			request.updateRefundReceiveAccount();
 
 		TossResponse.Cancel response = tossClient.cancel(
 			payment.getPaymentKey(),

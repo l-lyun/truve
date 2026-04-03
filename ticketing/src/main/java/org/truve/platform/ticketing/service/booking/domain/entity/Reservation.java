@@ -3,6 +3,7 @@ package org.truve.platform.ticketing.service.booking.domain.entity;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -10,6 +11,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.truve.platform.ticketing.service.booking.domain.constant.ReservationStatus;
+import org.truve.platform.ticketing.service.booking.domain.entity.embedded.Applicant;
+import org.truve.platform.ticketing.service.booking.domain.entity.embedded.ShowInfo;
+import org.truve.platform.ticketing.service.booking.domain.entity.embedded.VirtualAccount;
 import org.truve.platform.ticketing.service.booking.domain.policy.CancellationPolicy;
 
 import com.truve.platform.common.exception.ErrorCode;
@@ -219,10 +223,8 @@ public class Reservation extends BaseEntity {
 	}
 
 	public void cancel(List<Long> ticketIds, LocalDateTime canceledAt) {
-		validateTicketId(ticketIds);
-		validateCancelStatus();
-
-		this.status = ticketIds.size() == tickets.size() ? ReservationStatus.CANCELED : ReservationStatus.PARTIAL_CANCELED;
+		this.status = new HashSet<>(ticketIds).size() == tickets.size() ? ReservationStatus.CANCELED :
+			ReservationStatus.PARTIAL_CANCELED;
 		this.canceledAt = canceledAt;
 
 		tickets.stream()
@@ -235,7 +237,7 @@ public class Reservation extends BaseEntity {
 		Preconditions.validate(validIds.containsAll(ticketIds), ErrorCode.INVALID_TICKET_ID);
 	}
 
-	private void validateCancelStatus() {
+	public void validateCancelStatus() {
 		Preconditions.validate(status != ReservationStatus.CANCELED && status != ReservationStatus.COMPLETED,
 			ErrorCode.ALREADY_CANCELED_OR_COMPLETED);
 	}

@@ -2,7 +2,9 @@ package org.truve.platform.ticketing.service.booking.util;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class NumberGenerator {
 
@@ -17,5 +19,13 @@ public class NumberGenerator {
 
 	public static String generateTicketNumber() {
 		return "T-" + UUID.randomUUID().toString().substring(0, 13).toUpperCase();
+	}
+
+	public static String generateIdempotencyKey(String reservationNumber, List<Long> ticketIds) {
+		String sorted = ticketIds.stream()
+			.sorted()
+			.map(String::valueOf)
+			.collect(Collectors.joining(","));
+		return UUID.nameUUIDFromBytes((reservationNumber + ":" + sorted).getBytes()).toString();
 	}
 }

@@ -4,8 +4,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.truve.platform.ticketing.service.booking.domain.entity.Reservation;
-import org.truve.platform.ticketing.service.booking.domain.entity.ShowInfo;
 import org.truve.platform.ticketing.service.booking.domain.entity.Ticket;
+import org.truve.platform.ticketing.service.booking.domain.entity.embedded.ShowInfo;
 import org.truve.platform.ticketing.service.booking.util.DateTimeUtil;
 
 import lombok.AllArgsConstructor;
@@ -133,7 +133,7 @@ public class BookingDetail {
 				if (reservation.getVirtualAccount() == null)
 					return null;
 
-				org.truve.platform.ticketing.service.booking.domain.entity.VirtualAccount virtualAccount = reservation.getVirtualAccount();
+				org.truve.platform.ticketing.service.booking.domain.entity.embedded.VirtualAccount virtualAccount = reservation.getVirtualAccount();
 
 				return VirtualAccount.builder()
 					.accountNumber(virtualAccount.getAccountNumber())

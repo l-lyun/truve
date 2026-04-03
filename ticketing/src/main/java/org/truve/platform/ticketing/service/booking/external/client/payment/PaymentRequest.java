@@ -1,6 +1,5 @@
-package com.truve.platform.payment.service.dto;
+package org.truve.platform.ticketing.service.booking.external.client.payment;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
@@ -8,20 +7,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 public class PaymentRequest {
-
-	@Getter
-	@AllArgsConstructor
-	@NoArgsConstructor
-	public static class Confirm {
-		@NotBlank
-		private String orderId;
-		@NotBlank
-		private String paymentKey;
-		@NotNull
-		@Positive
-		private Long amount;
-	}
-
 	@Getter
 	@AllArgsConstructor
 	@NoArgsConstructor
@@ -33,8 +18,8 @@ public class PaymentRequest {
 		private Long cancelAmount;
 		private RefundReceiveAccount refundReceiveAccount;
 
-		public void updateRefundReceiveAccount() {
-			refundReceiveAccount = new RefundReceiveAccount("20", "001012341342", "박토스");
+		public static Cancel of(String cancelReason, Long cancelAmount) {
+			return new Cancel(cancelReason, cancelAmount, null);
 		}
 	}
 

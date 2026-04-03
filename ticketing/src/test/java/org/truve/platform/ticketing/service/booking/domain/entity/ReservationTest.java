@@ -16,6 +16,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.truve.platform.ticketing.service.booking.domain.constant.ReservationStatus;
+import org.truve.platform.ticketing.service.booking.domain.entity.embedded.ShowInfo;
+import org.truve.platform.ticketing.service.booking.domain.entity.embedded.VirtualAccount;
 
 import com.truve.platform.common.exception.CustomException;
 
@@ -148,7 +150,7 @@ public class ReservationTest {
 		ReflectionTestUtils.setField(reservation, "status", status);
 
 		// when & then
-		assertThatThrownBy(() -> reservation.cancel(List.of(1L), LocalDateTime.now()))
+		assertThatThrownBy(reservation::validateCancelStatus)
 			.isInstanceOf(CustomException.class);
 	}
 

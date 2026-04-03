@@ -1,4 +1,4 @@
-package org.truve.platform.ticketing.service.booking.domain.entity;
+package org.truve.platform.ticketing.service.booking.domain.entity.embedded;
 
 import jakarta.persistence.Embeddable;
 import lombok.AccessLevel;

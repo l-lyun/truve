@@ -182,6 +182,7 @@ services:
       - USER_REDIS_HOST=user-redis
       - USER_REDIS_PORT=6379
       - KAFKA_SERVERS=kafka:9092
+      - PAYMENT_SERVER_URI=http://payment:8082
 
     depends_on:
       db:

@@ -11,11 +11,13 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.truve.platform.ticketing.service.booking.domain.entity.Reservation;
-import org.truve.platform.ticketing.service.booking.domain.entity.ShowInfo;
 import org.truve.platform.ticketing.service.booking.domain.entity.Ticket;
-import org.truve.platform.ticketing.service.booking.domain.entity.VirtualAccount;
+import org.truve.platform.ticketing.service.booking.domain.entity.embedded.ShowInfo;
+import org.truve.platform.ticketing.service.booking.domain.entity.embedded.VirtualAccount;
 import org.truve.platform.ticketing.service.booking.dto.BookingRequest;
 import org.truve.platform.ticketing.service.booking.dto.BookingResponse;
+import org.truve.platform.ticketing.service.booking.external.client.payment.PaymentClient;
+import org.truve.platform.ticketing.service.booking.external.client.payment.PaymentRequest;
 import org.truve.platform.ticketing.service.booking.external.client.ticketing.TicketingClient;
 import org.truve.platform.ticketing.service.booking.external.client.ticketing.TicketingResponse;
 import org.truve.platform.ticketing.service.booking.external.kafka.BookingEventCommand;
@@ -36,6 +38,7 @@ public class BookingService {
 	private final ReservationRepository reservationRepository;
 	private final TicketingClient ticketingClient;
 	private final PaymentPublisher paymentPublisher;
+	private final PaymentClient paymentClient;
 
 	@Transactional
 	public BookingResponse.Create create(UUID userId, BookingRequest.Create request) {
@@ -162,15 +165,24 @@ public class BookingService {
 	}
 
 	@Transactional
-	public BookingResponse.CanceledTickets cancel(String reservationNumber, BookingRequest.TicketIds request) {
+	public BookingResponse.CanceledTickets cancel(String reservationNumber, BookingRequest.Cancel request) {
 		Reservation reservation = reservationRepository.findByNumber(reservationNumber);
-		List<Long> requestedTicketIds = request.getTicketIds();
 
-		// TODO: 결제서버 취소 API 동기 호출
-		// TODO: canceledAt -> 결제 서버 응답으로 온 취소 시간으로 변경
+		List<Long> ticketIds = request.getTicketIds();
+		LocalDateTime canceledAt = LocalDateTime.now();
 
-		reservation.cancel(requestedTicketIds, LocalDateTime.now());
+		reservation.validateTicketId(ticketIds);
+		reservation.validateCancelStatus();
 
-		return new BookingResponse.CanceledTickets(requestedTicketIds);
+		Long refundAmount = reservation.calculateRefundAmount(canceledAt, ticketIds);
+		paymentClient.cancel(
+			reservationNumber,
+			NumberGenerator.generateIdempotencyKey(reservationNumber, ticketIds),
+			PaymentRequest.Cancel.of(request.getCancelReason(), refundAmount)
+		);
+
+		reservation.cancel(ticketIds, canceledAt);
+
+		return new BookingResponse.CanceledTickets(ticketIds);
 	}
 }

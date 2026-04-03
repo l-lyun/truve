@@ -12,8 +12,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.truve.platform.ticketing.service.booking.domain.entity.Reservation;
-import org.truve.platform.ticketing.service.booking.domain.entity.ShowInfo;
 import org.truve.platform.ticketing.service.booking.domain.entity.Ticket;
+import org.truve.platform.ticketing.service.booking.domain.entity.embedded.ShowInfo;
 
 import com.truve.platform.common.exception.CustomException;
 

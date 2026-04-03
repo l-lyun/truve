@@ -90,7 +90,7 @@ public class BookingController {
 	@PostMapping("/{reservation_number}/cancel")
 	public ApiResult<BookingResponse.CanceledTickets> cancel(
 		@PathVariable("reservation_number") String reservationNumber,
-		@RequestBody @Valid BookingRequest.TicketIds request
+		@RequestBody @Valid BookingRequest.Cancel request
 	) {
 		return ApiResult.ok(bookingService.cancel(reservationNumber, request));
 	}
