@@ -31,13 +31,13 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory {
 				return exchange.getResponse().setComplete();
 			}
 
-			token = token.substring(7);
+			String accessToken = token.substring(7);
 
 			SecretKey secretKey = jwtProperties.getSecretKey();
 			Claims claims = Jwts.parser()
 				.verifyWith(secretKey)
 				.build()
-				.parseSignedClaims(token)
+				.parseSignedClaims(accessToken)
 				.getPayload();
 
 			String jti = claims.getId();
@@ -60,9 +60,14 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory {
 					.request(
 						exchange.getRequest()
 							.mutate()
-							.header("X-User-Id", userId)
-							.header("X-User-Role", role)
-							.header("X-Token", token)
+							.headers(headers -> {
+								headers.remove("X-User-Id");
+								headers.remove("X-User-Role");
+
+								headers.set("X-User-Id", userId);
+								headers.set("X-User-Role", role);
+								headers.set("X-Token", accessToken);
+							})
 							.build()
 					)
 					.build()
