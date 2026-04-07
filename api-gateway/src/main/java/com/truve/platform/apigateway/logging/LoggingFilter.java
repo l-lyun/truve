@@ -55,7 +55,8 @@ public class LoggingFilter implements WebFilter, Ordered {
 						Integer status = exchange.getResponse().getStatusCode() != null
 							? exchange.getResponse().getStatusCode().value()
 							: null;
-						saveLog(ctx.toBuilder().statusCode(status).build());
+						String userId = exchange.getAttribute("userId");
+						saveLog(ctx.toBuilder().statusCode(status).userId(userId).build());
 					}));
 			});
 	}

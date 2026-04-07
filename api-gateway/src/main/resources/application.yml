@@ -76,12 +76,16 @@ spring:
               uri: ${AUTH_SERVER_URI:http://localhost:8081}
               predicates:
                 - Path=/api/auth/**
+              filters:
+                - JwtExtractionFilter
 
             # 2. payment
             - id: payment
               uri: ${PAYMENT_SERVER_URI:http://localhost:8082}
               predicates:
                 - Path=/api/payments/**
+              filters:
+                - JwtAuthenticationFilter
             - id: payment-webhook
               uri: ${PAYMENT_SERVER_URI:http://localhost:8082}
               predicates:
@@ -108,6 +112,8 @@ spring:
               uri: ${TICKETING_SERVER_URI:http://localhost:8084}
               predicates:
                 - Path=/api/bookings/**
+              filters:
+                - JwtExtractionFilter
 
             # 6. review
             - id: review-protected
@@ -121,6 +127,8 @@ spring:
               uri: ${MUSICAL_SERVER_URI:http://localhost:8085}
               predicates:
                 - Path=/api/musical/reviews/**
+              filters:
+                - JwtExtractionFilter
 
             # 7. artist
             - id: artist-protected
@@ -134,12 +142,16 @@ spring:
               uri: ${MUSICAL_SERVER_URI:http://localhost:8085}
               predicates:
                 - Path=/api/musical/artists/**
+              filters:
+                - JwtExtractionFilter
 
             # 8. musical
             - id: musical
               uri: ${MUSICAL_SERVER_URI:http://localhost:8085}
               predicates:
                 - Path=/api/musical/**
+              filters:
+                - JwtExtractionFilter
 
 
 

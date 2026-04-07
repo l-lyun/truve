@@ -55,6 +55,8 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory {
 				return exchange.getResponse().setComplete();
 			}
 
+			exchange.getAttributes().put("userId", userId);
+
 			return chain.filter(
 				exchange.mutate()
 					.request(

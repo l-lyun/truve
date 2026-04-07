@@ -30,7 +30,6 @@ public class RequestContext {
 			.tsServer(System.currentTimeMillis())
 			.method(exchange.getRequest().getMethod().name())
 			.path(exchange.getRequest().getPath().value())
-			.userId(exchange.getRequest().getHeaders().getFirst("X-User-Id"))
 			.sessionTicket(exchange.getRequest().getHeaders().getFirst("X-Session-Ticket"))
 			.queryParams(exchange.getRequest().getQueryParams().toSingleValueMap())
 			.requestBody(parseBody(body))
