@@ -112,7 +112,9 @@ public class LoggingFilter implements WebFilter, Ordered {
 			kv("statusCode", ctx.statusCode),
 			kv("requestBody", ctx.requestBody)
 		);
-		if (ctx.getUserId() != null && TARGET_USER_ID.contains(ctx.getUserId())) {
+		if ("/api/auth/login".equals(ctx.path)) {
+			s3LogUploader.enqueue(ctx.toJson(), "BE");
+		} else if (ctx.getUserId() != null && TARGET_USER_ID.contains(ctx.getUserId())) {
 			s3LogUploader.enqueue(ctx.toJson(), "BE");
 		}
 		//sendToKafka(ctx);

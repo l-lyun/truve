@@ -19,6 +19,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import lombok.extern.slf4j.Slf4j;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -30,6 +32,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
+@Slf4j
 @Component
 public class S3LogUploader {
 
@@ -150,6 +153,7 @@ public class S3LogUploader {
 				.build(),
 			RequestBody.fromString(content, StandardCharsets.UTF_8)
 		);
+		log.info("S3 upload complete: bucket={}, key={}, lines={}", bucket, key, lines.size());
 	}
 
 	private S3Client buildS3Client() {
