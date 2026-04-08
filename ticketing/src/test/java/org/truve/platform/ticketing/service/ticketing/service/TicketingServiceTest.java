@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
+import static org.mockito.Mockito.lenient;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -12,7 +13,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -66,6 +66,7 @@ class TicketingServiceTest {
 		userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
 		admissionToken = "admission-token";
 		sessionToken = "session-token";
+		lenient().when(ticketingProperties.getSessionTtlSec()).thenReturn(300L);
 	}
 
 	@Nested
@@ -74,8 +75,6 @@ class TicketingServiceTest {
 
 		@Test
 		@DisplayName("입장 토큰이 유효하면 세션 토큰과 TTL을 반환한다.")
-		// TODO: 검증 주석 해제 후 삭제
-		@Disabled
 		void 입장_성공() {
 			// given
 			AdmissionTokenClaimsDTO claims = AdmissionTokenClaimsDTO.of(userId, showScheduleId, "admission");
@@ -100,8 +99,6 @@ class TicketingServiceTest {
 
 		@Test
 		@DisplayName("입장 토큰 소비에 실패하면 예외가 발생한다.")
-		// TODO: 검증 주석 해제 후 삭제
-		@Disabled
 		void 입장_토큰실패() {
 			// given
 			AdmissionTokenClaimsDTO claims = AdmissionTokenClaimsDTO.of(userId, showScheduleId, "admission");
@@ -132,7 +129,7 @@ class TicketingServiceTest {
 			given(ticketingProperties.getActiveWindowMs()).willReturn(30_000L);
 			given(ticketingRedisRepository.getSessionTokenValue(sessionToken))
 				.willReturn(SessionTicketValueDTO.of(userId, showScheduleId));
-			given(ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, 3600L)).willReturn(true);
+			given(ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, 300L)).willReturn(true);
 
 			// when
 			ticketingService.heartbeat(showScheduleId, userId, sessionToken);
@@ -141,7 +138,7 @@ class TicketingServiceTest {
 			assertAll(
 				() -> verify(ticketingRedisRepository).addActiveTicketingUser(showScheduleId, sessionToken),
 				() -> verify(ticketingRedisRepository).removeInactiveTicketingUsers(eq(showScheduleId), anyLong()),
-				() -> verify(ticketingRedisRepository).refreshSessionTokenTtl(sessionToken, 3600L)
+				() -> verify(ticketingRedisRepository).refreshSessionTokenTtl(sessionToken, 300L)
 			);
 		}
 
@@ -203,7 +200,7 @@ class TicketingServiceTest {
 			given(ticketingProperties.getActiveWindowMs()).willReturn(30_000L);
 			given(ticketingRedisRepository.getSessionTokenValue(sessionToken))
 				.willReturn(SessionTicketValueDTO.of(userId, showScheduleId));
-			given(ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, 3600L)).willReturn(false);
+			given(ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, 300L)).willReturn(false);
 
 			// when
 			CustomException exception = assertThrows(
@@ -229,7 +226,7 @@ class TicketingServiceTest {
 			given(ticketingProperties.getActiveWindowMs()).willReturn(30_000L);
 			given(ticketingRedisRepository.getSessionTokenValue(sessionToken))
 				.willReturn(SessionTicketValueDTO.of(userId, showScheduleId));
-			given(ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, 3600L)).willReturn(true);
+			given(ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, 300L)).willReturn(true);
 
 			showScheduled = ShowScheduled.builder()
 				.title("공연")
@@ -390,7 +387,7 @@ class TicketingServiceTest {
 			given(ticketingProperties.getActiveWindowMs()).willReturn(30_000L);
 			given(ticketingRedisRepository.getSessionTokenValue(sessionToken))
 				.willReturn(SessionTicketValueDTO.of(userId, showScheduleId));
-			given(ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, 3600L)).willReturn(true);
+			given(ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, 300L)).willReturn(true);
 		}
 
 		@Test
@@ -444,7 +441,7 @@ class TicketingServiceTest {
 			given(ticketingProperties.getActiveWindowMs()).willReturn(30_000L);
 			given(ticketingRedisRepository.getSessionTokenValue(sessionToken))
 				.willReturn(SessionTicketValueDTO.of(userId, showScheduleId));
-			given(ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, 3600L)).willReturn(true);
+			given(ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, 300L)).willReturn(true);
 		}
 
 		@Test
@@ -496,7 +493,7 @@ class TicketingServiceTest {
 			given(ticketingProperties.getActiveWindowMs()).willReturn(30_000L);
 			given(ticketingRedisRepository.getSessionTokenValue(sessionToken))
 				.willReturn(SessionTicketValueDTO.of(userId, showScheduleId));
-			given(ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, 3600L)).willReturn(true);
+			given(ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, 300L)).willReturn(true);
 		}
 
 		@Test

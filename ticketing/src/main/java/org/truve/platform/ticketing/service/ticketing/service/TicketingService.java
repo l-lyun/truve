@@ -34,15 +34,15 @@ public class TicketingService {
 	private final ShowScheduledRepository showScheduledRepository;
 
 	public TicketingResponse.Enter enter(Long showScheduleId, UUID userId, String admissionToken) {
-		// TODO: 프론트 연동 이후 입장 토큰 검증 로직 주석 해제
-		// AdmissionTokenClaimsDTO claims = admissionTokenService.parseAdmissionToken(admissionToken, showScheduleId, userId);
-		// boolean consumedAdmissionToken = ticketingRedisRepository.consumeAdmissionToken(claims.getShowId(), claims.getUserId(), admissionToken);
-		// Preconditions.validate(consumedAdmissionToken, ErrorCode.INVALID_ADMISSION_TOKEN);
+		AdmissionTokenClaimsDTO claims = admissionTokenService.parseAdmissionToken(admissionToken, showScheduleId, userId);
+		boolean consumedAdmissionToken = ticketingRedisRepository.consumeAdmissionToken(
+			claims.getShowId(), claims.getUserId(), admissionToken
+		);
+		Preconditions.validate(consumedAdmissionToken, ErrorCode.INVALID_ADMISSION_TOKEN);
 
 		String sessionToken = UUID.randomUUID().toString();
 
-		// TODO: 만료시간 기획측과 논의, 현재 60분으로 연동 편의성 확보
-		ticketingRedisRepository.saveSessionToken(sessionToken, userId, showScheduleId, Duration.ofMinutes(60));
+		ticketingRedisRepository.saveSessionToken(sessionToken, userId, showScheduleId, Duration.ofMinutes(5));
 		ticketingRedisRepository.addActiveTicketingUser(showScheduleId, sessionToken);
 		long sessionTokenTtl = ticketingRedisRepository.getSessionTokenTtl(sessionToken);
 
@@ -58,9 +58,9 @@ public class TicketingService {
 		long activeWindowMs = ticketingProperties.getActiveWindowMs();
 		ticketingRedisRepository.removeInactiveTicketingUsers(showScheduleId, nowMs - activeWindowMs);
 
-		// TODO: 프론트 연동 이후 세션 만료시간 설정값 기반 갱신 로직 주석 해제
-		// boolean extended = ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, ticketingProperties.getSessionTtlSec());
-		boolean extended = ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, Duration.ofMinutes(60).toSeconds());
+		boolean extended = ticketingRedisRepository.refreshSessionTokenTtl(
+			sessionToken, ticketingProperties.getSessionTtlSec()
+		);
 		Preconditions.validate(extended, ErrorCode.INVALID_SESSION_TOKEN);
 	}
 

@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
 
 import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -743,6 +744,7 @@ class AuthServiceTest {
 			// given
 			String email = "new@test.com";
 			String password = "plain";
+			given(emailVerificationRepository.isVerifiedEmail(email)).willReturn("verified");
 			given(userRepository.findByEmail(email)).willReturn(Optional.empty());
 			given(userRepository.existsByNickname(NICKNAME)).willReturn(false);
 			given(passwordEncoder.encode(password)).willReturn("encoded");
@@ -784,16 +786,18 @@ class AuthServiceTest {
 			// given
 			String email = "new@test.com";
 			String password = "plain";
-			given(userRepository.findByEmail(email)).willReturn(Optional.empty());
-			given(userRepository.existsByNickname(NICKNAME)).willReturn(false);
-			given(passwordEncoder.encode(password)).willReturn("encoded");
-			given(userRepository.save(any(User.class))).willAnswer(invocation -> invocation.getArgument(0));
+			given(emailVerificationRepository.isVerifiedEmail(email)).willReturn(null);
 
 			// when
-			authService.signUp(email, NICKNAME, password, true, true, true, false, true);
+			CustomException exception = assertThrows(
+				CustomException.class,
+				() -> authService.signUp(email, NICKNAME, password, true, true, true, false, true)
+			);
 
 			// then
-			verify(userRepository).save(any(User.class));
+			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.NOT_VERIFIED_EMAIL);
+			verify(userRepository, never()).findByEmail(anyString());
+			verify(userRepository, never()).save(any(User.class));
 		}
 
 		@Test
@@ -813,6 +817,7 @@ class AuthServiceTest {
 				false,
 				true
 			);
+			given(emailVerificationRepository.isVerifiedEmail(email)).willReturn("verified");
 			given(userRepository.findByEmail(email)).willReturn(Optional.of(existingUser));
 
 			// when
@@ -829,7 +834,7 @@ class AuthServiceTest {
 		}
 
 		@Test
-		@DisplayName("탈퇴한 유저는 즉시 재가입 처리된다.")
+		@DisplayName("탈퇴 후 1주가 지난 유저는 재가입 처리된다.")
 		void 회원가입_성공_탈퇴유저_재가입() {
 			// given
 			String email = "withdrawn@test.com";
@@ -846,7 +851,13 @@ class AuthServiceTest {
 				true
 			);
 			withdrawnUser.withdraw();
+			ReflectionTestUtils.setField(
+				withdrawnUser,
+				"withdrawnAt",
+				LocalDateTime.now().minusWeeks(1).minusSeconds(1)
+			);
 
+			given(emailVerificationRepository.isVerifiedEmail(email)).willReturn("verified");
 			given(userRepository.findByEmail(email)).willReturn(Optional.of(withdrawnUser));
 			given(userRepository.existsByNickname(NICKNAME)).willReturn(false);
 			given(passwordEncoder.encode(password)).willReturn("encoded");
@@ -870,12 +881,48 @@ class AuthServiceTest {
 		}
 
 		@Test
+		@DisplayName("탈퇴 후 1주가 지나지 않은 유저면 재가입할 수 없다.")
+		void 회원가입_실패_탈퇴유저_일주일미만() {
+			// given
+			String email = "withdrawn@test.com";
+			String password = "plain";
+			User withdrawnUser = User.createLocalUser(
+				email,
+				"oldnick",
+				"old-password",
+				true,
+				true,
+				true,
+				false,
+				false,
+				true
+			);
+			withdrawnUser.withdraw();
+			ReflectionTestUtils.setField(withdrawnUser, "withdrawnAt", LocalDateTime.now().minusDays(6));
+
+			given(emailVerificationRepository.isVerifiedEmail(email)).willReturn("verified");
+			given(userRepository.findByEmail(email)).willReturn(Optional.of(withdrawnUser));
+
+			// when
+			CustomException exception = assertThrows(
+				CustomException.class,
+				() -> authService.signUp(email, NICKNAME, password, true, true, true, false, true)
+			);
+
+			// then
+			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ALREADY_EXISTS_EMAIL);
+			verify(userRepository, never()).save(any(User.class));
+			verify(emailVerificationRepository, never()).deleteVerifiedEmail(anyString());
+		}
+
+		@Test
 		@DisplayName("필수 약관에 동의하지 않으면 예외가 발생한다.")
 		void 회원가입_실패_필수_약관_미동의() {
 			// given
 			String email = "new@test.com";
 			String password = "plain";
 
+			given(emailVerificationRepository.isVerifiedEmail(email)).willReturn("verified");
 			given(userRepository.findByEmail(email)).willReturn(Optional.empty());
 
 			// when
@@ -899,6 +946,7 @@ class AuthServiceTest {
 			String email = "new@test.com";
 			String password = "plain";
 
+			given(emailVerificationRepository.isVerifiedEmail(email)).willReturn("verified");
 			given(userRepository.findByEmail(email)).willReturn(Optional.empty());
 
 			// when
@@ -920,6 +968,7 @@ class AuthServiceTest {
 			String password = "plain";
 			String englishNickname = "abcdefghijklmnop";
 
+			given(emailVerificationRepository.isVerifiedEmail(email)).willReturn("verified");
 			given(userRepository.findByEmail(email)).willReturn(Optional.empty());
 			given(userRepository.existsByNickname(englishNickname)).willReturn(false);
 			given(passwordEncoder.encode(password)).willReturn("encoded");
@@ -944,6 +993,7 @@ class AuthServiceTest {
 			String email = "new@test.com";
 			String password = "plain";
 
+			given(emailVerificationRepository.isVerifiedEmail(email)).willReturn("verified");
 			given(userRepository.findByEmail(email)).willReturn(Optional.empty());
 			given(userRepository.existsByNickname(NICKNAME)).willReturn(true);
 

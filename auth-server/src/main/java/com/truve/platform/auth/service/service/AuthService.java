@@ -154,18 +154,13 @@ public class AuthService {
 		boolean marketingInfoAgreed,
 		boolean over14Agreed
 	) {
-
-		// TODO: 프론트 연동 이후 이메일 인증 검증 로직 주석 해제
-		// String verifiedAt = emailVerificationRepository.isVerifiedEmail(email);
-		// Preconditions.validate(!(verifiedAt == null || verifiedAt.isBlank()), ErrorCode.NOT_VERIFIED_EMAIL);
+		String verifiedAt = emailVerificationRepository.isVerifiedEmail(email);
+		Preconditions.validate(!(verifiedAt == null || verifiedAt.isBlank()), ErrorCode.NOT_VERIFIED_EMAIL);
 
 		User existingUser = userRepository.findByEmail(email).orElse(null);
 
 		Preconditions.validate(
-			// TODO: 최종 발표 이전에는 탈퇴 유저 즉시 재가입 허용
-			// TODO: 발표 전 1주일 재가입 제한 정책으로 변경
-			// isWithdrawnAfterWeek(existingUser)
-			existingUser == null || existingUser.isWithdrawn(),
+			existingUser == null || isWithdrawnAfterWeek(existingUser),
 			ErrorCode.ALREADY_EXISTS_EMAIL
 		);
 
