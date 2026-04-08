@@ -73,6 +73,11 @@ services:
       - TICKETING_SERVER_URI=http://ticketing:8084
       - MUSICAL_SERVER_URI=http://musical:8085
       - KAFKA_SERVERS=kafka:9092
+      - LOG_S3_BUCKET=truve-dev-raw-data
+      - LOG_S3_REGION=ap-northeast-2
+      - LOG_S3_ACCESS_KEY=${AWS_ACCESS_KEY}
+      - LOG_S3_SECRET_KEY=${AWS_SECRET_KEY}
+      - LOG_S3_ENDPOINT=http://localstack:4566
     networks:
       - truve-network
 

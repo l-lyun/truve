@@ -1,5 +1,6 @@
 #!/bin/bash
 awslocal s3 mb s3://truve-media
+awslocal s3 mb s3://truve-dev-raw-data
 
 awslocal s3api put-public-access-block \
     --bucket truve-media \

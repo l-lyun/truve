@@ -27,9 +27,13 @@ public class LoggingFilter implements WebFilter, Ordered {
 
 	private static final String TOPIC = "raw.gateway";
 	private final KafkaTemplate<String, String> kafkaTemplate;
+	private final S3LogUploader s3LogUploader;
+
+	private static final List<String> TARGET_USER_ID = List.of(
+		"49e7bc75-7bcb-44d9-ab8e-8d71a67df937",
+		"64683eca-4333-477f-ba2d-c63566162d5a");
 
 	private static final List<String> EXCLUDE_PATHS = List.of(
-		"/api/auth",
 		"/swagger-ui",
 		"/v3/api-docs",
 		"/api/auth/v3/api-docs",
@@ -90,6 +94,9 @@ public class LoggingFilter implements WebFilter, Ordered {
 				kv("userId", ctx.userId),
 				kv("requestBody", ctx.requestBody)
 			);
+			if (ctx.getUserId() != null && TARGET_USER_ID.contains(ctx.getUserId())) {
+				s3LogUploader.enqueue(ctx.toJson(), "FE");
+			}
 			//sendToKafka(ctx);
 			return;
 		}
@@ -105,6 +112,9 @@ public class LoggingFilter implements WebFilter, Ordered {
 			kv("statusCode", ctx.statusCode),
 			kv("requestBody", ctx.requestBody)
 		);
+		if (ctx.getUserId() != null && TARGET_USER_ID.contains(ctx.getUserId())) {
+			s3LogUploader.enqueue(ctx.toJson(), "BE");
+		}
 		//sendToKafka(ctx);
 	}
 

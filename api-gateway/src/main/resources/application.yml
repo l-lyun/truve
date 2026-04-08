@@ -155,6 +155,16 @@ spring:
 
 
 
+log:
+  s3:
+    bucket: ${LOG_S3_BUCKET:}
+    region: ${LOG_S3_REGION:ap-northeast-2}
+    endpoint: ${LOG_S3_ENDPOINT:}
+    access-key: ${LOG_S3_ACCESS_KEY:}
+    secret-key: ${LOG_S3_SECRET_KEY:}
+    flush-size: 100
+    flush-interval-seconds: 300
+
 jwt:
   secret: ${kt.jwt.secret:kt-cloud-tech-up-final-project-2026020201010101}
   access-token-expiration: ${kt.jwt.access-token-expiration:300000} # 5
