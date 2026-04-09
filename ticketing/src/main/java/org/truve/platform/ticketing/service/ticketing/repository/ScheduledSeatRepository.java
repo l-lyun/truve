@@ -50,7 +50,7 @@ public interface ScheduledSeatRepository extends JpaRepository<ScheduledSeat, Lo
 		JOIN ss.seat s 
 		JOIN s.seatSection sc
 		JOIN ShowScheduled shs ON ss.showScheduleId = shs.id 
-		WHERE s.id IN :ids
+		WHERE ss.id IN :ids
 		""")
 	List<TicketingResponse.FlatSeatInfo> findFlatInfoById(List<Long> ids);
 
