@@ -221,6 +221,7 @@ services:
       - AWS_SECRET_KEY=${AWS_SECRET_KEY}
       - AWS_S3_ENDPOINT=http://localstack:4566
       - KAFKA_SERVERS=kafka:9092
+      - TICKETING_SERVER_URI=http://ticketing:8084
     depends_on:
       db:
         condition: service_healthy

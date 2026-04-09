@@ -162,8 +162,8 @@ log:
     endpoint: ${LOG_S3_ENDPOINT:}
     access-key: ${LOG_S3_ACCESS_KEY:}
     secret-key: ${LOG_S3_SECRET_KEY:}
-    flush-size: 100
-    flush-interval-seconds: 300
+    flush-size: 500
+    flush-interval-seconds: 900 # 15 * 60
 
 jwt:
   secret: ${kt.jwt.secret:kt-cloud-tech-up-final-project-2026020201010101}
