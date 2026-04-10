@@ -9,7 +9,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -110,7 +112,15 @@ public class ReviewService {
 	}
 
 	public Page<ReviewResponse.ReviewItem> getReviews(Long showId, ReviewSortType sort, Paging paging) {
-		Page<Review> reviews = getSortedReviews(showId, sort, paging.toPageable());
+		Pageable pageable = PageRequest.of(
+			paging.getPage() - 1,
+			paging.getSize(),
+			Sort.by(
+				Sort.Order.desc("createdAt"),
+				Sort.Order.desc("id")
+			)
+		);
+		Page<Review> reviews = getSortedReviews(showId, sort, pageable);
 		return reviews.map(this::toReviewItem);
 	}
 

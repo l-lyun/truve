@@ -13,6 +13,7 @@ import com.truve.platform.auth.service.domain.dto.request.AuthRequest;
 import com.truve.platform.auth.service.domain.dto.response.AuthResponse;
 import com.truve.platform.auth.service.security.AuthCookieManager;
 import com.truve.platform.auth.service.service.AuthService;
+import com.truve.platform.auth.service.service.SocialLoginService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -30,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "Auth", description = "인증/인가 API")
 public class AuthController {
 	private final AuthService authService;
+	private final SocialLoginService socialLoginService;
 	private final AuthCookieManager authCookieManager;
 
 	@PostMapping("/sign-up")
@@ -79,6 +81,25 @@ public class AuthController {
 			);
 
 		return ResponseEntity.ok(response);
+	}
+
+	@PostMapping("/social/sign-up/complete")
+	public ResponseEntity<AuthResponse.Login> completeSocialSignUp(
+		HttpServletResponse httpServletResponse,
+		@RequestBody @Valid AuthRequest.CompleteSocialSignUp request
+	) {
+		Pair<String, String> tokens = socialLoginService.completeSignUp(request);
+
+		String accessToken = tokens.getFirst();
+		String refreshToken = tokens.getSecond();
+
+		authCookieManager.setRefreshToken(
+			httpServletResponse,
+			refreshToken,
+			60L * 60 * 24 * 14
+		);
+
+		return ResponseEntity.ok(new AuthResponse.Login(accessToken));
 	}
 
 	@Operation(summary = "토큰 재발급")

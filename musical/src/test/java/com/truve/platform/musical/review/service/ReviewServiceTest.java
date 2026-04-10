@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -21,12 +22,17 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
+import com.truve.platform.common.response.Paging;
 import com.truve.platform.musical.review.dao.ReviewPointCountDao;
 import com.truve.platform.musical.review.domain.constant.ReviewPointName;
+import com.truve.platform.musical.review.domain.constant.ReviewSortType;
 import com.truve.platform.musical.review.domain.entity.Review;
 import com.truve.platform.musical.review.domain.entity.ReviewPoint;
 import com.truve.platform.musical.review.domain.entity.ReviewPointType;
@@ -34,6 +40,8 @@ import com.truve.platform.musical.review.dto.ReviewRequest;
 import com.truve.platform.musical.review.repository.ReviewPointRepository;
 import com.truve.platform.musical.review.repository.ReviewPointTypeRepository;
 import com.truve.platform.musical.review.repository.ReviewRepository;
+import com.truve.platform.musical.user.domain.entity.User;
+import com.truve.platform.musical.user.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class ReviewServiceTest {
@@ -44,6 +52,8 @@ class ReviewServiceTest {
 	private ReviewPointTypeRepository reviewPointTypeRepository;
 	@Mock
 	private ReviewPointRepository reviewPointRepository;
+	@Mock
+	private UserRepository userRepository;
 
 	@InjectMocks
 	private ReviewService reviewService;
@@ -171,6 +181,47 @@ class ReviewServiceTest {
 			() -> assertThat(response.getTruveScore()).isEqualTo(75L),
 			() -> assertThat(response.getCharmPointScores()).isNotEmpty(),
 			() -> assertThat(response.getEmotionPointScores()).isNotEmpty()
+		);
+	}
+
+	@Test
+	@DisplayName("리뷰 목록 조회는 최신순(createdAt desc, id desc)으로 정렬 요청한다.")
+	void 리뷰목록_최신순_정렬요청() {
+		// given
+		Long showId = 1L;
+		Paging paging = new Paging(1, 10);
+		Review review = Review.builder()
+			.showId(showId)
+			.userId(UUID.fromString("11111111-1111-1111-1111-111111111111"))
+			.title("리뷰 제목")
+			.content("리뷰 내용")
+			.isPositive(true)
+			.watchedAt(java.time.LocalDateTime.now())
+			.build();
+		ReflectionTestUtils.setField(review, "id", 1L);
+		ReflectionTestUtils.setField(review, "createdAt", java.time.LocalDateTime.now());
+
+		User user = mock(User.class);
+		when(user.getNickname()).thenReturn("tester");
+
+		given(reviewRepository.findByShowIdAndDeletedAtIsNull(any(Long.class), any(Pageable.class)))
+			.willReturn(new PageImpl<>(List.of(review)));
+		given(userRepository.findByUserId(review.getUserId())).willReturn(Optional.of(user));
+
+		// when
+		Page<?> result = reviewService.getReviews(showId, ReviewSortType.LATEST, paging);
+
+		// then
+		ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+		verify(reviewRepository).findByShowIdAndDeletedAtIsNull(eq(showId), pageableCaptor.capture());
+
+		Pageable pageable = pageableCaptor.getValue();
+		assertAll(
+			() -> assertThat(result.getContent()).hasSize(1),
+			() -> assertThat(pageable.getSort().getOrderFor("createdAt")).isNotNull(),
+			() -> assertThat(pageable.getSort().getOrderFor("createdAt").isDescending()).isTrue(),
+			() -> assertThat(pageable.getSort().getOrderFor("id")).isNotNull(),
+			() -> assertThat(pageable.getSort().getOrderFor("id").isDescending()).isTrue()
 		);
 	}
 

@@ -1,14 +1,8 @@
 package com.truve.platform.auth.service.service;
 
-import static com.truve.platform.auth.service.domain.dto.response.OAuthDTO.*;
-
 import org.springframework.data.util.Pair;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestClient;
 
 import com.truve.platform.common.constants.AuthProvider;
 import com.truve.platform.common.exception.ErrorCode;
@@ -17,7 +11,9 @@ import com.truve.platform.auth.service.domain.entity.User;
 import com.truve.platform.auth.service.repository.UserRepository;
 import com.truve.platform.auth.service.security.JwtService;
 import com.truve.platform.auth.service.security.TokenType;
-import com.truve.platform.auth.service.security.properties.NaverOAuthProperties;
+import com.truve.platform.auth.service.service.social.NaverOAuthProviderClient;
+import com.truve.platform.auth.service.service.social.OAuthTokenInfo;
+import com.truve.platform.auth.service.service.social.OAuthUserInfo;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,9 +21,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class NaverOAuthService {
 	
-	private final NaverOAuthProperties naverOAuthProperties;
-	private final RestClient naverOAuthRestClient;
-	private final RestClient naverApiRestClient;
+	private final NaverOAuthProviderClient naverOAuthProviderClient;
 	private final UserRepository userRepository;
 	private final JwtService jwtService;
 	private final RefreshTokenService refreshTokenService;
@@ -38,15 +32,16 @@ public class NaverOAuthService {
 	@Transactional
 	public Pair<String, String> login(String code, String error, String errorDescription, String state) {
 
-		NaverLoginResponse naverDTO = requestToken(code, state);
+		OAuthTokenInfo tokenInfo = naverOAuthProviderClient.exchangeToken(code, state);
 
-		Preconditions.validate(!(naverDTO == null), ErrorCode.NOT_FOUND_EMAIL);
+		Preconditions.validate(tokenInfo != null, ErrorCode.NOT_FOUND_EMAIL);
 
-		String naverAccessToken = naverDTO.getAccessToken();
-		String naverRefreshToken = naverDTO.getRefreshToken();
-		NaverUserInfo info = requestUserInfo(naverAccessToken);
-		String naverEmail = info.getResponse().getEmail();
-		String naverUserId = info.getResponse().getId();
+		String naverAccessToken = tokenInfo.getAccessToken();
+		String naverRefreshToken = tokenInfo.getRefreshToken();
+		OAuthUserInfo userInfo = naverOAuthProviderClient.getUserInfo(naverAccessToken);
+		Preconditions.validate(userInfo != null && userInfo.getEmail() != null, ErrorCode.NOT_FOUND_EMAIL);
+		String naverEmail = userInfo.getEmail();
+		String naverUserId = userInfo.getProviderUserId();
 		User user;
 
 		if (!userRepository.existsByEmail(naverEmail)) {
@@ -72,29 +67,5 @@ public class NaverOAuthService {
 		refreshTokenService.save(user.getPublicId(), refreshToken, refreshTtlMs);
 
 		return Pair.of(accessToken, refreshToken);
-	}
-
-	private NaverLoginResponse requestToken(String code, String state) {
-		MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
-		form.add("grant_type", "authorization_code");
-		form.add("client_id", naverOAuthProperties.getClientId());
-		form.add("client_secret", naverOAuthProperties.getClientSecret());
-		form.add("code", code);
-		form.add("state", state);
-
-		return naverOAuthRestClient.post()
-			.uri("/token")
-			.contentType(MediaType.APPLICATION_FORM_URLENCODED)
-			.body(form)
-			.retrieve()
-			.body(NaverLoginResponse.class);
-	}
-
-	private NaverUserInfo requestUserInfo(String accessToken) {
-		return naverApiRestClient.get()
-			.uri("/me")
-			.header("Authorization", "Bearer " + accessToken)
-			.retrieve()
-			.body(NaverUserInfo.class);
 	}
 }

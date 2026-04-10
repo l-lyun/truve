@@ -159,6 +159,38 @@ public class User extends BaseEntity {
 			.build();
 	}
 
+	public static User createOAuthUser(
+		String email,
+		String nickname,
+		AuthProvider provider,
+		String oAuthUserId,
+		String oAuthAccessToken,
+		String oAuthRefreshToken,
+		boolean serviceTermsAgreed,
+		boolean electronicFinanceTermsAgreed,
+		boolean privacyCollectionAgreed,
+		boolean marketingInfoAgreed,
+		boolean emailNotificationAgreed,
+		boolean over14Agreed
+	) {
+		return User.builder()
+			.publicId(UUID.randomUUID())
+			.email(email)
+			.nickname(nickname)
+			.provider(provider)
+			.role(UserRole.MEMBER)
+			.oAuthUserId(oAuthUserId)
+			.oAuthAccessToken(oAuthAccessToken)
+			.oAuthRefreshToken(oAuthRefreshToken)
+			.serviceTermsAgreed(serviceTermsAgreed)
+			.electronicFinanceTermsAgreed(electronicFinanceTermsAgreed)
+			.privacyCollectionAgreed(privacyCollectionAgreed)
+			.marketingInfoAgreed(marketingInfoAgreed)
+			.emailNotificationAgreed(emailNotificationAgreed)
+			.over14Agreed(over14Agreed)
+			.build();
+	}
+
 	public void updateNickname(String nickname) {
 		this.nickname = nickname;
 	}

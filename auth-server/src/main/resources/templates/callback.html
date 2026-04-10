@@ -2,22 +2,188 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>OAuth Callback</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            max-width: 860px;
+            margin: 40px auto;
+            padding: 0 20px 40px;
+            line-height: 1.5;
+        }
+
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        input {
+            width: 100%;
+            max-width: 360px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            border: 0;
+            border-radius: 10px;
+            padding: 10px 16px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-break: break-word;
+            background: #111;
+            color: #f7f7f7;
+            padding: 16px;
+            border-radius: 12px;
+            min-height: 120px;
+        }
+
+        .dim {
+            color: #666;
+        }
+
+        .success {
+            color: #0a7f38;
+            font-weight: 700;
+        }
+
+        .warn {
+            color: #9a6700;
+            font-weight: 700;
+        }
+    </style>
 </head>
 <body>
 
-<h2>OAuth Callback Success</h2>
+<h2>OAuth Callback 테스트 페이지</h2>
 
-<p>Refresh Token은 HttpOnly 쿠키로 저장되었습니다.</p>
+<div class="card">
+    <h3>콜백 상태</h3>
+    <p id="statusText" class="dim">쿼리 파라미터를 확인 중입니다.</p>
+    <div id="summary"></div>
+</div>
 
-<hr>
+<div id="loginSuccessCard" class="card hidden">
+    <h3>기존 회원 로그인 완료</h3>
+    <p>Refresh Token은 HttpOnly 쿠키로 저장되었습니다.</p>
+    <div class="row">
+        <button onclick="reissue()">Access Token 재발급</button>
+        <button onclick="logout()">로그아웃</button>
+    </div>
+</div>
 
-<button onclick="reissue()">Access Token 재발급</button>
-<button onclick="logout()">로그아웃</button>
+<div id="signUpCard" class="card hidden">
+    <h3>신규 소셜 회원 가입 진행</h3>
+    <p class="warn">지금은 시작 플로우까지만 연결되어 있습니다. 이메일 인증은 테스트 가능하고, 최종 소셜 가입 완료 API는 다음 단계에서 붙일 예정입니다.</p>
+
+    <div class="row">
+        <div>
+            <label>Provider</label><br />
+            <input id="provider" readonly />
+        </div>
+        <div>
+            <label>Email</label><br />
+            <input id="email" readonly />
+        </div>
+    </div>
+
+    <div class="row">
+        <div>
+            <label>Registration Token</label><br />
+            <input id="registrationToken" readonly />
+        </div>
+    </div>
+
+    <hr />
+
+    <h4>1. 이메일 인증코드 발송</h4>
+    <div class="row">
+        <button onclick="sendCode()">인증코드 발송</button>
+    </div>
+
+    <h4>2. 이메일 인증코드 검증</h4>
+    <div class="row">
+        <div>
+            <label>인증코드</label><br />
+            <input id="verificationCode" placeholder="이메일로 받은 인증코드 입력" />
+        </div>
+    </div>
+    <div class="row">
+        <button onclick="verifyCode()">인증코드 검증</button>
+    </div>
+
+    <h4>3. 닉네임 입력</h4>
+    <div class="row">
+        <div>
+            <label>닉네임</label><br />
+            <input id="nickname" placeholder="최종 가입 완료 API 붙으면 이 값으로 제출" />
+        </div>
+    </div>
+
+    <h4>4. 소셜 회원가입 완료</h4>
+    <div class="row">
+        <button onclick="completeSocialSignUp()">회원가입 완료</button>
+    </div>
+    <p class="dim">이 버튼은 registrationToken, email, nickname, 기본 약관 동의값을 묶어서 최종 가입 완료 API를 호출합니다.</p>
+</div>
 
 <pre id="result"></pre>
 
 <script>
     let accessToken = null;
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get("status");
+    const provider = params.get("provider");
+    const email = params.get("email");
+    const registrationToken = params.get("registrationToken");
+
+    initialize();
+
+    function initialize() {
+        const statusText = document.getElementById("statusText");
+        const summary = document.getElementById("summary");
+
+        if (status === "login-success") {
+            document.getElementById("loginSuccessCard").classList.remove("hidden");
+            statusText.innerHTML = '<span class="success">기존 회원 로그인 성공</span>';
+            summary.innerHTML = "<p>이제 reissue로 access token을 발급받고 로그아웃까지 테스트할 수 있습니다.</p>";
+            return;
+        }
+
+        if (status === "sign-up-required") {
+            document.getElementById("signUpCard").classList.remove("hidden");
+            document.getElementById("provider").value = provider || "";
+            document.getElementById("email").value = email || "";
+            document.getElementById("registrationToken").value = registrationToken || "";
+
+            statusText.innerHTML = '<span class="warn">신규 소셜 회원 - 추가 가입 절차 필요</span>';
+            summary.innerHTML =
+                "<p><strong>provider:</strong> " + (provider || "-") + "</p>" +
+                "<p><strong>email:</strong> " + (email || "-") + "</p>" +
+                "<p><strong>registrationToken:</strong> " + (registrationToken || "-") + "</p>";
+            return;
+        }
+
+        statusText.innerText = "알 수 없는 콜백 상태입니다. 직접 콜백 URL로 들어왔거나 쿼리 파라미터가 없습니다.";
+        summary.innerHTML = "<p class='dim'>/api/auth/kakao/login 또는 /api/auth/naver/login 으로 다시 시작해보세요.</p>";
+    }
 
     async function reissue() {
         try {
@@ -68,6 +234,94 @@
         } catch (e) {
             document.getElementById("result").innerText =
                 "로그아웃 중 에러 발생";
+        }
+    }
+
+    async function sendCode() {
+        try {
+            const res = await fetch("http://localhost:8080/api/auth/email/send-code", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    email: document.getElementById("email").value
+                })
+            });
+
+            const data = await res.json();
+
+            document.getElementById("result").innerText =
+                "인증코드 발송 응답\n\n" +
+                JSON.stringify(data, null, 2);
+        } catch (e) {
+            document.getElementById("result").innerText = "인증코드 발송 실패";
+        }
+    }
+
+    async function verifyCode() {
+        try {
+            const res = await fetch("http://localhost:8080/api/auth/email/verify", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    email: document.getElementById("email").value,
+                    code: document.getElementById("verificationCode").value
+                })
+            });
+
+            const data = await res.json();
+            const nickname = document.getElementById("nickname").value;
+
+            document.getElementById("result").innerText =
+                "인증코드 검증 응답\n\n" +
+                JSON.stringify(data, null, 2) +
+                "\n\n입력한 nickname\n\n" +
+                (nickname || "(미입력)");
+        } catch (e) {
+            document.getElementById("result").innerText = "인증코드 검증 실패";
+        }
+    }
+
+    async function completeSocialSignUp() {
+        try {
+            const res = await fetch("http://localhost:8080/api/auth/social/sign-up/complete", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                    registrationToken: document.getElementById("registrationToken").value,
+                    email: document.getElementById("email").value,
+                    nickname: document.getElementById("nickname").value,
+                    serviceTermsAgreed: true,
+                    electronicFinanceTermsAgreed: true,
+                    privacyCollectionAgreed: true,
+                    marketingInfoAgreed: false,
+                    over14Agreed: true
+                })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                document.getElementById("result").innerText =
+                    "소셜 회원가입 완료 실패\n\n" +
+                    JSON.stringify(data, null, 2);
+                return;
+            }
+
+            accessToken = data.accessToken;
+
+            document.getElementById("result").innerText =
+                "소셜 회원가입 완료 성공\n\n" +
+                JSON.stringify(data, null, 2) +
+                "\n\nrefreshToken은 HttpOnly 쿠키로 저장되었습니다.";
+        } catch (e) {
+            document.getElementById("result").innerText = "소셜 회원가입 완료 호출 실패";
         }
     }
 </script>

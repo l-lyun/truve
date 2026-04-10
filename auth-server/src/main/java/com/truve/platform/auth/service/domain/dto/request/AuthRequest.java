@@ -69,4 +69,29 @@ public class AuthRequest {
 	public static class UpdateEmailNotificationConsent {
 		private boolean emailNotificationAgreed;
 	}
+
+	@Getter
+	@AllArgsConstructor
+	@NoArgsConstructor
+	@Schema(name = "AuthRequestCompleteSocialSignUp", description = "소셜 회원가입 완료 요청")
+	public static class CompleteSocialSignUp {
+		@NotBlank
+		private String registrationToken;
+
+		@NotBlank
+		private String email;
+
+		@NotBlank
+		private String nickname;
+
+		private boolean serviceTermsAgreed;
+
+		private boolean electronicFinanceTermsAgreed;
+
+		private boolean privacyCollectionAgreed;
+
+		private boolean marketingInfoAgreed;
+
+		private boolean over14Agreed;
+	}
 }

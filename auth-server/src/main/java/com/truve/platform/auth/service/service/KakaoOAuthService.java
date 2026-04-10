@@ -1,14 +1,8 @@
 package com.truve.platform.auth.service.service;
 
-import static com.truve.platform.auth.service.domain.dto.response.OAuthDTO.*;
-
 import org.springframework.data.util.Pair;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestClient;
 
 import com.truve.platform.common.constants.AuthProvider;
 import com.truve.platform.common.exception.ErrorCode;
@@ -17,18 +11,18 @@ import com.truve.platform.auth.service.domain.entity.User;
 import com.truve.platform.auth.service.repository.UserRepository;
 import com.truve.platform.auth.service.security.JwtService;
 import com.truve.platform.auth.service.security.TokenType;
-import com.truve.platform.auth.service.security.properties.KakaoOAuthProperties;
+import com.truve.platform.auth.service.service.social.KakaoOAuthProviderClient;
+import com.truve.platform.auth.service.service.social.OAuthTokenInfo;
+import com.truve.platform.auth.service.service.social.OAuthUserInfo;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class KakaoOAuthService {
-	private final KakaoOAuthProperties kakaoOAuthProperties;
 	private final JwtService jwtService;
 	private final RefreshTokenService refreshTokenService;
-	private final RestClient kakaoOAuthRestClient;
-	private final RestClient kakaoApiRestClient;
+	private final KakaoOAuthProviderClient kakaoOAuthProviderClient;
 	private final UserRepository userRepository;
 
 
@@ -37,15 +31,16 @@ public class KakaoOAuthService {
 	@Transactional
 	public Pair<String, String> login(String code, String error, String errorDescription, String state) {
 
-		KakaoLoginResponse kakaoDTO = requestToken(code);
+		OAuthTokenInfo tokenInfo = kakaoOAuthProviderClient.exchangeToken(code, state);
 
-		Preconditions.validate(!(kakaoDTO == null), ErrorCode.NOT_FOUND_EMAIL);
+		Preconditions.validate(tokenInfo != null, ErrorCode.NOT_FOUND_EMAIL);
 
-		String kakaoAccessToken = kakaoDTO.getAccessToken();
-		String kakaoRefreshToken = kakaoDTO.getRefreshToken();
-		KakaoUserInfo info = requestUserInfo(kakaoAccessToken);
-		String kakaoEmail = info.getKakaoAccount().getEmail();
-		String kakaoUserId = info.getId();
+		String kakaoAccessToken = tokenInfo.getAccessToken();
+		String kakaoRefreshToken = tokenInfo.getRefreshToken();
+		OAuthUserInfo userInfo = kakaoOAuthProviderClient.getUserInfo(kakaoAccessToken);
+		Preconditions.validate(userInfo != null && userInfo.getEmail() != null, ErrorCode.NOT_FOUND_EMAIL);
+		String kakaoEmail = userInfo.getEmail();
+		String kakaoUserId = userInfo.getProviderUserId();
 		User user;
 
 		if (!userRepository.existsByEmail(kakaoEmail)) {
@@ -71,32 +66,4 @@ public class KakaoOAuthService {
 
 		return Pair.of(accessToken, refreshToken);
 	}
-
-
-	private KakaoLoginResponse requestToken(String code) {
-		MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
-		form.add("grant_type", "authorization_code");
-		form.add("client_id", kakaoOAuthProperties.getClientId());
-		form.add("redirect_uri", kakaoOAuthProperties.getRedirectUri());
-		form.add("code", code);
-		form.add("client_secret", kakaoOAuthProperties.getClientSecret());
-
-		return kakaoOAuthRestClient.post()
-			.uri("/token")
-			.contentType(MediaType.APPLICATION_FORM_URLENCODED)
-			.body(form)
-			.retrieve()
-			.body(KakaoLoginResponse.class);
-	}
-
-	private KakaoUserInfo requestUserInfo(String accessToken) {
-		return kakaoApiRestClient.post()
-			.uri("/user/me")
-			.contentType(MediaType.APPLICATION_FORM_URLENCODED)
-			.header("Authorization", "Bearer " + accessToken)
-			.body("property_keys=[\"kakao_account.email\"]")
-			.retrieve()
-			.body(KakaoUserInfo.class);
-	}
-
 }

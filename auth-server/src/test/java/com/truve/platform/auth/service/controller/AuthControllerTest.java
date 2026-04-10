@@ -1,6 +1,7 @@
 package com.truve.platform.auth.service.controller;
 
 import static org.mockito.BDDMockito.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -19,6 +20,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import com.truve.platform.auth.service.security.AuthCookieManager;
 import com.truve.platform.auth.service.security.config.SecurityConfig;
 import com.truve.platform.auth.service.service.AuthService;
+import com.truve.platform.auth.service.service.SocialLoginService;
 import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
 
@@ -32,6 +34,8 @@ class AuthControllerTest {
 	private MockMvc mockMvc;
 	@MockitoBean
 	private AuthService authService;
+	@MockitoBean
+	private SocialLoginService socialLoginService;
 	@MockitoBean
 	private AuthCookieManager authCookieManager;
 	@MockitoBean
@@ -170,6 +174,37 @@ class AuthControllerTest {
 
 		// when
 		ResultActions resultActions = mockMvc.perform(post("/api/auth/login")
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(body));
+
+		// then
+		resultActions.andExpect(status().isOk())
+			.andExpect(jsonPath("$.accessToken").value("access-token"));
+		verify(authCookieManager).setRefreshToken(any(HttpServletResponse.class), eq("refresh-token"), eq(1209600L));
+	}
+
+	@Test
+	@DisplayName("소셜 회원가입 완료에 성공하면 accessToken을 반환하고 refreshToken 쿠키를 설정한다.")
+	void 소셜회원가입완료_성공() throws Exception {
+		// given
+		String body = """
+			{
+			  "registrationToken": "registration-token",
+			  "email": "social@test.com",
+			  "nickname": "tester",
+			  "serviceTermsAgreed": true,
+			  "electronicFinanceTermsAgreed": true,
+			  "privacyCollectionAgreed": true,
+			  "marketingInfoAgreed": false,
+			  "over14Agreed": true
+			}
+			""";
+		given(socialLoginService.completeSignUp(
+			any(com.truve.platform.auth.service.domain.dto.request.AuthRequest.CompleteSocialSignUp.class)
+		)).willReturn(Pair.of("access-token", "refresh-token"));
+
+		// when
+		ResultActions resultActions = mockMvc.perform(post("/api/auth/social/sign-up/complete")
 			.contentType(MediaType.APPLICATION_JSON)
 			.content(body));
 

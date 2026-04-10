@@ -22,6 +22,8 @@ public enum ErrorCode {
 	INVALID_NICKNAME(HttpStatus.BAD_REQUEST, "유효하지 않은 닉네임입니다.", "A11"),
 	ALREADY_EXISTS_NICKNAME(HttpStatus.BAD_REQUEST, "중복된 닉네임입니다.", "A12"),
 	ALREADY_WITHDRAWN_USER(HttpStatus.BAD_REQUEST, "이미 탈퇴한 회원입니다.", "A13"),
+	INVALID_AUTH_PROVIDER(HttpStatus.BAD_REQUEST, "유효하지 않은 소셜 로그인 제공자입니다.", "A14"),
+	INVALID_SOCIAL_REGISTRATION_TOKEN(HttpStatus.BAD_REQUEST, "유효하지 않은 소셜 가입 토큰입니다.", "A15"),
 
 	NOT_FOUND_PAYMENT(HttpStatus.BAD_REQUEST, "존재하지 않는 결제입니다.", "P01"),
 	INVALID_PAYMENT_AMOUNT(HttpStatus.BAD_REQUEST, "유효하지 않은 결제 금액입니다.", "P02"),

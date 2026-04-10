@@ -1,9 +1,10 @@
 package com.truve.platform.auth.service.controller;
 
 import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
-import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,7 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.truve.platform.auth.service.security.AuthCookieManager;
 import com.truve.platform.auth.service.security.properties.FrontOAuthProperties;
 import com.truve.platform.auth.service.security.properties.NaverOAuthProperties;
-import com.truve.platform.auth.service.service.NaverOAuthService;
+import com.truve.platform.auth.service.service.SocialLoginService;
+import com.truve.platform.auth.service.service.social.SocialLoginResult;
+import com.truve.platform.common.constants.AuthProvider;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.headers.Header;
@@ -30,7 +33,7 @@ import lombok.RequiredArgsConstructor;
 public class NaverOAuthController {
 	private final FrontOAuthProperties frontOAuthProperties;
 	private final NaverOAuthProperties naverOAuthProperties;
-	private final NaverOAuthService naverOAuthService;
+	private final SocialLoginService socialLoginService;
 	private final AuthCookieManager authCookieManager;
 
 	@Operation(
@@ -76,17 +79,28 @@ public class NaverOAuthController {
 		@RequestParam(required = false) String state,
 		HttpServletResponse httpServletResponse
 	) {
-		Pair<String, String> tokens = naverOAuthService.login(code, error, error_description, state);
-		String refreshToken = tokens.getSecond();
+		SocialLoginResult result = socialLoginService.start(AuthProvider.NAVER, code, state);
 
-		authCookieManager.setRefreshToken(
-			httpServletResponse,
-			refreshToken,
-			60L * 60 * 24 * 14
-		);
+		if (result.getStatus() == SocialLoginResult.Status.LOGIN_SUCCESS) {
+			authCookieManager.setRefreshToken(
+				httpServletResponse,
+				result.getRefreshToken(),
+				60L * 60 * 24 * 14
+			);
+
+			return ResponseEntity.status(HttpStatus.FOUND)
+				.location(URI.create(frontOAuthProperties.getCallback() + "?status=login-success"))
+				.build();
+		}
+
+		String redirectUri = frontOAuthProperties.getCallback()
+			+ "?status=sign-up-required"
+			+ "&provider=" + result.getProvider().name()
+			+ "&email=" + URLEncoder.encode(result.getEmail(), StandardCharsets.UTF_8)
+			+ "&registrationToken=" + URLEncoder.encode(result.getRegistrationToken(), StandardCharsets.UTF_8);
 
 		return ResponseEntity.status(HttpStatus.FOUND)
-			.location(URI.create(frontOAuthProperties.getCallback()))
+			.location(URI.create(redirectUri))
 			.build();
 	}
 }
