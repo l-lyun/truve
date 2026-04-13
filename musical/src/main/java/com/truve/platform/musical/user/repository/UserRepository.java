@@ -1,5 +1,7 @@
 package com.truve.platform.musical.user.repository;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -12,4 +14,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	boolean existsByUserId(UUID userId);
 
 	Optional<User> findByUserId(UUID userId);
+
+	List<User> findByUserIdIn(Collection<UUID> userIds);
 }

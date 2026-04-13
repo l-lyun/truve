@@ -119,7 +119,7 @@ class ArtistServiceTest {
 	}
 
 	@Test
-	@DisplayName("비로그인 아티스트 상세 조회는 liked, joined를 false로 응답한다.")
+	@DisplayName("비로그인 아티스트 상세 조회는 개발 연동용으로 joined를 true로 응답한다.")
 	void 아티스트_상세_조회_비로그인_성공() {
 		ArtistRepository.ArtistDetailProjection artist = org.mockito.Mockito.mock(ArtistRepository.ArtistDetailProjection.class);
 		ShowCastingRepository.ArtistShowSummaryProjection currentShow = org.mockito.Mockito.mock(ShowCastingRepository.ArtistShowSummaryProjection.class);
@@ -144,10 +144,45 @@ class ArtistServiceTest {
 		ArtistResponse.Detail response = artistService.getDetail(1L, null);
 
 		assertThat(response.getArtist().getIsLiked()).isFalse();
-		assertThat(response.getMembership().getJoined()).isFalse();
+		assertThat(response.getMembership().getJoined()).isTrue();
 		assertThat(response.getArtist().getProfileImageUrl()).isEqualTo("https://img.example/lee.png");
 		assertThat(response.getCurrentShows()).hasSize(1);
 		assertThat(response.getCurrentShows().get(0).getPosterUrl()).isEqualTo("https://img.example/current.png");
+	}
+
+	@Test
+	@DisplayName("아티스트 게시판 접근 가능 여부 조회는 개발 연동용으로 joined와 accessible을 true로 응답한다.")
+	void 아티스트_게시판_접근가능여부_조회_성공() {
+		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+
+		when(artistRepository.existsById(1L)).thenReturn(true);
+
+		ArtistResponse.BoardAccess response = artistService.getBoardAccess(1L, userId);
+
+		assertThat(response.getJoined()).isTrue();
+		assertThat(response.getAccessible()).isTrue();
+	}
+
+	@Test
+	@DisplayName("비로그인 아티스트 게시판 접근 가능 여부 조회는 개발 연동용으로 joined와 accessible을 true로 응답한다.")
+	void 비로그인_아티스트_게시판_접근가능여부_조회_성공() {
+		when(artistRepository.existsById(1L)).thenReturn(true);
+
+		ArtistResponse.BoardAccess response = artistService.getBoardAccess(1L, null);
+
+		assertThat(response.getJoined()).isTrue();
+		assertThat(response.getAccessible()).isTrue();
+		verify(artistMembershipRepository, never()).findByUserIdAndArtistId(any(), anyLong());
+	}
+
+	@Test
+	@DisplayName("존재하지 않는 아티스트 게시판 접근 가능 여부 조회는 예외를 발생시킨다.")
+	void 존재하지않는_아티스트_게시판_접근가능여부_조회_실패() {
+		when(artistRepository.existsById(999L)).thenReturn(false);
+
+		CustomException exception = assertThrows(CustomException.class, () -> artistService.getBoardAccess(999L, null));
+
+		assertEquals(ErrorCode.NOT_FOUND_ARTIST, exception.getErrorCode());
 	}
 
 	@Test

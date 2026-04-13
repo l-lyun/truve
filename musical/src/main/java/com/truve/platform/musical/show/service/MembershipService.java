@@ -178,4 +178,69 @@ public class MembershipService {
 		long remainingDays = ChronoUnit.DAYS.between(now.toLocalDate(), nextBillingAt.toLocalDate());
 		return Math.max(remainingDays, 0L);
 	}
+
+	@Transactional(readOnly = true)
+	public MembershipResponse.MyMembership getMyMembership(UUID userId) {
+		LocalDateTime now = LocalDateTime.now();
+		List<ArtistMembership> memberships = artistMembershipRepository.findCurrentMemberships(
+			userId,
+			List.of(ArtistMembershipStatus.ACTIVE, ArtistMembershipStatus.CANCEL_SCHEDULED),
+			now
+		);
+
+		List<MembershipResponse.MyMembershipItem> items = memberships.stream()
+			.map(membership -> toMyMembershipItem(membership, now))
+			.toList();
+
+		long monthlyPaymentAmount = memberships.stream()
+			.filter(membership -> membership.getStatus() == ArtistMembershipStatus.ACTIVE)
+			.mapToLong(ArtistMembership::getMonthlyAmount)
+			.sum();
+
+		return MembershipResponse.MyMembership.of(
+			MembershipResponse.MyMembershipSummary.of(items.size(), monthlyPaymentAmount),
+			items
+		);
+	}
+
+	private MembershipResponse.MyMembershipItem toMyMembershipItem(ArtistMembership membership, LocalDateTime now) {
+		return MembershipResponse.MyMembershipItem.of(
+			membership.getId(),
+			membership.getArtist().getId(),
+			membership.getArtist().getName(),
+			toProfileImageUrl(membership.getArtist().getProfileImg()),
+			membership.getStatus().name(),
+			toStatusLabel(membership.getStatus()),
+			formatMembershipDate(membership.getJoinedAt()),
+			formatMembershipDate(membership.getNextBillingAt()),
+			calculateRemainingDays(membership.getNextBillingAt(), now),
+			membership.getMonthlyAmount(),
+			membership.getStatus() == ArtistMembershipStatus.ACTIVE
+		);
+	}
+
+	private String toProfileImageUrl(String profileImg) {
+		return profileImg == null ? null : s3Service.getImageUrl(profileImg);
+	}
+
+	private String toStatusLabel(ArtistMembershipStatus status) {
+		return switch (status) {
+			case ACTIVE -> "멤버십 가입중";
+			case CANCEL_SCHEDULED -> "해지 예정";
+			default -> status.name();
+		};
+	}
+
+	private String formatMembershipDate(LocalDateTime dateTime) {
+		return dateTime == null ? null : dateTime.format(MEMBERSHIP_DATE_FORMATTER);
+	}
+
+	private long calculateRemainingDays(LocalDateTime nextBillingAt, LocalDateTime now) {
+		if (nextBillingAt == null) {
+			return 0L;
+		}
+
+		long remainingDays = ChronoUnit.DAYS.between(now.toLocalDate(), nextBillingAt.toLocalDate());
+		return Math.max(remainingDays, 0L);
+	}
 }

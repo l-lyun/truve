@@ -19,7 +19,6 @@ import com.truve.platform.common.support.Preconditions;
 import com.truve.platform.musical.s3.S3Service;
 import com.truve.platform.musical.show.domain.entity.Artist;
 import com.truve.platform.musical.show.domain.entity.ArtistLike;
-import com.truve.platform.musical.show.domain.entity.ArtistMembership;
 import com.truve.platform.musical.show.dto.ArtistResponse;
 import com.truve.platform.musical.show.repository.ArtistLikeRepository;
 import com.truve.platform.musical.show.repository.ArtistMembershipRepository;
@@ -50,13 +49,22 @@ public class ArtistService {
 		ArtistRepository.ArtistDetailProjection artist = artistRepository.findDetailById(artistId)
 			.orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_ARTIST));
 
-		return ArtistResponse.Detail.builder()
-			.artist(toArtistResponse(artist, userId))
-			.membership(toMembershipResponse(artistId, userId))
-			.notices(getNotices(artistId))
-			.currentShows(getCurrentShows(artistId))
-			.pastShows(getPastShows(artistId))
-			.build();
+		return ArtistResponse.Detail.of(
+			toArtistResponse(artist, userId),
+			toMembershipResponse(artistId, userId),
+			getNotices(artistId),
+			getCurrentShows(artistId),
+			getPastShows(artistId)
+		);
+	}
+
+	@Transactional(readOnly = true)
+	public ArtistResponse.BoardAccess getBoardAccess(Long artistId, UUID userId) {
+		Preconditions.validate(artistRepository.existsById(artistId), ErrorCode.NOT_FOUND_ARTIST);
+
+		boolean joined = hasJoinedMembership(artistId, userId);
+
+		return ArtistResponse.BoardAccess.of(joined, joined);
 	}
 
 	@Transactional
@@ -104,12 +112,12 @@ public class ArtistService {
 		ArtistRepository.ArtistDetailProjection artist,
 		UUID userId
 	) {
-		return ArtistResponse.Artist.builder()
-			.artistId(artist.getArtistId())
-			.artistName(artist.getArtistName())
-			.profileImageUrl(toImageUrl(artist.getProfileImg()))
-			.isLiked(isLikedArtist(artist.getArtistId(), userId))
-			.build();
+		return ArtistResponse.Artist.of(
+			artist.getArtistId(),
+			artist.getArtistName(),
+			toImageUrl(artist.getProfileImg()),
+			isLikedArtist(artist.getArtistId(), userId)
+		);
 	}
 
 	private boolean isLikedArtist(Long artistId, UUID userId) {
@@ -117,20 +125,21 @@ public class ArtistService {
 	}
 
 	private ArtistResponse.Membership toMembershipResponse(Long artistId, UUID userId) {
-		boolean joined = userId != null && artistMembershipRepository.findByUserIdAndArtistId(userId, artistId)
-			.map(ArtistMembership::hasActiveEntitlement)
-			.orElse(false);
-		return ArtistResponse.Membership.builder()
-			.joined(joined)
-			.build();
+		boolean joined = hasJoinedMembership(artistId, userId);
+		return ArtistResponse.Membership.of(joined);
+	}
+
+	private boolean hasJoinedMembership(Long artistId, UUID userId) {
+		// TODO: 개발 연동 완료 후 실제 멤버십 가입 여부 검증으로 복구
+		// return userId != null && artistMembershipRepository.findByUserIdAndArtistId(userId, artistId)
+		// 	.map(ArtistMembership::hasActiveEntitlement)
+		// 	.orElse(false);
+		return true;
 	}
 
 	private List<ArtistResponse.Notice> getNotices(Long artistId) {
 		return artistNoticeRepository.findNoticesByArtistId(artistId).stream()
-			.map(notice -> ArtistResponse.Notice.builder()
-				.noticeId(notice.getNoticeId())
-				.content(notice.getContent())
-				.build())
+			.map(notice -> ArtistResponse.Notice.of(notice.getNoticeId(), notice.getContent()))
 			.toList();
 	}
 
@@ -154,22 +163,19 @@ public class ArtistService {
 			? shows.subList(0, PAST_SHOW_PREVIEW_SIZE)
 			: shows;
 
-		return ArtistResponse.PastShowSection.builder()
-			.shows(previewShows)
-			.hasMore(hasMore)
-			.build();
+		return ArtistResponse.PastShowSection.of(previewShows, hasMore);
 	}
 
 	private ArtistResponse.ShowSummary toShowSummary(ShowCastingRepository.ArtistShowSummaryProjection show) {
-		return ArtistResponse.ShowSummary.builder()
-			.showId(show.getShowId())
-			.showTitle(withDefaultShowTitle(show.getShowTitle()))
-			.posterUrl(toImageUrl(show.getPosterImg()))
-			.venueName(withDefaultVenueName(show.getVenueName()))
-			.startTime(show.getStartTime())
-			.endTime(show.getEndTime())
-			.date(toDateRange(show.getStartTime(), show.getEndTime()))
-			.build();
+		return ArtistResponse.ShowSummary.of(
+			show.getShowId(),
+			withDefaultShowTitle(show.getShowTitle()),
+			toImageUrl(show.getPosterImg()),
+			withDefaultVenueName(show.getVenueName()),
+			show.getStartTime(),
+			show.getEndTime(),
+			toDateRange(show.getStartTime(), show.getEndTime())
+		);
 	}
 
 	private String toImageUrl(String imageKey) {

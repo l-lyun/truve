@@ -148,6 +148,37 @@ class ArtistControllerTest {
 	}
 
 	@Test
+	@DisplayName("아티스트 게시판 접근 가능 여부 조회에 성공하면 200 OK를 응답한다.")
+	void 아티스트_게시판_접근가능여부_조회_성공() throws Exception {
+		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+		ArtistResponse.BoardAccess response = ArtistResponse.BoardAccess.builder()
+			.joined(true)
+			.accessible(true)
+			.build();
+
+		given(artistService.getBoardAccess(1L, userId)).willReturn(response);
+
+		mockMvc.perform(get("/api/musical/artists/{artistId}/board/access", 1L)
+				.header("X-User-Id", userId))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.code").value("ok"))
+			.andExpect(jsonPath("$.data.joined").value(true))
+			.andExpect(jsonPath("$.data.accessible").value(true));
+	}
+
+	@Test
+	@DisplayName("존재하지 않는 아티스트 게시판 접근 여부를 조회하면 404를 응답한다.")
+	void 아티스트_게시판_접근가능여부_조회_실패() throws Exception {
+		willThrow(new CustomException(ErrorCode.NOT_FOUND_ARTIST))
+			.given(artistService).getBoardAccess(anyLong(), nullable(UUID.class));
+
+		mockMvc.perform(get("/api/musical/artists/{artistId}/board/access", 999L))
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.errorType").value("CLIENT_ERROR"))
+			.andExpect(jsonPath("$.code").value("M02"));
+	}
+
+	@Test
 	@DisplayName("아티스트 지난 출연 작품 조회에 성공하면 200 OK와 페이지 데이터를 응답한다.")
 	void 아티스트_지난출연작품_조회_성공() throws Exception {
 		var pageable = PageRequest.of(0, 10);

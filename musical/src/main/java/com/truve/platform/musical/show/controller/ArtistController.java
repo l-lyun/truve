@@ -58,6 +58,15 @@ public class ArtistController {
 		return ApiResult.ok(artistService.getDetail(artistId, userId));
 	}
 
+	@Operation(summary = "아티스트 게시판 접근 가능 여부 조회", description = "로그인 사용자의 아티스트 멤버십 가입 여부를 확인해 게시판 접근 가능 여부를 조회합니다.")
+	@GetMapping("/{artistId}/board/access")
+	public ApiResult<ArtistResponse.BoardAccess> getBoardAccess(
+		@PathVariable Long artistId,
+		@RequestHeader(name = "X-User-Id", required = false) UUID userId
+	) {
+		return ApiResult.ok(artistService.getBoardAccess(artistId, userId));
+	}
+
 	@Operation(summary = "아티스트 지난 출연 작품 조회", description = "아티스트의 지난 출연 작품 목록을 조회합니다.")
 	@GetMapping("/{artistId}/past-shows")
 	public ApiResult<PageResponse<ArtistResponse.ShowSummary>> getPastShows(
