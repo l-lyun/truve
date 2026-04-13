@@ -38,6 +38,15 @@ public class MembershipController {
 		return ApiResult.ok(membershipService.createPayment(artistId, userId, request));
 	}
 
+    @Operation(summary = "아티스트 멤버십 가입 완료 정보 조회", description = "결제가 완료된 멤버십의 가입 완료 정보를 조회합니다.")
+    @GetMapping("/artists/{artistId}/membership/complete")
+    public ApiResult<MembershipResponse.Complete> complete(
+            @PathVariable Long artistId,
+            @RequestHeader(name = "X-User-Id") UUID userId
+    ) {
+        return ApiResult.ok(membershipService.complete(artistId, userId));
+    }
+
 	@Operation(summary = "내 멤버십 조회", description = "현재 유효한 내 멤버십의 목록을 조회합니다.")
 	@GetMapping("/my/membership")
 	public ApiResult<MembershipResponse.MyMembership> getMyMembership(
