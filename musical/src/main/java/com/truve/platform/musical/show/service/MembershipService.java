@@ -2,6 +2,8 @@ package com.truve.platform.musical.show.service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.dao.DataIntegrityViolationException;
@@ -11,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
 import com.truve.platform.common.support.Preconditions;
+import com.truve.platform.musical.s3.S3Service;
+import com.truve.platform.musical.show.domain.constant.ArtistMembershipStatus;
 import com.truve.platform.musical.show.domain.entity.ArtistMembership;
 import com.truve.platform.musical.show.domain.entity.Artist;
 import com.truve.platform.musical.show.dto.MembershipRequest;
@@ -21,24 +25,18 @@ import com.truve.platform.musical.show.repository.ArtistMembershipRepository;
 import com.truve.platform.musical.show.repository.ArtistRepository;
 import com.truve.platform.musical.show.util.MembershipOrderIdGenerator;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class MembershipService {
 	private static final long MONTHLY_MEMBERSHIP_AMOUNT = 5_000L;
-	private static final DateTimeFormatter COMPLETE_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd.");
+	private static final DateTimeFormatter MEMBERSHIP_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd.");
 
 	private final ArtistRepository artistRepository;
 	private final ArtistMembershipRepository artistMembershipRepository;
 	private final PaymentPublisher paymentPublisher;
-
-	public MembershipService(
-		ArtistRepository artistRepository,
-		ArtistMembershipRepository artistMembershipRepository,
-		PaymentPublisher paymentPublisher
-	) {
-		this.artistRepository = artistRepository;
-		this.artistMembershipRepository = artistMembershipRepository;
-		this.paymentPublisher = paymentPublisher;
-	}
+	private final S3Service s3Service;
 
 	@Transactional
 	public MembershipResponse.CreatePayment createPayment(
@@ -114,5 +112,70 @@ public class MembershipService {
 
 	private String formatCompleteDate(LocalDateTime value) {
 		return value == null ? null : value.format(COMPLETE_DATE_FORMATTER);
+	}
+
+	@Transactional(readOnly = true)
+	public MembershipResponse.MyMembership getMyMembership(UUID userId) {
+		LocalDateTime now = LocalDateTime.now();
+		List<ArtistMembership> memberships = artistMembershipRepository.findCurrentMemberships(
+			userId,
+			List.of(ArtistMembershipStatus.ACTIVE, ArtistMembershipStatus.CANCEL_SCHEDULED),
+			now
+		);
+
+		List<MembershipResponse.MyMembershipItem> items = memberships.stream()
+			.map(membership -> toMyMembershipItem(membership, now))
+			.toList();
+
+		long monthlyPaymentAmount = memberships.stream()
+			.filter(membership -> membership.getStatus() == ArtistMembershipStatus.ACTIVE)
+			.mapToLong(ArtistMembership::getMonthlyAmount)
+			.sum();
+
+		return MembershipResponse.MyMembership.of(
+			MembershipResponse.MyMembershipSummary.of(items.size(), monthlyPaymentAmount),
+			items
+		);
+	}
+
+	private MembershipResponse.MyMembershipItem toMyMembershipItem(ArtistMembership membership, LocalDateTime now) {
+		return MembershipResponse.MyMembershipItem.of(
+			membership.getId(),
+			membership.getArtist().getId(),
+			membership.getArtist().getName(),
+			toProfileImageUrl(membership.getArtist().getProfileImg()),
+			membership.getStatus().name(),
+			toStatusLabel(membership.getStatus()),
+			formatMembershipDate(membership.getJoinedAt()),
+			formatMembershipDate(membership.getNextBillingAt()),
+			calculateRemainingDays(membership.getNextBillingAt(), now),
+			membership.getMonthlyAmount(),
+			membership.getStatus() == ArtistMembershipStatus.ACTIVE
+		);
+	}
+
+	private String toProfileImageUrl(String profileImg) {
+		return profileImg == null ? null : s3Service.getImageUrl(profileImg);
+	}
+
+	private String toStatusLabel(ArtistMembershipStatus status) {
+		return switch (status) {
+			case ACTIVE -> "멤버십 가입중";
+			case CANCEL_SCHEDULED -> "해지 예정";
+			default -> status.name();
+		};
+	}
+
+	private String formatMembershipDate(LocalDateTime dateTime) {
+		return dateTime == null ? null : dateTime.format(MEMBERSHIP_DATE_FORMATTER);
+	}
+
+	private long calculateRemainingDays(LocalDateTime nextBillingAt, LocalDateTime now) {
+		if (nextBillingAt == null) {
+			return 0L;
+		}
+
+		long remainingDays = ChronoUnit.DAYS.between(now.toLocalDate(), nextBillingAt.toLocalDate());
+		return Math.max(remainingDays, 0L);
 	}
 }

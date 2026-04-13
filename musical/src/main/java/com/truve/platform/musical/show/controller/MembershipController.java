@@ -19,7 +19,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/musical/artists")
+@RequestMapping("/api/musical")
 public class MembershipController {
 
 	private final MembershipService membershipService;
@@ -29,7 +29,7 @@ public class MembershipController {
 	}
 
 	@Operation(summary = "아티스트 멤버십 결제 준비", description = "멤버십 가입 결제를 위해 주문을 생성하고 결제를 준비합니다.")
-	@PostMapping("/{artistId}/membership/payment")
+	@PostMapping("/artists/{artistId}/membership/payment")
 	public ApiResult<MembershipResponse.CreatePayment> createPayment(
 		@PathVariable Long artistId,
 		@RequestHeader(name = "X-User-Id") UUID userId,
@@ -38,12 +38,11 @@ public class MembershipController {
 		return ApiResult.ok(membershipService.createPayment(artistId, userId, request));
 	}
 
-	@Operation(summary = "아티스트 멤버십 가입 완료 정보 조회", description = "결제가 완료된 멤버십의 가입 완료 정보를 조회합니다.")
-	@GetMapping("/{artistId}/membership/complete")
-	public ApiResult<MembershipResponse.Complete> complete(
-		@PathVariable Long artistId,
+	@Operation(summary = "내 멤버십 조회", description = "현재 유효한 내 멤버십의 목록을 조회합니다.")
+	@GetMapping("/my/membership")
+	public ApiResult<MembershipResponse.MyMembership> getMyMembership(
 		@RequestHeader(name = "X-User-Id") UUID userId
 	) {
-		return ApiResult.ok(membershipService.complete(artistId, userId));
+		return ApiResult.ok(membershipService.getMyMembership(userId));
 	}
 }

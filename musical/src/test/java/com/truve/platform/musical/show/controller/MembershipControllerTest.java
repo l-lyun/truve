@@ -1,7 +1,6 @@
 package com.truve.platform.musical.show.controller;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
@@ -35,6 +34,10 @@ import com.truve.platform.musical.show.service.MembershipService;
 @org.springframework.context.annotation.Import(ApiAdvice.class)
 @ContextConfiguration(classes = MusicalApplication.class)
 class MembershipControllerTest {
+	private static final UUID USER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
+	private static final Long ARTIST_ID = 101L;
+	private static final String ARTIST_NAME = "고은성";
+	private static final long MONTHLY_AMOUNT = 5_000L;
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -50,34 +53,28 @@ class MembershipControllerTest {
 	@Test
 	@DisplayName("아티스트 멤버십 결제 준비에 성공하면 200 OK와 주문 정보를 응답한다.")
 	void 아티스트_멤버십_결제준비_성공() throws Exception {
-		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
-		MembershipRequest.CreatePayment request = new MembershipRequest.CreatePayment(
-			MembershipPaymentMethod.TOSS_PAY,
-			true,
-			true,
-			true
-		);
+		MembershipRequest.CreatePayment request = createPaymentRequest(MembershipPaymentMethod.TOSS_PAY);
 		MembershipResponse.CreatePayment response = new MembershipResponse.CreatePayment(
-			101L,
-			"고은성",
+			ARTIST_ID,
+			ARTIST_NAME,
 			"월간 멤버십",
-			5_000L,
+			MONTHLY_AMOUNT,
 			"M20260326ABC123",
 			"토스 결제"
 		);
 
-		given(membershipService.createPayment(eq(101L), eq(userId), any())).willReturn(response);
+		given(membershipService.createPayment(eq(ARTIST_ID), eq(USER_ID), any())).willReturn(response);
 
-		mockMvc.perform(post("/api/musical/artists/{artistId}/membership/payment", 101L)
-				.header("X-User-Id", userId)
+		mockMvc.perform(post("/api/musical/artists/{artistId}/membership/payment", ARTIST_ID)
+				.header("X-User-Id", USER_ID)
 				.contentType("application/json")
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.code").value("ok"))
-			.andExpect(jsonPath("$.data.artistId").value(101L))
-			.andExpect(jsonPath("$.data.artistName").value("고은성"))
+			.andExpect(jsonPath("$.data.artistId").value(ARTIST_ID))
+			.andExpect(jsonPath("$.data.artistName").value(ARTIST_NAME))
 			.andExpect(jsonPath("$.data.planName").value("월간 멤버십"))
-			.andExpect(jsonPath("$.data.amount").value(5000L))
+			.andExpect(jsonPath("$.data.amount").value(MONTHLY_AMOUNT))
 			.andExpect(jsonPath("$.data.orderId").value("M20260326ABC123"))
 			.andExpect(jsonPath("$.data.paymentMethod").value("토스 결제"));
 	}
@@ -85,20 +82,14 @@ class MembershipControllerTest {
 	@Test
 	@DisplayName("존재하지 않는 아티스트의 멤버십 결제 준비 요청은 404를 응답한다.")
 	void 존재하지않는_아티스트_멤버십_결제준비_실패() throws Exception {
-		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
-		MembershipRequest.CreatePayment request = new MembershipRequest.CreatePayment(
-			MembershipPaymentMethod.TOSS_PAY,
-			true,
-			true,
-			true
-		);
+		MembershipRequest.CreatePayment request = createPaymentRequest(MembershipPaymentMethod.TOSS_PAY);
 
 		willThrow(new CustomException(ErrorCode.NOT_FOUND_ARTIST))
 			.given(membershipService)
-			.createPayment(eq(999L), eq(userId), any());
+			.createPayment(eq(999L), eq(USER_ID), any());
 
 		mockMvc.perform(post("/api/musical/artists/{artistId}/membership/payment", 999L)
-				.header("X-User-Id", userId)
+				.header("X-User-Id", USER_ID)
 				.contentType("application/json")
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isNotFound())
@@ -109,20 +100,14 @@ class MembershipControllerTest {
 	@Test
 	@DisplayName("이미 가입한 아티스트의 멤버십 결제 준비 요청은 400을 응답한다.")
 	void 이미가입한_아티스트_멤버십_결제준비_실패() throws Exception {
-		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
-		MembershipRequest.CreatePayment request = new MembershipRequest.CreatePayment(
-			MembershipPaymentMethod.BANK_TRANSFER,
-			true,
-			true,
-			true
-		);
+		MembershipRequest.CreatePayment request = createPaymentRequest(MembershipPaymentMethod.BANK_TRANSFER);
 
 		willThrow(new CustomException(ErrorCode.ALREADY_JOINED_ARTIST_MEMBERSHIP))
 			.given(membershipService)
-			.createPayment(eq(101L), eq(userId), any());
+			.createPayment(eq(ARTIST_ID), eq(USER_ID), any());
 
-		mockMvc.perform(post("/api/musical/artists/{artistId}/membership/payment", 101L)
-				.header("X-User-Id", userId)
+		mockMvc.perform(post("/api/musical/artists/{artistId}/membership/payment", ARTIST_ID)
+				.header("X-User-Id", USER_ID)
 				.contentType("application/json")
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isBadRequest())
@@ -133,7 +118,6 @@ class MembershipControllerTest {
 	@Test
 	@DisplayName("필수 동의가 누락된 멤버십 결제 준비 요청은 400을 응답한다.")
 	void 필수동의_누락_멤버십_결제준비_실패() throws Exception {
-		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
 		MembershipRequest.CreatePayment request = new MembershipRequest.CreatePayment(
 			MembershipPaymentMethod.TOSS_PAY,
 			false,
@@ -141,8 +125,8 @@ class MembershipControllerTest {
 			true
 		);
 
-		mockMvc.perform(post("/api/musical/artists/{artistId}/membership/payment", 101L)
-				.header("X-User-Id", userId)
+		mockMvc.perform(post("/api/musical/artists/{artistId}/membership/payment", ARTIST_ID)
+				.header("X-User-Id", USER_ID)
 				.contentType("application/json")
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isBadRequest())
@@ -151,45 +135,43 @@ class MembershipControllerTest {
 	}
 
 	@Test
-	@DisplayName("아티스트 멤버십 가입 완료 정보 조회에 성공하면 200 OK와 완료 정보를 응답한다.")
-	void 아티스트_멤버십_가입완료_조회_성공() throws Exception {
-		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
-		MembershipResponse.Complete response = new MembershipResponse.Complete(
-			101L,
-			"고은성",
-			"월간 멤버십",
-			5_000L,
-			"2026. 4. 3.",
-			"2026. 5. 3."
+	@DisplayName("내 멤버십 조회에 성공하면 요약과 목록을 함께 응답한다.")
+	void 내_멤버십_조회_성공() throws Exception {
+		MembershipResponse.MyMembership response = MembershipResponse.MyMembership.of(
+			MembershipResponse.MyMembershipSummary.of(2, MONTHLY_AMOUNT),
+			java.util.List.of(
+				MembershipResponse.MyMembershipItem.of(
+					3L,
+					1L,
+					"이재환",
+					"https://cdn/leejaehwan.png",
+					"ACTIVE",
+					"멤버십 가입중",
+					"2026.04.03.",
+					"2026.05.03.",
+					23L,
+					5_000L,
+					true
+				)
+			)
 		);
 
-		given(membershipService.complete(101L, userId)).willReturn(response);
+		given(membershipService.getMyMembership(USER_ID)).willReturn(response);
 
-		mockMvc.perform(get("/api/musical/artists/{artistId}/membership/complete", 101L)
-				.header("X-User-Id", userId))
+		mockMvc.perform(get("/api/musical/my/membership")
+				.header("X-User-Id", USER_ID))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.code").value("ok"))
-			.andExpect(jsonPath("$.data.artistId").value(101L))
-			.andExpect(jsonPath("$.data.artistName").value("고은성"))
-			.andExpect(jsonPath("$.data.planName").value("월간 멤버십"))
-			.andExpect(jsonPath("$.data.amount").value(5000L))
-			.andExpect(jsonPath("$.data.joinedAt").value("2026. 4. 3."))
-			.andExpect(jsonPath("$.data.nextBillingAt").value("2026. 5. 3."));
+			.andExpect(jsonPath("$.data.summary.activeMembershipCount").value(2))
+			.andExpect(jsonPath("$.data.summary.monthlyPaymentAmount").value(5000))
+			.andExpect(jsonPath("$.data.memberships[0].membershipId").value(3L))
+			.andExpect(jsonPath("$.data.memberships[0].artistId").value(1L))
+			.andExpect(jsonPath("$.data.memberships[0].artistName").value("이재환"))
+			.andExpect(jsonPath("$.data.memberships[0].status").value("ACTIVE"))
+			.andExpect(jsonPath("$.data.memberships[0].statusLabel").value("멤버십 가입중"));
 	}
 
-	@Test
-	@DisplayName("결제가 아직 완료되지 않은 멤버십의 완료 정보 조회는 400을 응답한다.")
-	void 결제미완료_멤버십_가입완료_조회_실패() throws Exception {
-		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
-
-		willThrow(new CustomException(ErrorCode.MEMBERSHIP_PAYMENT_NOT_COMPLETED))
-			.given(membershipService)
-			.complete(101L, userId);
-
-		mockMvc.perform(get("/api/musical/artists/{artistId}/membership/complete", 101L)
-				.header("X-User-Id", userId))
-			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.errorType").value("CLIENT_ERROR"))
-			.andExpect(jsonPath("$.code").value("M06"));
+	private MembershipRequest.CreatePayment createPaymentRequest(MembershipPaymentMethod paymentMethod) {
+		return new MembershipRequest.CreatePayment(paymentMethod, true, true, true);
 	}
 }
