@@ -111,7 +111,7 @@ public class MembershipService {
 	}
 
 	private String formatCompleteDate(LocalDateTime value) {
-		return value == null ? null : value.format(COMPLETE_DATE_FORMATTER);
+		return value == null ? null : value.format(MEMBERSHIP_DATE_FORMATTER);
 	}
 
 	@Transactional(readOnly = true)
