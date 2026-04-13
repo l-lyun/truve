@@ -51,6 +51,8 @@ class TicketingServiceTest {
 	private ScheduledSeatRepository scheduledSeatRepository;
 	@Mock
 	private ShowScheduledRepository showScheduledRepository;
+	@Mock
+	private TicketingSecurityService ticketingSecurityService;
 
 	@InjectMocks
 	private TicketingService ticketingService;
@@ -227,6 +229,7 @@ class TicketingServiceTest {
 			given(ticketingRedisRepository.getSessionTokenValue(sessionToken))
 				.willReturn(SessionTicketValueDTO.of(userId, showScheduleId));
 			given(ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, 300L)).willReturn(true);
+			willDoNothing().given(ticketingSecurityService).findMacro(sessionToken);
 
 			showScheduled = ShowScheduled.builder()
 				.title("공연")
@@ -253,8 +256,32 @@ class TicketingServiceTest {
 
 			// then
 			assertAll(
+				() -> verify(ticketingSecurityService).findMacro(sessionToken),
 				() -> verify(ticketingRedisRepository).tryHoldSeat(showScheduleId, 10L, sessionToken),
 				() -> verify(ticketingRedisRepository).tryHoldSeat(showScheduleId, 11L, sessionToken)
+			);
+		}
+
+		@Test
+		@DisplayName("매크로 탐지 대상 세션이면 SUSPECTED_MACRO_ACTIVITY 예외가 발생하고 선점 로직은 수행하지 않는다.")
+		void 좌석선점_매크로탐지() {
+			// given
+			willThrow(new CustomException(ErrorCode.SUSPECTED_MACRO_ACTIVITY))
+				.given(ticketingSecurityService).findMacro(sessionToken);
+
+			// when
+			CustomException exception = assertThrows(
+				CustomException.class,
+				() -> ticketingService.holdSeat(showScheduleId, userId, sessionToken, List.of(10L))
+			);
+
+			// then
+			assertAll(
+				() -> assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.SUSPECTED_MACRO_ACTIVITY),
+				() -> verify(ticketingSecurityService).findMacro(sessionToken),
+				() -> verify(showScheduledRepository, never()).findById(anyLong()),
+				() -> verify(scheduledSeatRepository, never()).findAllById(anyIterable()),
+				() -> verify(ticketingRedisRepository, never()).tryHoldSeat(anyLong(), anyLong(), anyString())
 			);
 		}
 

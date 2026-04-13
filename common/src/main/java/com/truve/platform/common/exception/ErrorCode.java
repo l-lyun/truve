@@ -53,6 +53,7 @@ public enum ErrorCode {
 	INVALID_SHOW_SCHEDULE(HttpStatus.BAD_REQUEST, "잘못된 공연 정보입니다.", "T09"),
 	EXCEEDED_MAX_TICKET_COUNT(HttpStatus.BAD_REQUEST, "인당 최대 4매까지 예매 가능합니다.", "T10"),
 	INVALID_HOLD_SEAT(HttpStatus.BAD_REQUEST, "타인이 점유한 좌석입니다.", "T11"),
+	SUSPECTED_MACRO_ACTIVITY(HttpStatus.BAD_REQUEST, "매크로 의심 유저입니다.", "T12"),
 
 	INVALID_RESERVATION_STATUS(HttpStatus.BAD_REQUEST, "유효하지 않은 예약 상태입니다.", "B01"),
 	CANCEL_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "관람일 당일에는 취소가 불가능합니다.", "B02"),

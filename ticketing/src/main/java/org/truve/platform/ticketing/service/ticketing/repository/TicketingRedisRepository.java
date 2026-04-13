@@ -4,8 +4,12 @@ import java.time.Duration;
 import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 import org.truve.platform.ticketing.service.ticketing.dto.SessionTicketValueDTO;
 import org.truve.platform.ticketing.service.global.support.RedisSupport;
+
+import com.truve.platform.common.exception.ErrorCode;
+import com.truve.platform.common.support.Preconditions;
 
 import lombok.RequiredArgsConstructor;
 
@@ -17,6 +21,8 @@ public class TicketingRedisRepository {
 	private static final String TICKET_ACTIVE_SHOW_USER_PREFIX = "ticket:active:";
 	private static final String READY_KEY_PREFIX = "queue:ready:";
 	private static final String SEAT_HOLD_KEY_PREFIX = "seat:hold:";
+	private static final String BLOCKED_TICKET_PREFIX = "ticket:blocked:";
+
 
 	private final RedisSupport redisSupport;
 
@@ -62,9 +68,22 @@ public class TicketingRedisRepository {
 	public String getHoldSeatSessionToken(Long showScheduleId, Long seatId) {
 		return redisSupport.getValue(seatHoldKey(showScheduleId, seatId));
 	}
+	public String validateMacro(String sessionTicket) {
+		String key = secureKey(sessionTicket);
+		return redisSupport.getValue(key);
+	}
+
+	public void expireSessionToken(String sessionToken) {
+		String key = sessionTokenKey(sessionToken);
+		redisSupport.expireSeconds(key, 0);
+	}
 
 	private String seatHoldKey(Long showScheduleId, Long seatId) {
 		return SEAT_HOLD_KEY_PREFIX + showScheduleId + ":" + seatId;
+	}
+
+	private String secureKey(String sessionTicket) {
+		return BLOCKED_TICKET_PREFIX + sessionTicket;
 	}
 
 	private String sessionTokenKey(String sessionToken) {
