@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -147,5 +148,48 @@ class MembershipControllerTest {
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.errorType").value("CLIENT_ERROR"))
 			.andExpect(jsonPath("$.code").value("C02"));
+	}
+
+	@Test
+	@DisplayName("아티스트 멤버십 가입 완료 정보 조회에 성공하면 200 OK와 완료 정보를 응답한다.")
+	void 아티스트_멤버십_가입완료_조회_성공() throws Exception {
+		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+		MembershipResponse.Complete response = new MembershipResponse.Complete(
+			101L,
+			"고은성",
+			"월간 멤버십",
+			5_000L,
+			"2026. 4. 3.",
+			"2026. 5. 3."
+		);
+
+		given(membershipService.complete(101L, userId)).willReturn(response);
+
+		mockMvc.perform(get("/api/musical/artists/{artistId}/membership/complete", 101L)
+				.header("X-User-Id", userId))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.code").value("ok"))
+			.andExpect(jsonPath("$.data.artistId").value(101L))
+			.andExpect(jsonPath("$.data.artistName").value("고은성"))
+			.andExpect(jsonPath("$.data.planName").value("월간 멤버십"))
+			.andExpect(jsonPath("$.data.amount").value(5000L))
+			.andExpect(jsonPath("$.data.joinedAt").value("2026. 4. 3."))
+			.andExpect(jsonPath("$.data.nextBillingAt").value("2026. 5. 3."));
+	}
+
+	@Test
+	@DisplayName("결제가 아직 완료되지 않은 멤버십의 완료 정보 조회는 400을 응답한다.")
+	void 결제미완료_멤버십_가입완료_조회_실패() throws Exception {
+		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+
+		willThrow(new CustomException(ErrorCode.MEMBERSHIP_PAYMENT_NOT_COMPLETED))
+			.given(membershipService)
+			.complete(101L, userId);
+
+		mockMvc.perform(get("/api/musical/artists/{artistId}/membership/complete", 101L)
+				.header("X-User-Id", userId))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.errorType").value("CLIENT_ERROR"))
+			.andExpect(jsonPath("$.code").value("M06"));
 	}
 }

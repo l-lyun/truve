@@ -2,6 +2,7 @@ package com.truve.platform.musical.show.controller;
 
 import java.util.UUID;
 
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -35,5 +36,14 @@ public class MembershipController {
 		@RequestBody @Valid MembershipRequest.CreatePayment request
 	) {
 		return ApiResult.ok(membershipService.createPayment(artistId, userId, request));
+	}
+
+	@Operation(summary = "아티스트 멤버십 가입 완료 정보 조회", description = "결제가 완료된 멤버십의 가입 완료 정보를 조회합니다.")
+	@GetMapping("/{artistId}/membership/complete")
+	public ApiResult<MembershipResponse.Complete> complete(
+		@PathVariable Long artistId,
+		@RequestHeader(name = "X-User-Id") UUID userId
+	) {
+		return ApiResult.ok(membershipService.complete(artistId, userId));
 	}
 }

@@ -1,7 +1,5 @@
 package com.truve.platform.musical.show.dto;
 
-import com.truve.platform.musical.show.domain.entity.ArtistMembership;
-
 public class MembershipResponse {
 
 	public static class CreatePayment {
@@ -28,14 +26,14 @@ public class MembershipResponse {
 			this.paymentMethod = paymentMethod;
 		}
 
-		public static CreatePayment of(Long artistId, String artistName, ArtistMembership membership) {
+		public static CreatePayment of(Long artistId, String artistName, Long amount, String orderId, String paymentMethod) {
 			return new CreatePayment(
 				artistId,
 				artistName,
 				"월간 멤버십",
-				membership.getMonthlyAmount(),
-				membership.getOrderId(),
-				membership.getPaymentMethod().getDisplayName()
+				amount,
+				orderId,
+				paymentMethod
 			);
 		}
 
@@ -61,6 +59,72 @@ public class MembershipResponse {
 
 		public String getPaymentMethod() {
 			return paymentMethod;
+		}
+	}
+
+	public static class Complete {
+		private Long artistId;
+		private String artistName;
+		private String planName;
+		private Long amount;
+		private String joinedAt;
+		private String nextBillingAt;
+
+		public Complete(
+			Long artistId,
+			String artistName,
+			String planName,
+			Long amount,
+			String joinedAt,
+			String nextBillingAt
+		) {
+			this.artistId = artistId;
+			this.artistName = artistName;
+			this.planName = planName;
+			this.amount = amount;
+			this.joinedAt = joinedAt;
+			this.nextBillingAt = nextBillingAt;
+		}
+
+		public static Complete of(
+			Long artistId,
+			String artistName,
+			Long amount,
+			String joinedAt,
+			String nextBillingAt
+		) {
+			return new Complete(
+				artistId,
+				artistName,
+				"월간 멤버십",
+				amount,
+				joinedAt,
+				nextBillingAt
+			);
+		}
+
+		public Long getArtistId() {
+			return artistId;
+		}
+
+		public String getArtistName() {
+			return artistName;
+		}
+
+		public String getPlanName() {
+			return planName;
+		}
+
+		public Long getAmount() {
+			return amount;
+		}
+
+		public String getJoinedAt() {
+			return joinedAt;
+		}
+
+		public String getNextBillingAt() {
+			return nextBillingAt;
 		}
 	}
 }

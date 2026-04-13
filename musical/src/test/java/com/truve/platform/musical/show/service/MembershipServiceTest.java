@@ -2,6 +2,7 @@ package com.truve.platform.musical.show.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -183,5 +184,99 @@ class MembershipServiceTest {
 		assertThat(existingMembership.getStatus()).isEqualTo(ArtistMembershipStatus.PAYMENT_PENDING);
 		assertThat(paymentCaptor.getValue().getOrderId()).isEqualTo(response.getOrderId());
 		assertThat(paymentCaptor.getValue().getAmount()).isEqualTo(5_000L);
+	}
+
+	@Test
+	@DisplayName("결제 완료 이벤트를 받으면 해당 주문의 멤버십을 ACTIVE로 전환한다.")
+	void 결제완료시_ACTIVE_전환() {
+		Artist artist = org.mockito.Mockito.mock(Artist.class);
+		ArtistMembership membership = ArtistMembership.preparePayment(
+			UUID.fromString("11111111-1111-1111-1111-111111111111"),
+			artist,
+			"M20260402123456",
+			5_000L,
+			MembershipPaymentMethod.TOSS_PAY
+		);
+
+		when(artistMembershipRepository.findByOrderId("M20260402123456")).thenReturn(java.util.Optional.of(membership));
+
+		membershipService.confirm("M20260402123456");
+
+		assertThat(membership.getStatus()).isEqualTo(ArtistMembershipStatus.ACTIVE);
+		assertNotNull(membership.getJoinedAt());
+		assertNotNull(membership.getNextBillingAt());
+	}
+
+	@Test
+	@DisplayName("입금 완료 이벤트를 받으면 해당 주문의 멤버십을 ACTIVE로 전환한다.")
+	void 입금완료시_ACTIVE_전환() {
+		Artist artist = org.mockito.Mockito.mock(Artist.class);
+		ArtistMembership membership = ArtistMembership.preparePayment(
+			UUID.fromString("11111111-1111-1111-1111-111111111111"),
+			artist,
+			"M20260402123457",
+			5_000L,
+			MembershipPaymentMethod.BANK_TRANSFER
+		);
+
+		when(artistMembershipRepository.findByOrderId("M20260402123457")).thenReturn(java.util.Optional.of(membership));
+
+		membershipService.depositReceive("M20260402123457");
+
+		assertThat(membership.getStatus()).isEqualTo(ArtistMembershipStatus.ACTIVE);
+	}
+
+	@Test
+	@DisplayName("활성 멤버십이 있으면 가입 완료 응답을 반환한다.")
+	void 멤버십_가입완료_조회_성공() {
+		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+		Artist artist = org.mockito.Mockito.mock(Artist.class);
+		ArtistRepository.ArtistDetailProjection artistDetail = org.mockito.Mockito.mock(ArtistRepository.ArtistDetailProjection.class);
+		ArtistMembership membership = ArtistMembership.preparePayment(
+			userId,
+			artist,
+			"M20260402123458",
+			5_000L,
+			MembershipPaymentMethod.TOSS_PAY
+		);
+		membership.confirm();
+
+		when(artistRepository.findDetailById(101L)).thenReturn(java.util.Optional.of(artistDetail));
+		when(artistDetail.getArtistName()).thenReturn("고은성");
+		when(artistMembershipRepository.findByUserIdAndArtistId(userId, 101L)).thenReturn(java.util.Optional.of(membership));
+
+		MembershipResponse.Complete response = membershipService.complete(101L, userId);
+
+		assertThat(response.getArtistId()).isEqualTo(101L);
+		assertThat(response.getArtistName()).isEqualTo("고은성");
+		assertThat(response.getPlanName()).isEqualTo("월간 멤버십");
+		assertThat(response.getAmount()).isEqualTo(5_000L);
+		assertThat(response.getJoinedAt()).matches("\\d{4}\\.\\d{2}\\.\\d{2}\\.");
+		assertThat(response.getNextBillingAt()).matches("\\d{4}\\.\\d{2}\\.\\d{2}\\.");
+	}
+
+	@Test
+	@DisplayName("아직 결제가 완료되지 않은 멤버십이면 가입 완료 조회에 실패한다.")
+	void 멤버십_가입완료_조회_실패() {
+		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+		Artist artist = org.mockito.Mockito.mock(Artist.class);
+		ArtistRepository.ArtistDetailProjection artistDetail = org.mockito.Mockito.mock(ArtistRepository.ArtistDetailProjection.class);
+		ArtistMembership membership = ArtistMembership.preparePayment(
+			userId,
+			artist,
+			"M20260402123459",
+			5_000L,
+			MembershipPaymentMethod.TOSS_PAY
+		);
+
+		when(artistRepository.findDetailById(101L)).thenReturn(java.util.Optional.of(artistDetail));
+		when(artistMembershipRepository.findByUserIdAndArtistId(userId, 101L)).thenReturn(java.util.Optional.of(membership));
+
+		CustomException exception = assertThrows(
+			CustomException.class,
+			() -> membershipService.complete(101L, userId)
+		);
+
+		assertEquals(ErrorCode.MEMBERSHIP_PAYMENT_NOT_COMPLETED, exception.getErrorCode());
 	}
 }
