@@ -225,11 +225,10 @@ class TicketingServiceTest {
 
 		@BeforeEach
 		void setUpHoldSeat() {
-			given(ticketingProperties.getActiveWindowMs()).willReturn(30_000L);
-			given(ticketingRedisRepository.getSessionTokenValue(sessionToken))
-				.willReturn(SessionTicketValueDTO.of(userId, showScheduleId));
-			given(ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, 300L)).willReturn(true);
-			willDoNothing().given(ticketingSecurityService).findMacro(sessionToken);
+			lenient().when(ticketingProperties.getActiveWindowMs()).thenReturn(30_000L);
+			lenient().when(ticketingRedisRepository.getSessionTokenValue(sessionToken))
+				.thenReturn(SessionTicketValueDTO.of(userId, showScheduleId));
+			lenient().when(ticketingRedisRepository.refreshSessionTokenTtl(sessionToken, 300L)).thenReturn(true);
 
 			showScheduled = ShowScheduled.builder()
 				.title("공연")
@@ -508,6 +507,69 @@ class TicketingServiceTest {
 
 			// then
 			assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_SHOW_SCHEDULE);
+		}
+	}
+
+	@Nested
+	@DisplayName("티켓팅 퇴장 테스트")
+	class ExitTicketingTest {
+
+		@Test
+		@DisplayName("정상 세션이면 세션 토큰을 만료하고 active ticketing user에서 제거한다.")
+		void 티켓팅퇴장_성공() {
+			// given
+			given(ticketingRedisRepository.getSessionTokenValue(sessionToken))
+				.willReturn(SessionTicketValueDTO.of(userId, showScheduleId));
+
+			// when
+			ticketingService.exitTicketing(showScheduleId, userId, sessionToken);
+
+			// then
+			assertAll(
+				() -> verify(ticketingRedisRepository).expireSessionToken(sessionToken),
+				() -> verify(ticketingRedisRepository).exitTicketing(showScheduleId, sessionToken)
+			);
+		}
+
+		@Test
+		@DisplayName("세션이 없으면 INVALID_SESSION_TOKEN 예외가 발생하고 퇴장 정리는 수행하지 않는다.")
+		void 티켓팅퇴장_세션없음() {
+			// given
+			given(ticketingRedisRepository.getSessionTokenValue(sessionToken)).willReturn(null);
+
+			// when
+			CustomException exception = assertThrows(
+				CustomException.class,
+				() -> ticketingService.exitTicketing(showScheduleId, userId, sessionToken)
+			);
+
+			// then
+			assertAll(
+				() -> assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_SESSION_TOKEN),
+				() -> verify(ticketingRedisRepository, never()).expireSessionToken(anyString()),
+				() -> verify(ticketingRedisRepository, never()).exitTicketing(anyLong(), anyString())
+			);
+		}
+
+		@Test
+		@DisplayName("세션 사용자 정보가 다르면 SESSION_TOKEN_MISMATCH 예외가 발생하고 퇴장 정리는 수행하지 않는다.")
+		void 티켓팅퇴장_사용자불일치() {
+			// given
+			given(ticketingRedisRepository.getSessionTokenValue(sessionToken))
+				.willReturn(SessionTicketValueDTO.of(UUID.fromString("22222222-2222-2222-2222-222222222222"), showScheduleId));
+
+			// when
+			CustomException exception = assertThrows(
+				CustomException.class,
+				() -> ticketingService.exitTicketing(showScheduleId, userId, sessionToken)
+			);
+
+			// then
+			assertAll(
+				() -> assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.SESSION_TOKEN_MISMATCH),
+				() -> verify(ticketingRedisRepository, never()).expireSessionToken(anyString()),
+				() -> verify(ticketingRedisRepository, never()).exitTicketing(anyLong(), anyString())
+			);
 		}
 	}
 

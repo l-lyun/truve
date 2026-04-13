@@ -78,6 +78,12 @@ public class TicketingRedisRepository {
 		redisSupport.expireSeconds(key, 0);
 	}
 
+	public void exitTicketing(Long showId, String sessionToken) {
+		String key = activeTicketingUserKey(showId);
+		redisSupport.zRem(key, sessionToken);
+
+	}
+
 	private String seatHoldKey(Long showScheduleId, Long seatId) {
 		return SEAT_HOLD_KEY_PREFIX + showScheduleId + ":" + seatId;
 	}

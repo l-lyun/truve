@@ -98,6 +98,10 @@ public class RedisSupport {
 		return redisTemplate.opsForZSet().removeRangeByScore(key, minScore, maxScore);
 	}
 
+	public void zRem(String key, String member) {
+		redisTemplate.opsForZSet().remove(key, member);
+	}
+
 	public boolean expireSeconds(String key, long ttl) {
 		return Boolean.TRUE.equals(redisTemplate.expire(key, ttl, TimeUnit.SECONDS));
 	}

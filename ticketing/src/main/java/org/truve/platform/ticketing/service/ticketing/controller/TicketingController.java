@@ -169,4 +169,15 @@ public class TicketingController {
 		return ApiResult.ok();
 	}
 
+	@PostMapping("/{showScheduledId}/exit")
+	public ApiResult<Void> exitTicketing(
+		@PathVariable Long showScheduledId,
+		@Parameter(hidden = true)
+		@RequestHeader(value = USER_ID_HEADER) UUID userId,
+		@RequestHeader(value = SESSION_HEADER) String sessionToken
+	) {
+		ticketingService.exitTicketing(showScheduledId, userId, sessionToken);
+		return ApiResult.ok();
+	}
+
 }
