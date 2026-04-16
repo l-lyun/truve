@@ -150,6 +150,7 @@ class MembershipControllerTest {
 					"2026.04.03.",
 					"2026.05.03.",
 					23L,
+					8L,
 					5_000L,
 					true
 				)
@@ -168,7 +169,31 @@ class MembershipControllerTest {
 			.andExpect(jsonPath("$.data.memberships[0].artistId").value(1L))
 			.andExpect(jsonPath("$.data.memberships[0].artistName").value("이재환"))
 			.andExpect(jsonPath("$.data.memberships[0].status").value("ACTIVE"))
-			.andExpect(jsonPath("$.data.memberships[0].statusLabel").value("멤버십 가입중"));
+			.andExpect(jsonPath("$.data.memberships[0].statusLabel").value("멤버십 가입중"))
+			.andExpect(jsonPath("$.data.memberships[0].togetherDays").value(8L));
+	}
+
+	@Test
+	@DisplayName("활성 멤버십 해지 요청에 성공하면 200 OK를 응답한다.")
+	void 멤버십_해지_성공() throws Exception {
+		mockMvc.perform(post("/api/musical/memberships/{membershipId}/cancel", 3L)
+				.header("X-User-Id", USER_ID))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.code").value("ok"));
+	}
+
+	@Test
+	@DisplayName("해지 불가능한 멤버십 상태면 400을 응답한다.")
+	void 멤버십_해지_실패() throws Exception {
+		willThrow(new CustomException(ErrorCode.MEMBERSHIP_NOT_CANCELABLE))
+			.given(membershipService)
+			.cancel(3L, USER_ID);
+
+		mockMvc.perform(post("/api/musical/memberships/{membershipId}/cancel", 3L)
+				.header("X-User-Id", USER_ID))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.errorType").value("CLIENT_ERROR"))
+			.andExpect(jsonPath("$.code").value("M12"));
 	}
 
 	private MembershipRequest.CreatePayment createPaymentRequest(MembershipPaymentMethod paymentMethod) {

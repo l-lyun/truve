@@ -152,6 +152,7 @@ public class MembershipResponse {
 		private String joinedAt;
 		private String nextBillingAt;
 		private long remainingDays;
+		private long togetherDays;
 		private long monthlyAmount;
 		private boolean cancelable;
 
@@ -165,6 +166,7 @@ public class MembershipResponse {
 			String joinedAt,
 			String nextBillingAt,
 			long remainingDays,
+			long togetherDays,
 			long monthlyAmount,
 			boolean cancelable
 		) {
@@ -177,6 +179,7 @@ public class MembershipResponse {
 			this.joinedAt = joinedAt;
 			this.nextBillingAt = nextBillingAt;
 			this.remainingDays = remainingDays;
+			this.togetherDays = togetherDays;
 			this.monthlyAmount = monthlyAmount;
 			this.cancelable = cancelable;
 		}
@@ -191,6 +194,7 @@ public class MembershipResponse {
 			String joinedAt,
 			String nextBillingAt,
 			long remainingDays,
+			long togetherDays,
 			long monthlyAmount,
 			boolean cancelable
 		) {
@@ -204,6 +208,7 @@ public class MembershipResponse {
 				joinedAt,
 				nextBillingAt,
 				remainingDays,
+				togetherDays,
 				monthlyAmount,
 				cancelable
 			);
@@ -243,6 +248,10 @@ public class MembershipResponse {
 
 		public long getRemainingDays() {
 			return remainingDays;
+		}
+
+		public long getTogetherDays() {
+			return togetherDays;
 		}
 
 		public long getMonthlyAmount() {

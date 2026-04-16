@@ -54,4 +54,14 @@ public class MembershipController {
 	) {
 		return ApiResult.ok(membershipService.getMyMembership(userId));
 	}
+
+	@Operation(summary = "멤버십 해지", description = "활성 상태의 멤버십을 해지 예정 상태로 변경합니다.")
+	@PostMapping("/memberships/{membershipId}/cancel")
+	public ApiResult<Void> cancel(
+		@PathVariable Long membershipId,
+		@RequestHeader(name = "X-User-Id") UUID userId
+	) {
+		membershipService.cancel(membershipId, userId);
+		return ApiResult.ok();
+	}
 }

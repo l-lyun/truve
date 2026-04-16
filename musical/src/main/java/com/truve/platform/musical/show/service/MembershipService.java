@@ -149,6 +149,17 @@ public class MembershipService {
 		);
 	}
 
+	@Transactional
+	public void cancel(Long membershipId, UUID userId) {
+		ArtistMembership membership = artistMembershipRepository.findById(membershipId)
+			.orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_ARTIST_MEMBERSHIP));
+
+		Preconditions.validate(membership.getUserId().equals(userId), ErrorCode.NOT_FOUND_ARTIST_MEMBERSHIP);
+		Preconditions.validate(membership.getStatus() == ArtistMembershipStatus.ACTIVE, ErrorCode.MEMBERSHIP_NOT_CANCELABLE);
+
+		membership.requestCancel();
+	}
+
 	private MembershipResponse.MyMembershipItem toMyMembershipItem(ArtistMembership membership, LocalDateTime now) {
 		return MembershipResponse.MyMembershipItem.of(
 			membership.getId(),
@@ -160,6 +171,7 @@ public class MembershipService {
 			formatMembershipDate(membership.getJoinedAt()),
 			formatMembershipDate(membership.getNextBillingAt()),
 			calculateRemainingDays(membership.getNextBillingAt(), now),
+			calculateTogetherDays(membership.getJoinedAt(), now),
 			membership.getMonthlyAmount(),
 			membership.getStatus() == ArtistMembershipStatus.ACTIVE
 		);
@@ -188,5 +200,13 @@ public class MembershipService {
 
 		long remainingDays = ChronoUnit.DAYS.between(now.toLocalDate(), nextBillingAt.toLocalDate());
 		return Math.max(remainingDays, 0L);
+	}
+
+	private long calculateTogetherDays(LocalDateTime joinedAt, LocalDateTime now) {
+		if (joinedAt == null) {
+			return 0L;
+		}
+
+		return Math.max(ChronoUnit.DAYS.between(joinedAt.toLocalDate(), now.toLocalDate()) + 1, 0L);
 	}
 }

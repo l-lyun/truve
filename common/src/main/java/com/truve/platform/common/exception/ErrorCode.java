@@ -72,6 +72,7 @@ public enum ErrorCode {
 	ALREADY_LIKED_ARTIST_BOARD_COMMENT(HttpStatus.BAD_REQUEST, "이미 좋아요한 아티스트 댓글입니다.", "M09"),
 	NOT_FOUND_ARTIST_MEMBERSHIP(HttpStatus.NOT_FOUND, "가입된 아티스트 멤버십이 없습니다.", "M10"),
 	MEMBERSHIP_PAYMENT_NOT_COMPLETED(HttpStatus.BAD_REQUEST, "멤버십 결제가 아직 완료되지 않았습니다.", "M11"),
+	MEMBERSHIP_NOT_CANCELABLE(HttpStatus.BAD_REQUEST, "현재 상태에서는 멤버십을 해지할 수 없습니다.", "M12"),
 
 	ALREADY_EXIST_REVIEW(HttpStatus.BAD_REQUEST, "이미 유저가 리뷰를 작성했습니다.", "MR01"),
 	NOT_CHARM_POINT(HttpStatus.BAD_REQUEST, "매력 포인트가 아닙니다.", "MR02"),

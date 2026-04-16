@@ -234,9 +234,11 @@ class MembershipServiceTest {
 		assertThat(response.getMemberships().get(0).getProfileImageUrl()).isEqualTo("https://cdn/leejaehwan.png");
 		assertThat(response.getMemberships().get(0).getStatus()).isEqualTo("ACTIVE");
 		assertThat(response.getMemberships().get(0).getStatusLabel()).isEqualTo("멤버십 가입중");
+		assertThat(response.getMemberships().get(0).getTogetherDays()).isGreaterThan(0L);
 		assertThat(response.getMemberships().get(0).isCancelable()).isTrue();
 		assertThat(response.getMemberships().get(1).getStatus()).isEqualTo("CANCEL_SCHEDULED");
 		assertThat(response.getMemberships().get(1).getStatusLabel()).isEqualTo("해지 예정");
+		assertThat(response.getMemberships().get(1).getTogetherDays()).isGreaterThan(0L);
 		assertThat(response.getMemberships().get(1).isCancelable()).isFalse();
 	}
 
@@ -248,5 +250,156 @@ class MembershipServiceTest {
 
 	private MembershipRequest.CreatePayment createPaymentRequest(MembershipPaymentMethod paymentMethod) {
 		return new MembershipRequest.CreatePayment(paymentMethod, true, true, true);
+	}
+
+	@Test
+	@DisplayName("결제 완료 이벤트를 받으면 해당 주문의 멤버십을 ACTIVE로 전환한다.")
+	void 결제완료시_ACTIVE_전환() {
+		Artist artist = org.mockito.Mockito.mock(Artist.class);
+		ArtistMembership membership = ArtistMembership.preparePayment(
+			UUID.fromString("11111111-1111-1111-1111-111111111111"),
+			artist,
+			"M20260402123456",
+			5_000L,
+			MembershipPaymentMethod.TOSS_PAY
+		);
+
+		when(artistMembershipRepository.findByOrderId("M20260402123456")).thenReturn(java.util.Optional.of(membership));
+
+		membershipService.confirm("M20260402123456");
+
+		assertThat(membership.getStatus()).isEqualTo(ArtistMembershipStatus.ACTIVE);
+		assertNotNull(membership.getJoinedAt());
+		assertNotNull(membership.getNextBillingAt());
+	}
+
+	@Test
+	@DisplayName("입금 완료 이벤트를 받으면 해당 주문의 멤버십을 ACTIVE로 전환한다.")
+	void 입금완료시_ACTIVE_전환() {
+		Artist artist = org.mockito.Mockito.mock(Artist.class);
+		ArtistMembership membership = ArtistMembership.preparePayment(
+			UUID.fromString("11111111-1111-1111-1111-111111111111"),
+			artist,
+			"M20260402123457",
+			5_000L,
+			MembershipPaymentMethod.BANK_TRANSFER
+		);
+
+		when(artistMembershipRepository.findByOrderId("M20260402123457")).thenReturn(java.util.Optional.of(membership));
+
+		membershipService.depositReceive("M20260402123457");
+
+		assertThat(membership.getStatus()).isEqualTo(ArtistMembershipStatus.ACTIVE);
+	}
+
+	@Test
+	@DisplayName("활성 멤버십이 있으면 가입 완료 응답을 반환한다.")
+	void 멤버십_가입완료_조회_성공() {
+		Artist artist = org.mockito.Mockito.mock(Artist.class);
+		ArtistRepository.ArtistDetailProjection artistDetail = mockArtistDetailProjection();
+		ArtistMembership membership = ArtistMembership.preparePayment(
+			USER_ID,
+			artist,
+			"M20260402123458",
+			5_000L,
+			MembershipPaymentMethod.TOSS_PAY
+		);
+		membership.confirm();
+
+		when(artistRepository.findDetailById(101L)).thenReturn(java.util.Optional.of(artistDetail));
+		when(artistMembershipRepository.findByUserIdAndArtistId(USER_ID, 101L)).thenReturn(java.util.Optional.of(membership));
+
+		MembershipResponse.Complete response = membershipService.complete(101L, USER_ID);
+
+		assertThat(response.getArtistId()).isEqualTo(101L);
+		assertThat(response.getArtistName()).isEqualTo("고은성");
+		assertThat(response.getPlanName()).isEqualTo("월간 멤버십");
+		assertThat(response.getAmount()).isEqualTo(5_000L);
+		assertThat(response.getJoinedAt()).matches("\\d{4}\\.\\d{2}\\.\\d{2}\\.");
+		assertThat(response.getNextBillingAt()).matches("\\d{4}\\.\\d{2}\\.\\d{2}\\.");
+	}
+
+	@Test
+	@DisplayName("아직 결제가 완료되지 않은 멤버십이면 가입 완료 조회에 실패한다.")
+	void 멤버십_가입완료_조회_실패() {
+		Artist artist = org.mockito.Mockito.mock(Artist.class);
+		ArtistRepository.ArtistDetailProjection artistDetail = org.mockito.Mockito.mock(ArtistRepository.ArtistDetailProjection.class);
+		ArtistMembership membership = ArtistMembership.preparePayment(
+			USER_ID,
+			artist,
+			"M20260402123459",
+			5_000L,
+			MembershipPaymentMethod.TOSS_PAY
+		);
+
+		when(artistRepository.findDetailById(101L)).thenReturn(java.util.Optional.of(artistDetail));
+		when(artistMembershipRepository.findByUserIdAndArtistId(USER_ID, 101L)).thenReturn(java.util.Optional.of(membership));
+
+		CustomException exception = assertThrows(
+			CustomException.class,
+			() -> membershipService.complete(101L, USER_ID)
+		);
+
+		assertEquals(ErrorCode.MEMBERSHIP_PAYMENT_NOT_COMPLETED, exception.getErrorCode());
+	}
+
+	@Test
+	@DisplayName("활성 멤버십 해지 요청 시 CANCEL_SCHEDULED로 전이된다.")
+	void 멤버십_해지_성공() {
+		Artist artist = org.mockito.Mockito.mock(Artist.class);
+		ArtistMembership membership = ArtistMembership.builder()
+			.userId(USER_ID)
+			.artist(artist)
+			.status(ArtistMembershipStatus.ACTIVE)
+			.orderId("M20260408111111")
+			.monthlyAmount(MONTHLY_AMOUNT)
+			.paymentMethod(MembershipPaymentMethod.TOSS_PAY)
+			.joinedAt(LocalDateTime.now().minusDays(5))
+			.nextBillingAt(LocalDateTime.now().plusDays(20))
+			.build();
+
+		when(artistMembershipRepository.findById(3L)).thenReturn(java.util.Optional.of(membership));
+
+		membershipService.cancel(3L, USER_ID);
+
+		assertThat(membership.getStatus()).isEqualTo(ArtistMembershipStatus.CANCEL_SCHEDULED);
+	}
+
+	@Test
+	@DisplayName("해지 불가능한 멤버십 상태면 해지 요청에 실패한다.")
+	void 멤버십_해지_실패() {
+		Artist artist = org.mockito.Mockito.mock(Artist.class);
+		ArtistMembership membership = ArtistMembership.builder()
+			.userId(USER_ID)
+			.artist(artist)
+			.status(ArtistMembershipStatus.CANCEL_SCHEDULED)
+			.orderId("M20260408111111")
+			.monthlyAmount(MONTHLY_AMOUNT)
+			.paymentMethod(MembershipPaymentMethod.TOSS_PAY)
+			.joinedAt(LocalDateTime.now().minusDays(5))
+			.nextBillingAt(LocalDateTime.now().plusDays(20))
+			.build();
+
+		when(artistMembershipRepository.findById(3L)).thenReturn(java.util.Optional.of(membership));
+
+		CustomException exception = assertThrows(
+			CustomException.class,
+			() -> membershipService.cancel(3L, USER_ID)
+		);
+
+		assertEquals(ErrorCode.MEMBERSHIP_NOT_CANCELABLE, exception.getErrorCode());
+	}
+
+	@Test
+	@DisplayName("존재하지 않는 멤버십 해지 요청은 실패한다.")
+	void 존재하지않는_멤버십_해지_실패() {
+		when(artistMembershipRepository.findById(999L)).thenReturn(java.util.Optional.empty());
+
+		CustomException exception = assertThrows(
+			CustomException.class,
+			() -> membershipService.cancel(999L, USER_ID)
+		);
+
+		assertEquals(ErrorCode.NOT_FOUND_ARTIST_MEMBERSHIP, exception.getErrorCode());
 	}
 }

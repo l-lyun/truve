@@ -119,6 +119,12 @@ public class ArtistMembership extends BaseEntity {
 		this.nextBillingAt = null;
 	}
 
+	public void requestCancel() {
+		if (this.status == ArtistMembershipStatus.ACTIVE) {
+			this.status = ArtistMembershipStatus.CANCEL_SCHEDULED;
+		}
+	}
+
 	public void confirm() {
 		if (this.status == ArtistMembershipStatus.PAYMENT_PENDING) {
 			this.status = ArtistMembershipStatus.ACTIVE;
