@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.truve.platform.ticketing.service.booking.domain.entity.Reservation;
@@ -23,6 +24,8 @@ import org.truve.platform.ticketing.service.booking.external.client.ticketing.Ti
 import org.truve.platform.ticketing.service.booking.external.kafka.BookingEventCommand;
 import org.truve.platform.ticketing.service.booking.external.kafka.PaymentEventCommand;
 import org.truve.platform.ticketing.service.booking.external.kafka.PaymentPublisher;
+import org.truve.platform.ticketing.service.booking.external.kafka.TicketingEventCommand;
+import org.truve.platform.ticketing.service.booking.external.kafka.TicketingPublisher;
 import org.truve.platform.ticketing.service.booking.repository.ReservationRepository;
 import org.truve.platform.ticketing.service.booking.util.NumberGenerator;
 
@@ -39,6 +42,7 @@ public class BookingService {
 	private final TicketingClient ticketingClient;
 	private final PaymentPublisher paymentPublisher;
 	private final PaymentClient paymentClient;
+	private final TicketingPublisher ticketingPublisher;
 
 	@Transactional
 	public BookingResponse.Create create(UUID userId, BookingRequest.Create request) {
@@ -49,6 +53,7 @@ public class BookingService {
 		reservation.addTickets(tickets);
 
 		reservationRepository.save(reservation);
+		ticketingPublisher.publish(TicketingEventCommand.HoldRequested.of(reservation, request.getSeatIds()));
 		return new BookingResponse.Create(reservation.getNumber());
 	}
 
@@ -63,14 +68,15 @@ public class BookingService {
 
 	private List<Ticket> createTickets(TicketingResponse.SeatInfo seatInfo, Reservation reservation) {
 		return seatInfo.getSeats().stream().map(
-			seat -> Ticket.create(
-				reservation,
-				NumberGenerator.generateTicketNumber(),
-				seat.getGradeName(),
-				seat.getPrice(),
-				createSeatDetail(seat)
-			)
-		).toList();
+				seat -> Ticket.create(
+					reservation,
+					NumberGenerator.generateTicketNumber(),
+					seat.getGradeName(),
+					seat.getPrice(),
+					createSeatDetail(seat),
+					seat.getScheduledSeatId()
+				)
+			).toList();
 	}
 
 	private String createGradeSummary(TicketingResponse.SeatInfo seatInfo) {
@@ -144,6 +150,11 @@ public class BookingService {
 			event.getMethod(),
 			VirtualAccount.from(event.getVirtualAccount())
 		);
+
+		List<Long> scheduledSeatIds = reservation.getTickets().stream()
+			.map(Ticket::getScheduledSeatId)
+			.toList();
+		ticketingPublisher.publish(TicketingEventCommand.SoldConfirmed.of(reservation, scheduledSeatIds));
 	}
 
 	@Transactional
@@ -169,6 +180,10 @@ public class BookingService {
 		Reservation reservation = reservationRepository.findByNumber(reservationNumber);
 
 		List<Long> ticketIds = request.getTicketIds();
+		List<Long> scheduledSeatIds = reservation.getTickets().stream()
+			.filter(ticket -> ticketIds.contains(ticket.getId()))
+			.map(Ticket::getScheduledSeatId)
+			.toList();
 		LocalDateTime canceledAt = LocalDateTime.now();
 
 		reservation.validateTicketId(ticketIds);
@@ -182,6 +197,7 @@ public class BookingService {
 		);
 
 		reservation.cancel(ticketIds, canceledAt);
+		ticketingPublisher.publish(TicketingEventCommand.HoldReleased.of(reservation, scheduledSeatIds));
 
 		return new BookingResponse.CanceledTickets(ticketIds);
 	}

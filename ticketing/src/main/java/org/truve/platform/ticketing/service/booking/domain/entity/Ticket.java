@@ -44,6 +44,9 @@ public class Ticket extends BaseEntity {
 	private String seatDetail;
 
 	@Column(nullable = false)
+	private Long scheduledSeatId;
+
+	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	private TicketStatus status;
 
@@ -54,12 +57,20 @@ public class Ticket extends BaseEntity {
 	private LocalDateTime usedAt;
 
 	@Builder
-	private Ticket(Reservation reservation, String number, String grade, Long priceSnapshot, String seatDetail) {
+	private Ticket(
+		Reservation reservation,
+		String number,
+		String grade,
+		Long priceSnapshot,
+		String seatDetail,
+		Long scheduledSeatId
+	) {
 		this.reservation = reservation;
 		this.number = number;
 		this.grade = grade;
 		this.priceSnapshot = priceSnapshot;
 		this.seatDetail = seatDetail;
+		this.scheduledSeatId = scheduledSeatId;
 		this.status = TicketStatus.ISSUED;
 	}
 
@@ -68,13 +79,16 @@ public class Ticket extends BaseEntity {
 		String number,
 		String grade,
 		Long priceSnapshot,
-		String seatDetail) {
+		String seatDetail,
+		Long scheduledSeatId
+	) {
 		return Ticket.builder()
 			.reservation(reservation)
 			.number(number)
 			.grade(grade)
 			.priceSnapshot(priceSnapshot)
 			.seatDetail(seatDetail)
+			.scheduledSeatId(scheduledSeatId)
 			.build();
 	}
 

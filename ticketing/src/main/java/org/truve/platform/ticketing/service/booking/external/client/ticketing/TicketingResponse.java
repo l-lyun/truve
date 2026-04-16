@@ -30,6 +30,8 @@ public class TicketingResponse {
 		Long getSeatNumber();
 
 		Long getPrice();
+
+		Long getScheduledSeatId();
 	}
 
 	@Getter
@@ -55,21 +57,23 @@ public class TicketingResponse {
 	}
 
 	@Getter
-	@AllArgsConstructor
-	public static class Seat {
-		private final String sectionName;
-		private final Long floor;
-		private final String gradeName;
-		private final String seatRow;
-		private final Long seatNumber;
+		@AllArgsConstructor
+		public static class Seat {
+			private final Long scheduledSeatId;
+			private final String sectionName;
+			private final Long floor;
+			private final String gradeName;
+			private final String seatRow;
+			private final Long seatNumber;
 		private final Long price;
 
-		public static Seat from(FlatSeatInfo flat) {
-			return new Seat(
-				flat.getSectionName(),
-				flat.getFloor(),
-				flat.getGradeName(),
-				flat.getSeatRow(),
+			public static Seat from(FlatSeatInfo flat) {
+				return new Seat(
+					flat.getScheduledSeatId(),
+					flat.getSectionName(),
+					flat.getFloor(),
+					flat.getGradeName(),
+					flat.getSeatRow(),
 				flat.getSeatNumber(),
 				flat.getPrice()
 			);

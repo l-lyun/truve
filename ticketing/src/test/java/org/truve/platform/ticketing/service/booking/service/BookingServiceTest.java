@@ -22,8 +22,13 @@ import org.truve.platform.ticketing.service.booking.domain.entity.Ticket;
 import org.truve.platform.ticketing.service.booking.domain.entity.embedded.ShowInfo;
 import org.truve.platform.ticketing.service.booking.dto.BookingRequest;
 import org.truve.platform.ticketing.service.booking.dto.BookingResponse;
+import org.truve.platform.ticketing.service.booking.external.client.payment.PaymentClient;
 import org.truve.platform.ticketing.service.booking.external.client.ticketing.TicketingClient;
 import org.truve.platform.ticketing.service.booking.external.client.ticketing.TicketingResponse;
+import org.truve.platform.ticketing.service.booking.external.kafka.BookingEventCommand;
+import org.truve.platform.ticketing.service.booking.external.kafka.PaymentPublisher;
+import org.truve.platform.ticketing.service.booking.external.kafka.TicketingEventCommand;
+import org.truve.platform.ticketing.service.booking.external.kafka.TicketingPublisher;
 import org.truve.platform.ticketing.service.booking.repository.ReservationRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,6 +38,12 @@ class BookingServiceTest {
 	private ReservationRepository reservationRepository;
 	@Mock
 	private TicketingClient ticketingClient;
+	@Mock
+	private TicketingPublisher ticketingPublisher;
+	@Mock
+	private PaymentPublisher paymentPublisher;
+	@Mock
+	private PaymentClient paymentClient;
 
 	@InjectMocks
 	private BookingService bookingService;
@@ -45,9 +56,9 @@ class BookingServiceTest {
 		List<Long> seatIds = List.of(10L, 11L, 12L);
 		BookingRequest.Create request = new BookingRequest.Create(seatIds);
 
-		TicketingResponse.Seat seat1 = new TicketingResponse.Seat("Section1", 1L, "VIP", "A", 10L, 10000L);
-		TicketingResponse.Seat seat2 = new TicketingResponse.Seat("Section2", 2L, "S", "B", 20L, 20000L);
-		TicketingResponse.Seat seat3 = new TicketingResponse.Seat("Section3", 3L, "VIP", "C", 30L, 30000L);
+		TicketingResponse.Seat seat1 = new TicketingResponse.Seat(10L, "Section1", 1L, "VIP", "A", 10L, 10000L);
+		TicketingResponse.Seat seat2 = new TicketingResponse.Seat(11L, "Section2", 2L, "S", "B", 20L, 20000L);
+		TicketingResponse.Seat seat3 = new TicketingResponse.Seat(12L, "Section3", 3L, "VIP", "C", 30L, 30000L);
 		List<TicketingResponse.Seat> seats = List.of(seat1, seat2, seat3);
 		TicketingResponse.SeatInfo seatInfo = new TicketingResponse.SeatInfo(
 			1L,
@@ -63,14 +74,23 @@ class BookingServiceTest {
 
 		// then
 		ArgumentCaptor<Reservation> captor = ArgumentCaptor.forClass(Reservation.class);
+		ArgumentCaptor<TicketingEventCommand.TicketingEvent> eventCaptor =
+			ArgumentCaptor.forClass(TicketingEventCommand.TicketingEvent.class);
 		verify(reservationRepository).save(captor.capture());
+		verify(ticketingPublisher).publish(eventCaptor.capture());
 		Reservation savedReservation = captor.getValue();
+		TicketingEventCommand.HoldRequested holdRequested =
+			(TicketingEventCommand.HoldRequested)eventCaptor.getValue();
 
 		assertAll(
 			() -> assertThat(savedReservation.calculateTicketAmount()).isEqualTo(60000L),
 			() -> assertThat(savedReservation.getGradeSummary()).isEqualTo("VIP석 2인\nS석 1인"),
 			() -> assertThat(savedReservation.getTickets()).hasSize(3),
 			() -> assertThat(savedReservation.getServiceFee()).isEqualTo(6000L),
+			() -> assertThat(savedReservation.getTickets().getFirst().getScheduledSeatId()).isEqualTo(10L),
+			() -> assertThat(holdRequested.getReservationNumber()).isEqualTo(savedReservation.getNumber()),
+			() -> assertThat(holdRequested.getUserId()).isEqualTo(userId),
+			() -> assertThat(holdRequested.getScheduledSeatIds()).containsExactlyElementsOf(seatIds),
 			() -> {
 				assertNotNull(savedReservation.getTickets());
 				assertThat(savedReservation.getTickets().get(1).getPriceSnapshot()).isEqualTo(20000L);
@@ -78,6 +98,33 @@ class BookingServiceTest {
 				assertThat(savedReservation.getTickets().get(1).getUsedAt()).isNull();
 				assertThat(savedReservation.getTickets().getFirst().getSeatDetail()).isEqualTo("1층 Section1구역 A열 10번");
 			}
+		);
+	}
+
+	@Test
+	@DisplayName("결제가 확정되면 예약 상태를 업데이트하고 SOLD_CONFIRMED 이벤트를 발행한다.")
+	void 결제확정_SOLD_이벤트_발행() {
+		// given
+		Reservation reservation = createReservation();
+		given(reservationRepository.findByNumber("R-001")).willReturn(reservation);
+
+		BookingEventCommand.Confirmed event = new BookingEventCommand.Confirmed(
+			"R-001", LocalDateTime.now(), LocalDateTime.now(), "카드", null
+		);
+
+		// when
+		bookingService.confirm(event);
+
+		// then
+		ArgumentCaptor<TicketingEventCommand.TicketingEvent> eventCaptor =
+			ArgumentCaptor.forClass(TicketingEventCommand.TicketingEvent.class);
+		verify(ticketingPublisher).publish(eventCaptor.capture());
+
+		TicketingEventCommand.SoldConfirmed soldConfirmed =
+			(TicketingEventCommand.SoldConfirmed)eventCaptor.getValue();
+		assertAll(
+			() -> assertThat(soldConfirmed.getReservationNumber()).isEqualTo("R-001"),
+			() -> assertThat(soldConfirmed.getScheduledSeatIds()).containsExactly(1L, 2L)
 		);
 	}
 
@@ -109,6 +156,32 @@ class BookingServiceTest {
 		assertThat(res.getTickets()).hasSize(2);
 	}
 
+	@Test
+	@DisplayName("예매 취소 시 결제 취소 후 HOLD_RELEASED 이벤트를 발행한다.")
+	void 예매취소_좌석해제이벤트발행_성공() {
+		Reservation reservation = createReservation();
+		BookingRequest.Cancel request = new BookingRequest.Cancel("단순변심", List.of(1L));
+		given(reservationRepository.findByNumber("R-001")).willReturn(reservation);
+
+		BookingResponse.CanceledTickets response = bookingService.cancel("R-001", request);
+
+		ArgumentCaptor<TicketingEventCommand.TicketingEvent> eventCaptor =
+			ArgumentCaptor.forClass(TicketingEventCommand.TicketingEvent.class);
+		verify(paymentClient).cancel(eq("R-001"), anyString(), any());
+		verify(ticketingPublisher).publish(eventCaptor.capture());
+
+		TicketingEventCommand.HoldReleased holdReleased =
+			(TicketingEventCommand.HoldReleased)eventCaptor.getValue();
+
+		assertAll(
+			() -> assertThat(response.getCanceledTicketIds()).containsExactly(1L),
+			() -> assertThat(holdReleased.getReservationNumber()).isEqualTo("R-001"),
+			() -> assertThat(holdReleased.getScheduledSeatIds()).containsExactly(1L),
+			() -> assertThat(reservation.getTickets().getFirst().isCanceled()).isTrue(),
+			() -> assertThat(reservation.getTickets().getLast().isCanceled()).isFalse()
+		);
+	}
+
 	private Reservation createReservation() {
 		Reservation reservation = Reservation.create(
 			UUID.randomUUID(),
@@ -121,9 +194,9 @@ class BookingServiceTest {
 				.build()
 		);
 
-		Ticket ticket1 = Ticket.create(reservation, "T-001", "VIP", 120000L, "1층 A구역 1열 1번");
+		Ticket ticket1 = Ticket.create(reservation, "T-001", "VIP", 120000L, "1층 A구역 1열 1번", 1L);
 		ReflectionTestUtils.setField(ticket1, "id", 1L);
-		Ticket ticket2 = Ticket.create(reservation, "T-002", "VIP", 120000L, "1층 A구역 1열 2번");
+		Ticket ticket2 = Ticket.create(reservation, "T-002", "VIP", 120000L, "1층 A구역 1열 2번", 2L);
 		ReflectionTestUtils.setField(ticket2, "id", 2L);
 
 		List<Ticket> tickets = List.of(ticket1, ticket2);

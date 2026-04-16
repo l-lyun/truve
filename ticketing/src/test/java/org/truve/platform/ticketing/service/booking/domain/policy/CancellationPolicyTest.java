@@ -121,7 +121,7 @@ public class CancellationPolicyTest {
 				.build()
 		);
 
-		Ticket ticket1 = Ticket.create(reservation, "T-001", "VIP", price, "1층 A구역 1열 1번");
+		Ticket ticket1 = Ticket.create(reservation, "T-001", "VIP", price, "1층 A구역 1열 1번", 1L);
 		ReflectionTestUtils.setField(ticket1, "id", 1L);
 
 		reservation.addTickets(List.of(ticket1));

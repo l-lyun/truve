@@ -34,17 +34,18 @@ public interface ScheduledSeatRepository extends JpaRepository<ScheduledSeat, Lo
 	List<SeatSectionsDto> findSeatSectionByScheduledSeatId(@Param("showScheduleId") Long showScheduleId);
 
 	@Query("""
-		SELECT 
-			shs.showId AS showId,
-			shs.title AS showTitle,
-			shs.venueName AS venueName,
-			shs.startAt AS startAt,
-			shs.posterImg AS posterImg,
-			sc.name AS sectionName,
-			sc.floor AS floor,
-			sc.gradeName AS gradeName,
-			s.seatRow AS seatRow,
-			s.seatNumber AS seatNumber,
+			SELECT 
+				shs.showId AS showId,
+				shs.title AS showTitle,
+				shs.venueName AS venueName,
+				shs.startAt AS startAt,
+				shs.posterImg AS posterImg,
+				ss.id AS scheduledSeatId,
+				sc.name AS sectionName,
+				sc.floor AS floor,
+				sc.gradeName AS gradeName,
+				s.seatRow AS seatRow,
+				s.seatNumber AS seatNumber,
 			sc.price AS price
 		FROM ScheduledSeat ss 
 		JOIN ss.seat s 

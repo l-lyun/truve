@@ -13,7 +13,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -37,22 +36,28 @@ public class ScheduledSeat extends BaseEntity {
 	@Enumerated(EnumType.STRING)
 	private SeatStatus status;
 
-
 	@Builder
 	public ScheduledSeat(
 		Seat seat,
 		Long showScheduleId
-		) {
+	) {
 		this.showScheduleId = showScheduleId;
 		this.seat = seat;
 		this.status = SeatStatus.AVAILABLE;
 	}
 
-	public boolean  isAvailable() {
+	public boolean isAvailable() {
 		return status == SeatStatus.AVAILABLE;
 	}
 
-	public void cancelSeat() {
+	public void holdSeat() {
+		if (this.status == SeatStatus.SOLD || this.status == SeatStatus.HOLD) {
+			return;
+		}
+		this.status = SeatStatus.HOLD;
+	}
+
+	public void releaseSeat() {
 		this.status = SeatStatus.AVAILABLE;
 	}
 

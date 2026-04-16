@@ -196,7 +196,7 @@ public class ReservationTest {
 
 	private List<Ticket> createTickets(Reservation reservation, int count) {
 		return IntStream.range(0, count)
-			.mapToObj(i -> Ticket.create(reservation, "T-00" + i, "VIP", 10000L, "1층 A구역 1열 " + i + "번"))
+			.mapToObj(i -> Ticket.create(reservation, "T-00" + i, "VIP", 10000L, "1층 A구역 1열 " + i + "번", (long)i))
 			.toList();
 	}
 }
