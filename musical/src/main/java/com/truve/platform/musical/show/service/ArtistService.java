@@ -5,6 +5,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
+import com.truve.platform.musical.show.domain.entity.ArtistMembership;
 import org.springframework.data.domain.Page;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
@@ -130,11 +131,9 @@ public class ArtistService {
 	}
 
 	private boolean hasJoinedMembership(Long artistId, UUID userId) {
-		// TODO: 개발 연동 완료 후 실제 멤버십 가입 여부 검증으로 복구
-		// return userId != null && artistMembershipRepository.findByUserIdAndArtistId(userId, artistId)
-		// 	.map(ArtistMembership::hasActiveEntitlement)
-		// 	.orElse(false);
-		return true;
+		 return userId != null && artistMembershipRepository.findByUserIdAndArtistId(userId, artistId)
+		 	.map(ArtistMembership::hasActiveEntitlement)
+		 	.orElse(false);
 	}
 
 	private List<ArtistResponse.Notice> getNotices(Long artistId) {
