@@ -21,7 +21,7 @@ public class TicketingRedisRepository {
 	private static final String TICKET_ACTIVE_SHOW_USER_PREFIX = "ticket:active:";
 	private static final String READY_KEY_PREFIX = "queue:ready:";
 	private static final String SEAT_HOLD_KEY_PREFIX = "seat:hold:";
-	private static final String BLOCKED_TICKET_PREFIX = "ticket:blocked:";
+	private static final String BLOCKED_TICKET_PREFIX = "blocked_ticket:";
 
 
 	private final RedisSupport redisSupport;
