@@ -23,4 +23,12 @@ public class JsonConverter {
 			throw new CustomException(ErrorCode.EVENT_DESERIALIZATION_FAILED);
 		}
 	}
+
+	public String serialize(Object object) {
+		try {
+			return objectMapper.writeValueAsString(object);
+		} catch (IOException e) {
+			throw new CustomException(ErrorCode.EVENT_SERIALIZATION_FAILED);
+		}
+	}
 }

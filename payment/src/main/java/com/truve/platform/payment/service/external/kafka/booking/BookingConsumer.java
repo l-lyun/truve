@@ -23,17 +23,13 @@ public class BookingConsumer {
 
 	@KafkaListener(topics = TOPIC, groupId = GROUP)
 	public void consume(String payload, @Header("event-type") String type) {
-		switch (type) {
-			case "CREATE" -> handleCreate(payload);
-			case "CANCEL" -> handleCancel(payload);
+		if (type.equals("CREATE")) {
+			handleCreate(payload);
 		}
 	}
 
 	private void handleCreate(String payload) {
 		PaymentEventCommand.Create request = jsonConverter.convert(payload, PaymentEventCommand.Create.class);
 		paymentService.create(request);
-	}
-
-	private void handleCancel(String payload) {
 	}
 }

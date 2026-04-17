@@ -19,7 +19,7 @@ public class PaymentUpdatedListener {
 	private final BookingPublisher bookingPublisher;
 	private final MembershipPublisher membershipPublisher;
 
-	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+	@TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
 	public void onConfirmed(PaymentUpdated.Confirmed event) {
 		if (isMembershipOrder(event.getOrderId())) {
 			if (event.getStatus() == com.truve.platform.payment.service.domain.constant.PaymentStatus.DONE) {
@@ -44,7 +44,7 @@ public class PaymentUpdatedListener {
 			));
 	}
 
-	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+	@TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
 	public void onDepositReceived(PaymentUpdated.DepositReceived event) {
 		if (isMembershipOrder(event.getOrderId())) {
 			membershipPublisher.publish(new MembershipEventCommand.DepositReceived(event.getOrderId()));
