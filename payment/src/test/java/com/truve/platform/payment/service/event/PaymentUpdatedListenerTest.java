@@ -15,9 +15,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.truve.platform.payment.service.domain.constant.PaymentMethod;
 import com.truve.platform.payment.service.domain.constant.PaymentStatus;
-import com.truve.platform.payment.service.external.kafka.BookingPublisher;
-import com.truve.platform.payment.service.external.kafka.MembershipEventCommand;
-import com.truve.platform.payment.service.external.kafka.MembershipPublisher;
+import com.truve.platform.payment.service.external.kafka.booking.BookingPublisher;
+import com.truve.platform.payment.service.external.kafka.membership.MembershipEventCommand;
+import com.truve.platform.payment.service.external.kafka.membership.MembershipPublisher;
 
 @ExtendWith(MockitoExtension.class)
 class PaymentUpdatedListenerTest {

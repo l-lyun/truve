@@ -4,10 +4,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import com.truve.platform.payment.service.external.kafka.BookingEventCommand;
-import com.truve.platform.payment.service.external.kafka.BookingPublisher;
-import com.truve.platform.payment.service.external.kafka.MembershipEventCommand;
-import com.truve.platform.payment.service.external.kafka.MembershipPublisher;
+import com.truve.platform.payment.service.external.kafka.booking.BookingEventCommand;
+import com.truve.platform.payment.service.external.kafka.booking.BookingPublisher;
+import com.truve.platform.payment.service.external.kafka.membership.MembershipEventCommand;
+import com.truve.platform.payment.service.external.kafka.membership.MembershipPublisher;
 
 import lombok.RequiredArgsConstructor;
 

@@ -1,4 +1,4 @@
-package com.truve.platform.payment.service.external.kafka;
+package com.truve.platform.payment.service.external.kafka.membership;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
