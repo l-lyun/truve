@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.truve.platform.ticketing.service.booking.domain.entity.Reservation;
@@ -26,6 +25,7 @@ import org.truve.platform.ticketing.service.booking.external.kafka.PaymentEventC
 import org.truve.platform.ticketing.service.booking.external.kafka.PaymentPublisher;
 import org.truve.platform.ticketing.service.booking.external.kafka.TicketingEventCommand;
 import org.truve.platform.ticketing.service.booking.external.kafka.TicketingPublisher;
+import org.truve.platform.ticketing.service.booking.risk.service.BookingBotRiskService;
 import org.truve.platform.ticketing.service.booking.repository.ReservationRepository;
 import org.truve.platform.ticketing.service.booking.util.NumberGenerator;
 
@@ -43,6 +43,7 @@ public class BookingService {
 	private final PaymentPublisher paymentPublisher;
 	private final PaymentClient paymentClient;
 	private final TicketingPublisher ticketingPublisher;
+	private final BookingBotRiskService bookingBotRiskService;
 
 	@Transactional
 	public BookingResponse.Create create(UUID userId, BookingRequest.Create request) {
@@ -135,6 +136,7 @@ public class BookingService {
 	@Transactional
 	public void paymentReady(String reservationNumber, BookingRequest.ApplicantInfo request) {
 		Reservation reservation = reservationRepository.findByNumber(reservationNumber);
+		bookingBotRiskService.validatePaymentReady(reservation.getUserId());
 
 		reservation.readyForPayment(request.toEntity());
 

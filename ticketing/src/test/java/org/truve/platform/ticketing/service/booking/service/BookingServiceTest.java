@@ -26,9 +26,11 @@ import org.truve.platform.ticketing.service.booking.external.client.payment.Paym
 import org.truve.platform.ticketing.service.booking.external.client.ticketing.TicketingClient;
 import org.truve.platform.ticketing.service.booking.external.client.ticketing.TicketingResponse;
 import org.truve.platform.ticketing.service.booking.external.kafka.BookingEventCommand;
+import org.truve.platform.ticketing.service.booking.external.kafka.PaymentEventCommand;
 import org.truve.platform.ticketing.service.booking.external.kafka.PaymentPublisher;
 import org.truve.platform.ticketing.service.booking.external.kafka.TicketingEventCommand;
 import org.truve.platform.ticketing.service.booking.external.kafka.TicketingPublisher;
+import org.truve.platform.ticketing.service.booking.risk.service.BookingBotRiskService;
 import org.truve.platform.ticketing.service.booking.repository.ReservationRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,6 +46,8 @@ class BookingServiceTest {
 	private PaymentPublisher paymentPublisher;
 	@Mock
 	private PaymentClient paymentClient;
+	@Mock
+	private BookingBotRiskService bookingBotRiskService;
 
 	@InjectMocks
 	private BookingService bookingService;
@@ -125,6 +129,35 @@ class BookingServiceTest {
 		assertAll(
 			() -> assertThat(soldConfirmed.getReservationNumber()).isEqualTo("R-001"),
 			() -> assertThat(soldConfirmed.getScheduledSeatIds()).containsExactly(1L, 2L)
+		);
+	}
+
+	@Test
+	@DisplayName("위험 사용자 차단이 없으면 paymentReady는 정상적으로 결제 생성 이벤트를 발행한다.")
+	void 결제준비_정상통과() {
+		// given
+		Reservation reservation = createReservation();
+		BookingRequest.ApplicantInfo request = new BookingRequest.ApplicantInfo(
+			"홍길동",
+			"19900101",
+			"test@test.com",
+			"01012341234"
+		);
+		given(reservationRepository.findByNumber("R-001")).willReturn(reservation);
+
+		// when
+		bookingService.paymentReady("R-001", request);
+
+		// then
+		ArgumentCaptor<PaymentEventCommand.Create> paymentEventCaptor =
+			ArgumentCaptor.forClass(PaymentEventCommand.Create.class);
+		verify(paymentPublisher).publish(paymentEventCaptor.capture());
+
+		assertAll(
+			() -> verify(bookingBotRiskService).validatePaymentReady(reservation.getUserId()),
+			() -> assertThat(paymentEventCaptor.getValue().getOrderId()).isEqualTo(reservation.getNumber()),
+			() -> assertThat(paymentEventCaptor.getValue().getAmount()).isEqualTo(reservation.getTotalAmount()),
+			() -> assertThat(reservation.getStatus()).isEqualTo(org.truve.platform.ticketing.service.booking.domain.constant.ReservationStatus.PENDING_PAYMENT)
 		);
 	}
 
