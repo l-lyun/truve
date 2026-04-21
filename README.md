@@ -33,11 +33,11 @@ back
 ```
 
 <div align="center">
-  <img width="900" alt="image" src="https://github.com/user-attachments/assets/8e180d78-6e7d-4800-8d99-19f22dbd7ea1" />
+  <img width="900" alt="image" src="https://github.com/user-attachments/assets/a54f9340-26b2-408e-94a2-175b11268042" />
 </div>
 <br>
-Truve 백엔드는 api-gateway를 요청 진입점으로 사용하여 두고 인증, 공연 정보, 대기열, 티켓팅, 결제 요청을 각 서비스에 라우팅합니다.<br>
-  특히 대기열 진입, 티켓팅 입장, 좌석 선점, 결제까지 이어지는 흐름을 단계별로 분리해, 과부하를 안정적으로 제어하는 데 초점을 맞췄습니다.
+Truve 백엔드는 api-gateway를 사용하여 인증, 공연 정보, 대기열, 티켓팅, 결제 요청을 각 서비스에 라우팅합니다.<br>
+  특히 대기열 진입, 티켓팅 입장, 좌석 선점, 결제까지 이어지는 흐름을 단계별로 분리해, 과부하를 안정적으로 제어합니다.
 <br><br>
 
 <details>
