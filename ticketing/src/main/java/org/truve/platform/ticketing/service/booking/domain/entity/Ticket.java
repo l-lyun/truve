@@ -71,7 +71,7 @@ public class Ticket extends BaseEntity {
 		this.priceSnapshot = priceSnapshot;
 		this.seatDetail = seatDetail;
 		this.scheduledSeatId = scheduledSeatId;
-		this.status = TicketStatus.ISSUED;
+		this.status = TicketStatus.PENDING;
 	}
 
 	public static Ticket create(
@@ -94,6 +94,11 @@ public class Ticket extends BaseEntity {
 
 	public boolean isCanceled() {
 		return status == TicketStatus.CANCELED;
+	}
+
+	public void issue() {
+		Preconditions.validate(status == TicketStatus.PENDING, ErrorCode.INVALID_TICKET_STATUS);
+		this.status = TicketStatus.ISSUED;
 	}
 
 	public void cancel(LocalDateTime canceledAt) {

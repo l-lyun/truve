@@ -95,6 +95,7 @@ public class BookingService {
 	private ShowInfo createShowInfo(TicketingResponse.SeatInfo seatInfo) {
 		return ShowInfo.builder()
 			.showId(seatInfo.getShowId())
+			.showScheduleId(seatInfo.getShowScheduleId())
 			.title(seatInfo.getShowTitle())
 			.venueName(seatInfo.getVenueName())
 			.startAt(seatInfo.getStartAt())

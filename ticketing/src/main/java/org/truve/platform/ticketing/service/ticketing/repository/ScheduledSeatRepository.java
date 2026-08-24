@@ -36,6 +36,7 @@ public interface ScheduledSeatRepository extends JpaRepository<ScheduledSeat, Lo
 	@Query("""
 			SELECT 
 				shs.showId AS showId,
+				ss.showScheduleId AS showScheduleId,
 				shs.title AS showTitle,
 				shs.venueName AS venueName,
 				shs.startAt AS startAt,

@@ -1,8 +1,7 @@
 name: dev-ecr-ci
 
 on:
-  push:
-    branches: [ "dev" ]
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
