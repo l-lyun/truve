@@ -110,6 +110,26 @@ public class RedisSupport {
 		return Long.valueOf(1L).equals(result);
 	}
 
+	public boolean replaceEachIfEquals(List<String> keys, String expectedValue, String replacementValue) {
+		String script =
+			"local replaced = 0 " +
+				"for i, key in ipairs(KEYS) do " +
+				"if (redis.call('GET', key) == ARGV[1]) then " +
+				"redis.call('SET', key, ARGV[2], 'KEEPTTL') " +
+				"replaced = replaced + 1 " +
+				"end " +
+				"end " +
+				"return replaced";
+
+		Long result = redisTemplate.execute(
+			new DefaultRedisScript<>(script, Long.class),
+			keys,
+			expectedValue,
+			replacementValue
+		);
+		return result != null && result > 0;
+	}
+
 	public boolean deleteAllIfEquals(List<String> keys, String expectedValue) {
 		String script =
 			"local deleted = 0 " +

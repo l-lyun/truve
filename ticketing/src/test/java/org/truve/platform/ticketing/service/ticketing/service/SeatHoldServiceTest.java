@@ -56,4 +56,25 @@ class SeatHoldServiceTest {
 
 		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_BOOKING_SEAT_HOLD);
 	}
+
+	@Test
+	void DB_저장이_실패하면_claim을_기존_세션으로_복원한다() {
+		List<Long> seatIds = List.of(10L, 11L);
+		SeatHoldService.SeatClaim claim = new SeatHoldService.SeatClaim(
+			100L, seatIds, "session-token", "claim-token"
+		);
+		given(ticketingRedisRepository.restoreClaimedSeats(
+			100L, seatIds, "claim-token", "session-token"
+		)).willReturn(true);
+
+		boolean restored = seatHoldService.restore(claim);
+
+		assertThat(restored).isTrue();
+		verify(ticketingRedisRepository).restoreClaimedSeats(
+			100L,
+			seatIds,
+			"claim-token",
+			"session-token"
+		);
+	}
 }

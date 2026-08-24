@@ -42,7 +42,7 @@ public class SeatHoldService {
 			claimValue
 		);
 		Preconditions.validate(claimed, ErrorCode.INVALID_BOOKING_SEAT_HOLD);
-		return new SeatClaim(showScheduleId, List.copyOf(scheduledSeatIds), claimValue);
+		return new SeatClaim(showScheduleId, List.copyOf(scheduledSeatIds), sessionToken, claimValue);
 	}
 
 	public void release(SeatClaim claim) {
@@ -53,6 +53,20 @@ public class SeatHoldService {
 		);
 	}
 
-	public record SeatClaim(Long showScheduleId, List<Long> scheduledSeatIds, String claimValue) {
+	public boolean restore(SeatClaim claim) {
+		return ticketingRedisRepository.restoreClaimedSeats(
+			claim.showScheduleId(),
+			claim.scheduledSeatIds(),
+			claim.claimValue(),
+			claim.sessionToken()
+		);
+	}
+
+	public record SeatClaim(
+		Long showScheduleId,
+		List<Long> scheduledSeatIds,
+		String sessionToken,
+		String claimValue
+	) {
 	}
 }

@@ -86,6 +86,20 @@ public class TicketingRedisRepository {
 	) {
 		return redisSupport.deleteAllIfEquals(seatHoldKeys(showScheduleId, scheduledSeatIds), claimValue);
 	}
+
+	public boolean restoreClaimedSeats(
+		Long showScheduleId,
+		List<Long> scheduledSeatIds,
+		String claimValue,
+		String sessionToken
+	) {
+		return redisSupport.replaceEachIfEquals(
+			seatHoldKeys(showScheduleId, scheduledSeatIds),
+			claimValue,
+			sessionToken
+		);
+	}
+
 	public String validateMacro(String sessionTicket) {
 		String key = secureKey(sessionTicket);
 		return redisSupport.getValue(key);

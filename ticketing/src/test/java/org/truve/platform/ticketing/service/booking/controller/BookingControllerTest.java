@@ -86,4 +86,18 @@ class BookingControllerTest {
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isBadRequest());
 	}
+
+	@Test
+	void 좌석_ID에_null이_포함되면_400을_반환한다() throws Exception {
+		String request = """
+			{"showScheduleId":100,"scheduledSeatIds":[null]}
+			""";
+
+		mockMvc.perform(post("/api/bookings")
+				.header("X-User-Id", USER_ID)
+				.header("X-Session-Ticket", "session-token")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(request))
+			.andExpect(status().isBadRequest());
+	}
 }

@@ -6,13 +6,21 @@ import java.util.UUID;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.truve.platform.ticketing.service.booking.domain.entity.Reservation;
 
+import jakarta.persistence.LockModeType;
+
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
 	@EntityGraph(attributePaths = {"tickets"})
 	Reservation findByNumber(String number);
+
+	@EntityGraph(attributePaths = {"tickets"})
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("select r from Reservation r where r.number = :number")
+	Reservation findByNumberForUpdate(@Param("number") String number);
 
 	boolean existsByNumber(String number);
 

@@ -3,8 +3,10 @@ package org.truve.platform.ticketing.service.booking.domain.entity;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -253,8 +255,23 @@ public class Reservation extends BaseEntity {
 	}
 
 	public void validateTicketId(List<Long> ticketIds) {
+		Preconditions.validate(
+			ticketIds != null
+				&& !ticketIds.isEmpty()
+				&& ticketIds.stream().noneMatch(Objects::isNull)
+				&& new HashSet<>(ticketIds).size() == ticketIds.size(),
+			ErrorCode.INVALID_TICKET_ID
+		);
 		Set<Long> validIds = tickets.stream().map(Ticket::getId).collect(Collectors.toSet());
 		Preconditions.validate(validIds.containsAll(ticketIds), ErrorCode.INVALID_TICKET_ID);
+	}
+
+	public void validateCancelableTicketIds(List<Long> ticketIds) {
+		validateTicketId(ticketIds);
+		boolean allCancelable = tickets.stream()
+			.filter(ticket -> ticketIds.contains(ticket.getId()))
+			.noneMatch(Ticket::isCanceled);
+		Preconditions.validate(allCancelable, ErrorCode.ALREADY_CANCELED_TICKET);
 	}
 
 	public void validateCancelStatus() {

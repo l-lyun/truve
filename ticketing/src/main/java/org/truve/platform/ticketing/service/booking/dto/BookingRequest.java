@@ -22,7 +22,7 @@ public class BookingRequest {
 
 		@NotNull
 		@Size(min = 1, max = 4)
-		private List<Long> scheduledSeatIds;
+		private List<@NotNull Long> scheduledSeatIds;
 	}
 
 	@Getter
@@ -54,6 +54,6 @@ public class BookingRequest {
 		@NotEmpty
 		private String cancelReason;
 		@NotEmpty
-		private List<Long> ticketIds;
+		private List<@NotNull Long> ticketIds;
 	}
 }

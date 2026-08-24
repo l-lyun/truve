@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.springframework.dao.DataIntegrityViolationException;
@@ -48,6 +49,7 @@ public class BookingService {
 	private final BookingBotRiskService bookingBotRiskService;
 
 	public BookingResponse.Create create(UUID userId, String sessionToken, BookingRequest.Create request) {
+		Preconditions.validate(request != null, ErrorCode.NOT_CORRECT_SEAT);
 		validateCreateRequest(request);
 		Long showScheduleId = request.getShowScheduleId();
 		List<Long> scheduledSeatIds = request.getScheduledSeatIds();
@@ -79,14 +81,14 @@ public class BookingService {
 				releaseSeatClaim(claim);
 				return response;
 			} catch (DataIntegrityViolationException exception) {
-				releaseSeatClaim(claim);
+				restoreSeatClaim(claim);
 				throw new CustomException(ErrorCode.ALREADY_BOOKED_SHOW);
 			} catch (RuntimeException exception) {
 				if (reservationRepository.existsByNumber(reservationNumber)) {
 					releaseSeatClaim(claim);
 					return new BookingResponse.Create(reservationNumber);
 				}
-				releaseSeatClaim(claim);
+				restoreSeatClaim(claim);
 				throw exception;
 			}
 		} finally {
@@ -99,6 +101,7 @@ public class BookingService {
 		List<Long> scheduledSeatIds = request.getScheduledSeatIds();
 		Preconditions.validate(scheduledSeatIds != null && !scheduledSeatIds.isEmpty(), ErrorCode.NOT_CORRECT_SEAT);
 		Preconditions.validate(scheduledSeatIds.size() <= 4, ErrorCode.EXCEEDED_MAX_TICKET_COUNT);
+		Preconditions.validate(scheduledSeatIds.stream().noneMatch(Objects::isNull), ErrorCode.NOT_CORRECT_SEAT);
 		Preconditions.validate(
 			new HashSet<>(scheduledSeatIds).size() == scheduledSeatIds.size(),
 			ErrorCode.NOT_CORRECT_SEAT
@@ -110,6 +113,17 @@ public class BookingService {
 			seatHoldService.release(claim);
 		} catch (RuntimeException exception) {
 			log.warn("좌석 claim 정리에 실패했습니다. reservation claim={}", claim.claimValue(), exception);
+		}
+	}
+
+	private void restoreSeatClaim(SeatHoldService.SeatClaim claim) {
+		try {
+			boolean restored = seatHoldService.restore(claim);
+			if (!restored) {
+				log.warn("복원할 좌석 claim이 남아 있지 않습니다. reservation claim={}", claim.claimValue());
+			}
+		} catch (RuntimeException restoreException) {
+			log.warn("좌석 claim 복원에 실패했습니다. reservation claim={}", claim.claimValue(), restoreException);
 		}
 	}
 
@@ -189,17 +203,17 @@ public class BookingService {
 
 	@Transactional
 	public BookingResponse.CanceledTickets cancel(String reservationNumber, BookingRequest.Cancel request) {
-		Reservation reservation = reservationRepository.findByNumber(reservationNumber);
+		Reservation reservation = reservationRepository.findByNumberForUpdate(reservationNumber);
 
 		List<Long> ticketIds = request.getTicketIds();
+		reservation.validateCancelStatus();
+		reservation.validateCancelableTicketIds(ticketIds);
+
 		List<Long> scheduledSeatIds = reservation.getTickets().stream()
 			.filter(ticket -> ticketIds.contains(ticket.getId()))
 			.map(Ticket::getScheduledSeatId)
 			.toList();
 		LocalDateTime canceledAt = LocalDateTime.now();
-
-		reservation.validateTicketId(ticketIds);
-		reservation.validateCancelStatus();
 
 		Long refundAmount = reservation.calculateRefundAmount(canceledAt, ticketIds);
 		paymentClient.cancel(

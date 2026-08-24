@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -66,7 +67,9 @@ class BookingServiceTest {
 		List<Long> seatIds = List.of(10L, 11L, 12L);
 		BookingRequest.Create request = new BookingRequest.Create(100L, seatIds);
 		BookingLockService.BookingLock bookingLock = new BookingLockService.BookingLock(userId, 100L, "lock-token");
-		SeatHoldService.SeatClaim claim = new SeatHoldService.SeatClaim(100L, seatIds, "claim-token");
+		SeatHoldService.SeatClaim claim = new SeatHoldService.SeatClaim(
+			100L, seatIds, "session-token", "claim-token"
+		);
 		given(bookingLockService.acquire(userId, 100L)).willReturn(bookingLock);
 		given(reservationRepository.existsBlockingBooking(userId, 100L)).willReturn(false);
 		given(seatHoldService.claim(eq(100L), eq(seatIds), eq("session-token"), anyString())).willReturn(claim);
@@ -107,13 +110,32 @@ class BookingServiceTest {
 	}
 
 	@Test
-	@DisplayName("DB 예약 생성이 실패하면 좌석 claim과 사용자 락을 정리한다.")
+	@DisplayName("좌석 ID 목록에 null이 있으면 Redis와 DB 작업을 시작하지 않는다.")
+	void 예매생성_null좌석ID_차단() {
+		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+		BookingRequest.Create request = new BookingRequest.Create(100L, Collections.singletonList(null));
+
+		CustomException exception = assertThrows(
+			CustomException.class,
+			() -> bookingService.create(userId, "session-token", request)
+		);
+
+		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.NOT_CORRECT_SEAT);
+		verify(seatHoldService, never()).validateSession(any(), anyLong(), anyString());
+		verify(bookingLockService, never()).acquire(any(), anyLong());
+		verify(bookingCreationService, never()).create(any(), anyLong(), anyList(), anyString());
+	}
+
+	@Test
+	@DisplayName("DB 예약 생성이 실패하면 좌석 claim을 기존 세션으로 복원하고 사용자 락을 정리한다.")
 	void 예매생성_DB실패_보상() {
 		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
 		List<Long> seatIds = List.of(10L, 11L);
 		BookingRequest.Create request = new BookingRequest.Create(100L, seatIds);
 		BookingLockService.BookingLock bookingLock = new BookingLockService.BookingLock(userId, 100L, "lock-token");
-		SeatHoldService.SeatClaim claim = new SeatHoldService.SeatClaim(100L, seatIds, "claim-token");
+		SeatHoldService.SeatClaim claim = new SeatHoldService.SeatClaim(
+			100L, seatIds, "session-token", "claim-token"
+		);
 		given(bookingLockService.acquire(userId, 100L)).willReturn(bookingLock);
 		given(seatHoldService.claim(eq(100L), eq(seatIds), eq("session-token"), anyString())).willReturn(claim);
 		given(bookingCreationService.create(eq(userId), eq(100L), eq(seatIds), anyString()))
@@ -125,7 +147,8 @@ class BookingServiceTest {
 		);
 
 		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ALREADY_HOLD_SEAT);
-		verify(seatHoldService).release(claim);
+		verify(seatHoldService).restore(claim);
+		verify(seatHoldService, never()).release(claim);
 		verify(bookingLockService).release(bookingLock);
 	}
 
@@ -222,7 +245,7 @@ class BookingServiceTest {
 		Reservation reservation = createReservation();
 		confirmByCard(reservation);
 		BookingRequest.Cancel request = new BookingRequest.Cancel("단순변심", List.of(1L));
-		given(reservationRepository.findByNumber("R-001")).willReturn(reservation);
+		given(reservationRepository.findByNumberForUpdate("R-001")).willReturn(reservation);
 
 		BookingResponse.CanceledTickets response = bookingService.cancel("R-001", request);
 
@@ -250,11 +273,29 @@ class BookingServiceTest {
 		Reservation reservation = createReservation();
 		confirmByCard(reservation);
 		BookingRequest.Cancel request = new BookingRequest.Cancel("단순변심", List.of(1L, 2L));
-		given(reservationRepository.findByNumber("R-001")).willReturn(reservation);
+		given(reservationRepository.findByNumberForUpdate("R-001")).willReturn(reservation);
 
 		bookingService.cancel("R-001", request);
 
 		assertThat(reservation.getBlockBooking()).isNull();
+	}
+
+	@Test
+	@DisplayName("이미 취소된 티켓이 포함된 요청은 결제 취소를 호출하지 않는다.")
+	void 이미_취소된_티켓_중복환불_차단() {
+		Reservation reservation = createReservation();
+		confirmByCard(reservation);
+		reservation.cancel(List.of(1L), LocalDateTime.now());
+		BookingRequest.Cancel request = new BookingRequest.Cancel("단순변심", List.of(1L, 2L));
+		given(reservationRepository.findByNumberForUpdate("R-001")).willReturn(reservation);
+
+		CustomException exception = assertThrows(
+			CustomException.class,
+			() -> bookingService.cancel("R-001", request)
+		);
+
+		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ALREADY_CANCELED_TICKET);
+		verify(paymentClient, never()).cancel(anyString(), anyString(), any());
 	}
 
 	private Reservation createReservation() {

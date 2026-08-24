@@ -21,6 +21,7 @@ import org.truve.platform.ticketing.service.booking.domain.entity.embedded.ShowI
 import org.truve.platform.ticketing.service.booking.domain.entity.embedded.VirtualAccount;
 
 import com.truve.platform.common.exception.CustomException;
+import com.truve.platform.common.exception.ErrorCode;
 
 public class ReservationTest {
 
@@ -164,6 +165,33 @@ public class ReservationTest {
 		// when & then
 		assertThatThrownBy(() -> reservation.validateTicketId(ticketId))
 			.isInstanceOf(CustomException.class);
+	}
+
+	@Test
+	@DisplayName("같은 티켓 ID를 중복해서 취소할 수 없다.")
+	void 중복_티켓_ID_취소_차단() {
+		Reservation reservation = createReservationWithTickets();
+
+		CustomException exception = assertThrows(
+			CustomException.class,
+			() -> reservation.validateCancelableTicketIds(List.of(1L, 1L))
+		);
+
+		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_TICKET_ID);
+	}
+
+	@Test
+	@DisplayName("이미 취소된 티켓을 다른 티켓과 묶어 다시 취소할 수 없다.")
+	void 이미_취소된_티켓_중복_환불_차단() {
+		Reservation reservation = createReservationWithTickets();
+		reservation.cancel(List.of(1L), LocalDateTime.now());
+
+		CustomException exception = assertThrows(
+			CustomException.class,
+			() -> reservation.validateCancelableTicketIds(List.of(1L, 2L))
+		);
+
+		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ALREADY_CANCELED_TICKET);
 	}
 
 	@ParameterizedTest
