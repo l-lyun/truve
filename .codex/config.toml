@@ -1,0 +1,6 @@
+# 저장소 공통 Codex 설정입니다.
+# 모델은 고정하지 않고 부모 작업의 선택을 상속합니다.
+
+[agents]
+enabled = true
+max_concurrent_threads_per_session = 5
