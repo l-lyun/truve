@@ -1,7 +1,7 @@
 package org.truve.platform.ticketing.service.booking.domain.entity;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDateTime;
@@ -16,6 +16,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.truve.platform.ticketing.service.booking.domain.constant.ReservationStatus;
+import org.truve.platform.ticketing.service.booking.domain.constant.TicketStatus;
 import org.truve.platform.ticketing.service.booking.domain.entity.embedded.ShowInfo;
 import org.truve.platform.ticketing.service.booking.domain.entity.embedded.VirtualAccount;
 
@@ -45,21 +46,24 @@ public class ReservationTest {
 	@DisplayName("무통장 입금 외 결제를 승인하면 상태가 CONFIRMED로 변경된다.")
 	void 결제승인_일반() {
 		// given
-		Reservation reservation = createReservation();
+		Reservation reservation = createReservationWithTickets();
 		LocalDateTime now = LocalDateTime.now();
 
 		// when
 		reservation.confirm(now, now, "카드", null);
 
 		// then
-		assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.CONFIRMED);
+		assertAll(
+			() -> assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.CONFIRMED),
+			() -> assertThat(reservation.getTickets()).allMatch(ticket -> ticket.getStatus() == TicketStatus.ISSUED)
+		);
 	}
 
 	@Test
 	@DisplayName("무통장 입금 결제를 승인하면 상태가 PENDING_DEPOSIT으로 변경되고 가상계좌 정보를 저장한다.")
 	void 결제승인_무통장입금() {
 		// given
-		Reservation reservation = createReservation();
+		Reservation reservation = createReservationWithTickets();
 		LocalDateTime now = LocalDateTime.now();
 		VirtualAccount virtualAccount = new VirtualAccount("1111-11-1111111", "bank", "customer", now);
 
@@ -69,7 +73,28 @@ public class ReservationTest {
 		// then
 		assertAll(
 			() -> assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.PENDING_DEPOSIT),
-			() -> assertThat(reservation.getVirtualAccount()).isEqualTo(virtualAccount)
+			() -> assertThat(reservation.getVirtualAccount()).isEqualTo(virtualAccount),
+			() -> assertThat(reservation.getTickets()).allMatch(ticket -> ticket.getStatus() == TicketStatus.PENDING)
+		);
+	}
+
+	@Test
+	@DisplayName("무통장 입금이 완료되면 예약을 확정하고 티켓을 발급한다.")
+	void 무통장입금_완료() {
+		// given
+		Reservation reservation = createReservationWithTickets();
+		LocalDateTime now = LocalDateTime.now();
+		VirtualAccount virtualAccount = new VirtualAccount("1111-11-1111111", "bank", "customer", now.plusDays(1));
+		reservation.confirm(now, null, "무통장입금", virtualAccount);
+
+		// when
+		reservation.depositReceive(now);
+
+		// then
+		assertAll(
+			() -> assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.CONFIRMED),
+			() -> assertThat(reservation.getPaidAt()).isEqualTo(now),
+			() -> assertThat(reservation.getTickets()).allMatch(ticket -> ticket.getStatus() == TicketStatus.ISSUED)
 		);
 	}
 

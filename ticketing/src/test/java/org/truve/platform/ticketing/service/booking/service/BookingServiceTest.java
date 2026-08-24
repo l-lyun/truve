@@ -100,7 +100,7 @@ class BookingServiceTest {
 			() -> {
 				assertNotNull(savedReservation.getTickets());
 				assertThat(savedReservation.getTickets().get(1).getPriceSnapshot()).isEqualTo(20000L);
-				assertThat(savedReservation.getTickets().getLast().getStatus()).isEqualTo(TicketStatus.ISSUED);
+				assertThat(savedReservation.getTickets().getLast().getStatus()).isEqualTo(TicketStatus.PENDING);
 				assertThat(savedReservation.getTickets().get(1).getUsedAt()).isNull();
 				assertThat(savedReservation.getTickets().getFirst().getSeatDetail()).isEqualTo("1층 Section1구역 A열 10번");
 			}
@@ -130,7 +130,8 @@ class BookingServiceTest {
 			(TicketingEventCommand.SoldConfirmed)eventCaptor.getValue();
 		assertAll(
 			() -> assertThat(soldConfirmed.getReservationNumber()).isEqualTo("R-001"),
-			() -> assertThat(soldConfirmed.getScheduledSeatIds()).containsExactly(1L, 2L)
+			() -> assertThat(soldConfirmed.getScheduledSeatIds()).containsExactly(1L, 2L),
+			() -> assertThat(reservation.getTickets()).allMatch(ticket -> ticket.getStatus() == TicketStatus.ISSUED)
 		);
 	}
 
@@ -168,6 +169,7 @@ class BookingServiceTest {
 	void 전체티켓목록_반환_성공() {
 		// given
 		Reservation reservation = createReservation();
+		confirmByCard(reservation);
 		given(reservationRepository.findByNumber("R-001")).willReturn(reservation);
 
 		// when
@@ -182,6 +184,7 @@ class BookingServiceTest {
 	void 특정티켓선택시_전체티켓목록_반환_성공() {
 		// given
 		Reservation reservation = createReservation();
+		confirmByCard(reservation);
 		given(reservationRepository.findByNumber("R-001")).willReturn(reservation);
 
 		// when
@@ -195,6 +198,7 @@ class BookingServiceTest {
 	@DisplayName("예매 취소 시 결제 취소 후 HOLD_RELEASED 이벤트를 발행한다.")
 	void 예매취소_좌석해제이벤트발행_성공() {
 		Reservation reservation = createReservation();
+		confirmByCard(reservation);
 		BookingRequest.Cancel request = new BookingRequest.Cancel("단순변심", List.of(1L));
 		given(reservationRepository.findByNumber("R-001")).willReturn(reservation);
 
@@ -237,8 +241,10 @@ class BookingServiceTest {
 
 		List<Ticket> tickets = List.of(ticket1, ticket2);
 		reservation.addTickets(tickets);
-		reservation.confirm(LocalDateTime.now(), LocalDateTime.now(), "카드", null);
-
 		return reservation;
+	}
+
+	private void confirmByCard(Reservation reservation) {
+		reservation.confirm(LocalDateTime.now(), LocalDateTime.now(), "카드", null);
 	}
 }

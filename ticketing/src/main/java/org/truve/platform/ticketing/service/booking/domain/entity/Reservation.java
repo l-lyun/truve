@@ -141,6 +141,7 @@ public class Reservation extends BaseEntity {
 			this.status = ReservationStatus.PENDING_DEPOSIT;
 		} else {
 			this.status = ReservationStatus.CONFIRMED;
+			issueTickets();
 		}
 	}
 
@@ -151,6 +152,11 @@ public class Reservation extends BaseEntity {
 	public void depositReceive(LocalDateTime paidAt) {
 		this.paidAt = paidAt;
 		this.status = ReservationStatus.CONFIRMED;
+		issueTickets();
+	}
+
+	private void issueTickets() {
+		tickets.forEach(Ticket::issue);
 	}
 
 	public boolean isCancelable() {
