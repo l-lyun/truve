@@ -2,6 +2,7 @@ package org.truve.platform.ticketing.service.global.support;
 
 import java.time.Duration;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -88,6 +89,44 @@ public class RedisSupport {
 
 	public boolean setIfAbsent(String key, String value, Duration duration) {
 		return Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(key, value, duration));
+	}
+
+	public boolean replaceAllIfEquals(List<String> keys, String expectedValue, String replacementValue) {
+		String script =
+			"for i, key in ipairs(KEYS) do " +
+				"if (redis.call('GET', key) ~= ARGV[1]) then return 0 end " +
+				"end " +
+				"for i, key in ipairs(KEYS) do " +
+				"redis.call('SET', key, ARGV[2], 'KEEPTTL') " +
+				"end " +
+				"return 1";
+
+		Long result = redisTemplate.execute(
+			new DefaultRedisScript<>(script, Long.class),
+			keys,
+			expectedValue,
+			replacementValue
+		);
+		return Long.valueOf(1L).equals(result);
+	}
+
+	public boolean deleteAllIfEquals(List<String> keys, String expectedValue) {
+		String script =
+			"local deleted = 0 " +
+				"for i, key in ipairs(KEYS) do " +
+				"if (redis.call('GET', key) == ARGV[1]) then " +
+				"redis.call('DEL', key) " +
+				"deleted = deleted + 1 " +
+				"end " +
+				"end " +
+				"return deleted";
+
+		Long result = redisTemplate.execute(
+			new DefaultRedisScript<>(script, Long.class),
+			keys,
+			expectedValue
+		);
+		return result != null && result > 0;
 	}
 
 	public void zAdd(String key, String member, double score) {

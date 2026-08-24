@@ -24,8 +24,6 @@ public class BookingConsumer {
 	@KafkaListener(topics = TOPIC, groupId = GROUP)
 	public void consume(String payload, @Header("event-type") String type) {
 		switch (type) {
-			case "HOLD_REQUESTED" ->
-				scheduledSeatStatusService.holdSeats(jsonConverter.convert(payload, TicketingEventCommand.HoldRequested.class));
 			case "HOLD_RELEASED" ->
 				scheduledSeatStatusService.releaseSeats(jsonConverter.convert(payload, TicketingEventCommand.HoldReleased.class));
 			case "SOLD_CONFIRMED" ->

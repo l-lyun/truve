@@ -7,13 +7,26 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.truve.platform.ticketing.service.booking.domain.entity.Reservation;
-
-import io.lettuce.core.dynamic.annotation.Param;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
 	@EntityGraph(attributePaths = {"tickets"})
 	Reservation findByNumber(String number);
+
+	boolean existsByNumber(String number);
+
+	@Query("""
+		select (count(r) > 0)
+		from Reservation r
+		where r.userId = :userId
+		  and r.showInfo.showScheduleId = :showScheduleId
+		  and r.blockBooking = true
+		""")
+	boolean existsBlockingBooking(
+		@Param("userId") UUID userId,
+		@Param("showScheduleId") Long showScheduleId
+	);
 
 	@Query("""
 		SELECT DISTINCT r

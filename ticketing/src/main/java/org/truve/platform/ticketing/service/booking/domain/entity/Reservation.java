@@ -3,7 +3,6 @@ package org.truve.platform.ticketing.service.booking.domain.entity;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,6 +27,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -36,7 +36,13 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "reservations")
+@Table(
+	name = "reservations",
+	uniqueConstraints = @UniqueConstraint(
+		name = "uk_reservation_user_schedule_block_booking",
+		columnNames = {"user_id", "show_schedule_id", "block_booking"}
+	)
+)
 public class Reservation extends BaseEntity {
 	private static final Long TICKET_SERVICE_FEE = 2000L;
 
@@ -61,6 +67,9 @@ public class Reservation extends BaseEntity {
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	private ReservationStatus status;
+
+	@Column(name = "block_booking")
+	private Boolean blockBooking;
 
 	@Column
 	private LocalDateTime bookedAt;
@@ -98,6 +107,7 @@ public class Reservation extends BaseEntity {
 		this.gradeSummary = gradeSummary;
 		this.showInfo = showInfo;
 		this.status = ReservationStatus.CREATED;
+		this.blockBooking = true;
 	}
 
 	public static Reservation create(
@@ -229,13 +239,17 @@ public class Reservation extends BaseEntity {
 	}
 
 	public void cancel(List<Long> ticketIds, LocalDateTime canceledAt) {
-		this.status = new HashSet<>(ticketIds).size() == tickets.size() ? ReservationStatus.CANCELED :
-			ReservationStatus.PARTIAL_CANCELED;
 		this.canceledAt = canceledAt;
 
 		tickets.stream()
 			.filter(ticket -> ticketIds.contains(ticket.getId()))
 			.forEach(ticket -> ticket.cancel(canceledAt));
+
+		boolean allTicketsCanceled = tickets.stream().allMatch(Ticket::isCanceled);
+		this.status = allTicketsCanceled ? ReservationStatus.CANCELED : ReservationStatus.PARTIAL_CANCELED;
+		if (allTicketsCanceled) {
+			this.blockBooking = null;
+		}
 	}
 
 	public void validateTicketId(List<Long> ticketIds) {

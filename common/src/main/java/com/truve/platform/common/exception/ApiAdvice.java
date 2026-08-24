@@ -6,6 +6,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -40,6 +41,11 @@ public class ApiAdvice {
 		var message = details.split(",", 2)[1].replace("]", "").trim();
 
 		return ErrorResponse.error(HttpStatus.BAD_REQUEST, message, "C02");
+	}
+
+	@ExceptionHandler(MissingRequestHeaderException.class)
+	public ResponseEntity<ErrorResponse.ErrorData> missingRequestHeaderException(MissingRequestHeaderException e) {
+		return ErrorResponse.error(HttpStatus.BAD_REQUEST, e.getMessage(), "C02");
 	}
 
 }

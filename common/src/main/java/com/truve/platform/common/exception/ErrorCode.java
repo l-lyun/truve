@@ -62,6 +62,9 @@ public enum ErrorCode {
 	ALREADY_CANCELED_TICKET(HttpStatus.BAD_REQUEST, "이미 취소된 티켓입니다.", "B05"),
 	PAYMENT_RESTRICTED_BY_RISK(HttpStatus.BAD_REQUEST, "비정상 결제 시도가 감지되어 현재 결제를 진행할 수 없습니다. 잠시 후 다시 시도해 주세요.", "B06"),
 	INVALID_TICKET_STATUS(HttpStatus.BAD_REQUEST, "발급할 수 없는 티켓 상태입니다.", "B07"),
+	ALREADY_BOOKED_SHOW(HttpStatus.CONFLICT, "이미 예매한 공연 회차입니다.", "B08"),
+	BOOKING_IN_PROGRESS(HttpStatus.CONFLICT, "같은 공연 회차의 예매가 진행 중입니다.", "B09"),
+	INVALID_BOOKING_SEAT_HOLD(HttpStatus.CONFLICT, "선점하지 않았거나 만료된 좌석이 포함되어 있습니다.", "B10"),
 
 	NOT_FOUND_SHOW(HttpStatus.NOT_FOUND, "존재하지 않는 공연입니다.", "M01"),
 	NOT_FOUND_ARTIST(HttpStatus.NOT_FOUND, "존재하지 않는 배우입니다.", "M02"),

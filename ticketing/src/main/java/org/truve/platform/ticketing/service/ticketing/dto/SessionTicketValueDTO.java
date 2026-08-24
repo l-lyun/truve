@@ -11,9 +11,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class SessionTicketValueDTO {
 	private UUID userId;
-	private Long showId;
+	private Long showScheduleId;
 
-	public static SessionTicketValueDTO of(UUID userId, Long showId) {
-		return new SessionTicketValueDTO(userId, showId);
+	public static SessionTicketValueDTO of(UUID userId, Long showScheduleId) {
+		return new SessionTicketValueDTO(userId, showScheduleId);
 	}
 }
