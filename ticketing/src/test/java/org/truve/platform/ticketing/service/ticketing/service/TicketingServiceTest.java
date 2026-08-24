@@ -239,6 +239,8 @@ class TicketingServiceTest {
 
 			scheduledSeat1 = createScheduledSeat(10L, showScheduleId, SeatStatus.AVAILABLE);
 			scheduledSeat2 = createScheduledSeat(11L, showScheduleId, SeatStatus.AVAILABLE);
+			ReflectionTestUtils.setField(scheduledSeat1.getSeat(), "id", 100L);
+			ReflectionTestUtils.setField(scheduledSeat2.getSeat(), "id", 101L);
 		}
 
 		@Test
@@ -422,6 +424,8 @@ class TicketingServiceTest {
 			// given
 			ScheduledSeat scheduledSeat1 = createScheduledSeat(10L, showScheduleId, SeatStatus.AVAILABLE);
 			ScheduledSeat scheduledSeat2 = createScheduledSeat(11L, showScheduleId, SeatStatus.AVAILABLE);
+			ReflectionTestUtils.setField(scheduledSeat1.getSeat(), "id", 100L);
+			ReflectionTestUtils.setField(scheduledSeat2.getSeat(), "id", 101L);
 			given(scheduledSeatRepository.findAllById(List.of(10L, 11L))).willReturn(List.of(scheduledSeat1, scheduledSeat2));
 			given(ticketingRedisRepository.getHoldSeatSessionToken(showScheduleId, 10L)).willReturn(sessionToken);
 			given(ticketingRedisRepository.getHoldSeatSessionToken(showScheduleId, 11L)).willReturn(sessionToken);

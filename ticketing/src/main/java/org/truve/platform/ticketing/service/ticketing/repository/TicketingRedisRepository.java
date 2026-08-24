@@ -56,17 +56,17 @@ public class TicketingRedisRepository {
 		return redisSupport.expireSeconds(sessionTokenKey(sessionToken), ttlSeconds);
 	}
 
-	public boolean tryHoldSeat(Long showScheduleId, Long seatId, String sessionToken) {
+	public boolean tryHoldSeat(Long showScheduleId, Long scheduledSeatId, String sessionToken) {
 		// TODO: 좌석 점유 시간 기획측과 논의
-		return redisSupport.setIfAbsent(seatHoldKey(showScheduleId, seatId), sessionToken, Duration.ofMinutes(10));
+		return redisSupport.setIfAbsent(seatHoldKey(showScheduleId, scheduledSeatId), sessionToken, Duration.ofMinutes(10));
 	}
 
-	public boolean deleteHoldSeat(Long showScheduleId, Long seatId) {
-		return redisSupport.delete(seatHoldKey(showScheduleId, seatId));
+	public boolean deleteHoldSeat(Long showScheduleId, Long scheduledSeatId) {
+		return redisSupport.delete(seatHoldKey(showScheduleId, scheduledSeatId));
 	}
 
-	public String getHoldSeatSessionToken(Long showScheduleId, Long seatId) {
-		return redisSupport.getValue(seatHoldKey(showScheduleId, seatId));
+	public String getHoldSeatSessionToken(Long showScheduleId, Long scheduledSeatId) {
+		return redisSupport.getValue(seatHoldKey(showScheduleId, scheduledSeatId));
 	}
 	public String validateMacro(String sessionTicket) {
 		String key = secureKey(sessionTicket);
@@ -84,8 +84,8 @@ public class TicketingRedisRepository {
 
 	}
 
-	private String seatHoldKey(Long showScheduleId, Long seatId) {
-		return SEAT_HOLD_KEY_PREFIX + showScheduleId + ":" + seatId;
+	private String seatHoldKey(Long showScheduleId, Long scheduledSeatId) {
+		return SEAT_HOLD_KEY_PREFIX + showScheduleId + ":" + scheduledSeatId;
 	}
 
 	private String secureKey(String sessionTicket) {
