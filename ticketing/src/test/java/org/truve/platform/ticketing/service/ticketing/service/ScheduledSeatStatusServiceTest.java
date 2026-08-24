@@ -33,62 +33,7 @@ class ScheduledSeatStatusServiceTest {
 	private ScheduledSeatStatusService scheduledSeatStatusService;
 
 	@Test
-	@DisplayName("HOLD 요청이면 AVAILABLE 좌석을 HOLD 상태로 변경한다.")
-	void hold요청_좌석점유_성공() {
-		TicketingEventCommand.HoldRequested event = new TicketingEventCommand.HoldRequested(
-			"R-001",
-			UUID.fromString("11111111-1111-1111-1111-111111111111"),
-			List.of(10L, 11L)
-		);
-		ScheduledSeat seat1 = createScheduledSeat(10L, SeatStatus.AVAILABLE);
-		ScheduledSeat seat2 = createScheduledSeat(11L, SeatStatus.AVAILABLE);
-		given(scheduledSeatRepository.findAllById(event.getScheduledSeatIds())).willReturn(List.of(seat1, seat2));
-
-		scheduledSeatStatusService.holdSeats(event);
-
-		assertThat(seat1.getStatus()).isEqualTo(SeatStatus.HOLD);
-		assertThat(seat2.getStatus()).isEqualTo(SeatStatus.HOLD);
-	}
-
-	@Test
-	@DisplayName("이미 HOLD 또는 SOLD 인 좌석은 상태를 유지한다.")
-	void hold요청_기존상태유지() {
-		TicketingEventCommand.HoldRequested event = new TicketingEventCommand.HoldRequested(
-			"R-001",
-			UUID.fromString("11111111-1111-1111-1111-111111111111"),
-			List.of(10L, 11L)
-		);
-		ScheduledSeat holdSeat = createScheduledSeat(10L, SeatStatus.HOLD);
-		ScheduledSeat soldSeat = createScheduledSeat(11L, SeatStatus.SOLD);
-		given(scheduledSeatRepository.findAllById(event.getScheduledSeatIds())).willReturn(List.of(holdSeat, soldSeat));
-
-		scheduledSeatStatusService.holdSeats(event);
-
-		assertThat(holdSeat.getStatus()).isEqualTo(SeatStatus.HOLD);
-		assertThat(soldSeat.getStatus()).isEqualTo(SeatStatus.SOLD);
-	}
-
-	@Test
-	@DisplayName("좌석 개수가 맞지 않으면 NOT_CORRECT_SEAT 예외가 발생한다.")
-	void hold요청_좌석개수불일치() {
-		TicketingEventCommand.HoldRequested event = new TicketingEventCommand.HoldRequested(
-			"R-001",
-			UUID.fromString("11111111-1111-1111-1111-111111111111"),
-			List.of(10L, 11L)
-		);
-		given(scheduledSeatRepository.findAllById(event.getScheduledSeatIds()))
-			.willReturn(List.of(createScheduledSeat(10L, SeatStatus.AVAILABLE)));
-
-		CustomException exception = assertThrows(
-			CustomException.class,
-			() -> scheduledSeatStatusService.holdSeats(event)
-		);
-
-		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.NOT_CORRECT_SEAT);
-	}
-
-	@Test
-	@DisplayName("RELEASE 요청이면 좌석 상태를 AVAILABLE로 되돌린다.")
+	@DisplayName("RELEASE 요청이면 같은 예약이 소유한 HOLD 좌석만 AVAILABLE로 되돌린다.")
 	void release요청_좌석해제_성공() {
 		TicketingEventCommand.HoldReleased event = new TicketingEventCommand.HoldReleased(
 			"R-001",
@@ -98,14 +43,31 @@ class ScheduledSeatStatusServiceTest {
 		ScheduledSeat holdSeat = createScheduledSeat(10L, SeatStatus.HOLD);
 		ScheduledSeat availableSeat = createScheduledSeat(11L, SeatStatus.AVAILABLE);
 		ScheduledSeat soldSeat = createScheduledSeat(12L, SeatStatus.SOLD);
-		given(scheduledSeatRepository.findAllById(event.getScheduledSeatIds()))
+		given(scheduledSeatRepository.findAllByIdForUpdate(event.getScheduledSeatIds()))
 			.willReturn(List.of(holdSeat, availableSeat, soldSeat));
 
 		scheduledSeatStatusService.releaseSeats(event);
 
 		assertThat(holdSeat.getStatus()).isEqualTo(SeatStatus.AVAILABLE);
 		assertThat(availableSeat.getStatus()).isEqualTo(SeatStatus.AVAILABLE);
-		assertThat(soldSeat.getStatus()).isEqualTo(SeatStatus.AVAILABLE);
+		assertThat(soldSeat.getStatus()).isEqualTo(SeatStatus.SOLD);
+	}
+
+	@Test
+	@DisplayName("늦게 도착한 RELEASE는 다른 예약이 소유한 좌석을 해제하지 않는다.")
+	void release요청_다른예약소유_상태유지() {
+		TicketingEventCommand.HoldReleased event = new TicketingEventCommand.HoldReleased(
+			"R-OLD",
+			UUID.fromString("11111111-1111-1111-1111-111111111111"),
+			List.of(10L)
+		);
+		ScheduledSeat seat = createScheduledSeat(10L, SeatStatus.HOLD, "R-NEW");
+		given(scheduledSeatRepository.findAllByIdForUpdate(event.getScheduledSeatIds())).willReturn(List.of(seat));
+
+		scheduledSeatStatusService.releaseSeats(event);
+
+		assertThat(seat.getStatus()).isEqualTo(SeatStatus.HOLD);
+		assertThat(seat.getReservationNumber()).isEqualTo("R-NEW");
 	}
 
 	@Test
@@ -118,7 +80,7 @@ class ScheduledSeatStatusServiceTest {
 		);
 		ScheduledSeat seat1 = createScheduledSeat(10L, SeatStatus.HOLD);
 		ScheduledSeat seat2 = createScheduledSeat(11L, SeatStatus.HOLD);
-		given(scheduledSeatRepository.findAllById(event.getScheduledSeatIds())).willReturn(List.of(seat1, seat2));
+		given(scheduledSeatRepository.findAllByIdForUpdate(event.getScheduledSeatIds())).willReturn(List.of(seat1, seat2));
 
 		scheduledSeatStatusService.purchaseSeats(event);
 
@@ -127,22 +89,19 @@ class ScheduledSeatStatusServiceTest {
 	}
 
 	@Test
-	@DisplayName("이미 SOLD인 좌석에 SOLD_CONFIRMED 요청이 오면 예외가 발생한다.")
-	void sold요청_이미SOLD_예외발생() {
+	@DisplayName("같은 예약의 SOLD_CONFIRMED 이벤트가 재전달되면 상태를 유지한다.")
+	void sold요청_중복이벤트_상태유지() {
 		TicketingEventCommand.SoldConfirmed event = new TicketingEventCommand.SoldConfirmed(
 			"R-001",
 			UUID.fromString("11111111-1111-1111-1111-111111111111"),
 			List.of(10L)
 		);
 		ScheduledSeat soldSeat = createScheduledSeat(10L, SeatStatus.SOLD);
-		given(scheduledSeatRepository.findAllById(event.getScheduledSeatIds())).willReturn(List.of(soldSeat));
+		given(scheduledSeatRepository.findAllByIdForUpdate(event.getScheduledSeatIds())).willReturn(List.of(soldSeat));
 
-		CustomException exception = assertThrows(
-			CustomException.class,
-			() -> scheduledSeatStatusService.purchaseSeats(event)
-		);
+		scheduledSeatStatusService.purchaseSeats(event);
 
-		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ALREADY_SOLD_SEAT);
+		assertThat(soldSeat.getStatus()).isEqualTo(SeatStatus.SOLD);
 	}
 
 	@Test
@@ -153,7 +112,7 @@ class ScheduledSeatStatusServiceTest {
 			UUID.fromString("11111111-1111-1111-1111-111111111111"),
 			List.of(10L, 11L)
 		);
-		given(scheduledSeatRepository.findAllById(event.getScheduledSeatIds()))
+		given(scheduledSeatRepository.findAllByIdForUpdate(event.getScheduledSeatIds()))
 			.willReturn(List.of(createScheduledSeat(10L, SeatStatus.HOLD)));
 
 		CustomException exception = assertThrows(
@@ -165,6 +124,10 @@ class ScheduledSeatStatusServiceTest {
 	}
 
 	private ScheduledSeat createScheduledSeat(Long scheduledSeatId, SeatStatus status) {
+		return createScheduledSeat(scheduledSeatId, status, "R-001");
+	}
+
+	private ScheduledSeat createScheduledSeat(Long scheduledSeatId, SeatStatus status, String reservationNumber) {
 		Seat seat = Seat.builder()
 			.seatRow("A")
 			.seatNumber(scheduledSeatId)
@@ -177,6 +140,9 @@ class ScheduledSeatStatusServiceTest {
 			.build();
 		ReflectionTestUtils.setField(scheduledSeat, "id", scheduledSeatId);
 		ReflectionTestUtils.setField(scheduledSeat, "status", status);
+		if (status != SeatStatus.AVAILABLE) {
+			ReflectionTestUtils.setField(scheduledSeat, "reservationNumber", reservationNumber);
+		}
 		return scheduledSeat;
 	}
 }
