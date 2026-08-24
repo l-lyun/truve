@@ -2,7 +2,6 @@ package org.truve.platform.ticketing.service.global.support;
 
 import java.time.Duration;
 import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -89,55 +88,6 @@ public class RedisSupport {
 
 	public boolean setIfAbsent(String key, String value, Duration duration) {
 		return Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(key, value, duration));
-	}
-
-	public boolean setAllIfAbsentOrEqual(List<String> keys, String value, Duration duration) {
-		String script =
-			"local ttl = tonumber(ARGV[2]) " +
-			"for i, key in ipairs(KEYS) do " +
-				"local current = redis.call('GET', key) " +
-				"if (current and current ~= ARGV[1]) then return 0 end " +
-				"if (current) then " +
-				"local remaining = redis.call('PTTL', key) " +
-				"if (remaining == 0) then return 0 end " +
-				"if (remaining > 0 and remaining < ttl) then ttl = remaining end " +
-				"end " +
-				"end " +
-				"local time = redis.call('TIME') " +
-				"local expiresAt = (time[1] * 1000) + math.floor(time[2] / 1000) + ttl " +
-				"for i, key in ipairs(KEYS) do " +
-				"redis.call('SET', key, ARGV[1]) " +
-				"redis.call('PEXPIREAT', key, expiresAt) " +
-				"end " +
-				"return 1";
-
-		Long result = redisTemplate.execute(
-			new DefaultRedisScript<>(script, Long.class),
-			keys,
-			value,
-			String.valueOf(duration.toMillis())
-		);
-		return Long.valueOf(1L).equals(result);
-	}
-
-	public boolean deleteAllIfEqual(List<String> keys, String expectedValue) {
-		String script =
-			"local deleted = 0 " +
-				"for i, key in ipairs(KEYS) do " +
-				"local current = redis.call('GET', key) " +
-				"if (current == ARGV[1]) then " +
-				"redis.call('DEL', key) " +
-				"deleted = deleted + 1 " +
-				"end " +
-				"end " +
-				"return deleted";
-
-		Long result = redisTemplate.execute(
-			new DefaultRedisScript<>(script, Long.class),
-			keys,
-			expectedValue
-		);
-		return result != null && result > 0;
 	}
 
 	public void zAdd(String key, String member, double score) {

@@ -96,11 +96,12 @@ public class TicketingService {
 			);
 
 			Long scheduledSeatId = seat.getId();
-			Long seatId = seat.getSeat().getId();
-			boolean tryHoldSeatLock = ticketingRedisRepository.tryHoldSeat(
-				showScheduleId, scheduledSeatId, seatId, sessionToken
-			);
-			Preconditions.validate(tryHoldSeatLock, ErrorCode.ALREADY_HOLD_SEAT);
+			boolean tryHoldSeatLock = ticketingRedisRepository.tryHoldSeat(showScheduleId, scheduledSeatId, sessionToken);
+
+			if (!tryHoldSeatLock) {
+				String savesSessionToken = ticketingRedisRepository.getHoldSeatSessionToken(showScheduleId, scheduledSeatId);
+				Preconditions.validate(sessionToken.equals(savesSessionToken), ErrorCode.ALREADY_HOLD_SEAT);
+			}
 		}
 
 	}
@@ -120,11 +121,9 @@ public class TicketingService {
 			);
 
 			Long scheduledSeatId = seat.getId();
-			Long seatId = seat.getSeat().getId();
-			boolean deleted = ticketingRedisRepository.deleteHoldSeat(
-				showScheduleId, scheduledSeatId, seatId, sessionToken
-			);
-			Preconditions.validate(deleted, ErrorCode.INVALID_HOLD_SEAT);
+			String savedSessionToken = ticketingRedisRepository.getHoldSeatSessionToken(showScheduleId, scheduledSeatId);
+			Preconditions.validate(sessionToken.equals(savedSessionToken), ErrorCode.INVALID_HOLD_SEAT);
+			ticketingRedisRepository.deleteHoldSeat(showScheduleId, scheduledSeatId);
 		}
 	}
 
