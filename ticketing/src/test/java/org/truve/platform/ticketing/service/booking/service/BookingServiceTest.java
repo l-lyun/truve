@@ -66,6 +66,7 @@ class BookingServiceTest {
 		List<TicketingResponse.Seat> seats = List.of(seat1, seat2, seat3);
 		TicketingResponse.SeatInfo seatInfo = new TicketingResponse.SeatInfo(
 			1L,
+			100L,
 			"title",
 			"venue",
 			LocalDateTime.now(),
@@ -89,6 +90,7 @@ class BookingServiceTest {
 		assertAll(
 			() -> assertThat(savedReservation.calculateTicketAmount()).isEqualTo(60000L),
 			() -> assertThat(savedReservation.getGradeSummary()).isEqualTo("VIP석 2인\nS석 1인"),
+			() -> assertThat(savedReservation.getShowInfo().getShowScheduleId()).isEqualTo(100L),
 			() -> assertThat(savedReservation.getTickets()).hasSize(3),
 			() -> assertThat(savedReservation.getServiceFee()).isEqualTo(6000L),
 			() -> assertThat(savedReservation.getTickets().getFirst().getScheduledSeatId()).isEqualTo(10L),
@@ -222,6 +224,7 @@ class BookingServiceTest {
 			"VIP석 2인",
 			ShowInfo.builder()
 				.showId(1L)
+				.showScheduleId(100L)
 				.title("킹키부츠")
 				.startAt(LocalDateTime.now().plusDays(30))
 				.build()

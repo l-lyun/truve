@@ -18,6 +18,9 @@ public class ShowInfo {
 	private Long showId;
 
 	@Column(nullable = false)
+	private Long showScheduleId;
+
+	@Column(nullable = false)
 	private String title;
 
 	@Column(nullable = false)
@@ -30,8 +33,10 @@ public class ShowInfo {
 	private String posterImg;
 
 	@Builder
-	public ShowInfo(Long showId, String title, String venueName, LocalDateTime startAt, String posterImg) {
+	public ShowInfo(Long showId, Long showScheduleId, String title, String venueName, LocalDateTime startAt,
+		String posterImg) {
 		this.showId = showId;
+		this.showScheduleId = showScheduleId;
 		this.title = title;
 		this.venueName = venueName;
 		this.startAt = startAt;

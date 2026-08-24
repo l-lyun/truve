@@ -116,6 +116,7 @@ public class CancellationPolicyTest {
 			"VIP석 2인",
 			ShowInfo.builder()
 				.showId(1L)
+				.showScheduleId(100L)
 				.title("킹키부츠")
 				.startAt(showAt)
 				.build()

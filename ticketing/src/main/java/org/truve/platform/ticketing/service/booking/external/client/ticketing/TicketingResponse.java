@@ -11,6 +11,8 @@ public class TicketingResponse {
 	public interface FlatSeatInfo {
 		Long getShowId();
 
+		Long getShowScheduleId();
+
 		String getShowTitle();
 
 		String getVenueName();
@@ -38,6 +40,7 @@ public class TicketingResponse {
 	@AllArgsConstructor
 	public static class SeatInfo {
 		private final Long showId;
+		private final Long showScheduleId;
 		private final String showTitle;
 		private final String venueName;
 		private final LocalDateTime startAt;
@@ -47,6 +50,7 @@ public class TicketingResponse {
 		public static SeatInfo from(FlatSeatInfo flat, List<Seat> seats) {
 			return new SeatInfo(
 				flat.getShowId(),
+				flat.getShowScheduleId(),
 				flat.getShowTitle(),
 				flat.getVenueName(),
 				flat.getStartAt(),
