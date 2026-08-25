@@ -69,12 +69,18 @@ class TicketingOutboxClaimServiceIntegrationTest {
 
 	@Test
 	void timeout을_넘긴_PROCESSING은_FAILED로_회수해_다시_claim할_수_있다() {
+		UUID expiredToken = UUID.randomUUID();
 		TicketingOutboxEvent expired = event("R-001");
-		expired.claim(UUID.randomUUID(), LocalDateTime.now().minusMinutes(10));
+		expired.claim(expiredToken, LocalDateTime.now().minusMinutes(10));
 		outboxRepository.saveAndFlush(expired);
+		UUID recentToken = UUID.randomUUID();
+		TicketingOutboxEvent recent = event("R-002");
+		recent.claim(recentToken, LocalDateTime.now().minusMinutes(1));
+		outboxRepository.saveAndFlush(recent);
 
 		int recovered = claimService.recoverExpiredClaims(LocalDateTime.now().minusMinutes(5));
 		ClaimedOutboxEvent reclaimed = claimService.claimBatch(100).getFirst();
+		claimService.complete(List.of(new OutboxRelayResult(expired.getId(), expiredToken, false)));
 
 		assertThat(recovered).isEqualTo(1);
 		assertThat(reclaimed.id()).isEqualTo(expired.getId());
@@ -82,6 +88,10 @@ class TicketingOutboxClaimServiceIntegrationTest {
 		assertThat(processing.getStatus()).isEqualTo(OutboxStatus.PROCESSING);
 		assertThat(processing.getRetryCount()).isEqualTo(1);
 		assertThat(processing.getClaimToken()).isEqualTo(reclaimed.claimToken());
+		TicketingOutboxEvent notExpired = outboxRepository.findById(recent.getId()).orElseThrow();
+		assertThat(notExpired.getStatus()).isEqualTo(OutboxStatus.PROCESSING);
+		assertThat(notExpired.getRetryCount()).isZero();
+		assertThat(notExpired.getClaimToken()).isEqualTo(recentToken);
 	}
 
 	@Test

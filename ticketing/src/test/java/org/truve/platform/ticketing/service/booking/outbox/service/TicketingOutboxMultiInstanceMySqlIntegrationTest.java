@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -40,6 +41,7 @@ import com.truve.platform.common.outbox.OutboxStatus;
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 @Testcontainers
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+@Import(TicketingOutboxClaimService.class)
 class TicketingOutboxMultiInstanceMySqlIntegrationTest {
 	private static final String MYSQL_DATABASE = "ticketing_outbox_test";
 	private static final String MYSQL_USERNAME = "test";
@@ -68,6 +70,8 @@ class TicketingOutboxMultiInstanceMySqlIntegrationTest {
 	private TicketingOutboxEventRepository outboxRepository;
 	@Autowired
 	private PlatformTransactionManager transactionManager;
+	@Autowired
+	private TicketingOutboxClaimService claimService;
 
 	@BeforeEach
 	void cleanDatabase() {
@@ -102,14 +106,13 @@ class TicketingOutboxMultiInstanceMySqlIntegrationTest {
 		assertThat(first.ids()).doesNotContainAnyElementsOf(second.ids());
 		Set<Long> claimedIds = new HashSet<>(first.ids());
 		claimedIds.addAll(second.ids());
-		ClaimAttempt remaining = claim(20, new CountDownLatch(0), new CountDownLatch(0));
-		assertThat(remaining.failure()).isNull();
-		assertThat(remaining.ids()).allMatch(id -> !claimedIds.contains(id));
-		claimedIds.addAll(remaining.ids());
+		List<ClaimedOutboxEvent> remaining = claimService.claimBatch(20);
+		assertThat(remaining).extracting(ClaimedOutboxEvent::id).allMatch(id -> !claimedIds.contains(id));
+		claimedIds.addAll(remaining.stream().map(ClaimedOutboxEvent::id).toList());
 		assertThat(claimedIds).hasSize(20);
 		Set<UUID> expectedTokens = new HashSet<>(List.of(first.token(), second.token()));
-		if (!remaining.ids().isEmpty()) {
-			expectedTokens.add(remaining.token());
+		if (!remaining.isEmpty()) {
+			expectedTokens.add(remaining.getFirst().claimToken());
 		}
 		List<TicketingOutboxEvent> saved = outboxRepository.findAll();
 		assertThat(saved).allMatch(event -> event.getStatus() == OutboxStatus.PROCESSING);
@@ -142,8 +145,16 @@ class TicketingOutboxMultiInstanceMySqlIntegrationTest {
 		assertThat(second.failure()).isNull();
 		List<Long> allClaimed = java.util.stream.Stream.concat(first.ids().stream(), second.ids().stream()).toList();
 		assertThat(allClaimed).containsExactly(sold.getId());
+		TicketingOutboxEvent processingSold = outboxRepository.findById(sold.getId()).orElseThrow();
+		assertThat(claimService.claimBatch(1)).isEmpty();
+		claimService.complete(List.of(new OutboxRelayResult(
+			processingSold.getId(), processingSold.getClaimToken(), true
+		)));
+		List<ClaimedOutboxEvent> nextPoll = claimService.claimBatch(1);
+
+		assertThat(nextPoll).singleElement().extracting(ClaimedOutboxEvent::id).isEqualTo(canceled.getId());
 		TicketingOutboxEvent blocked = outboxRepository.findById(canceled.getId()).orElseThrow();
-		assertThat(blocked.getStatus()).isEqualTo(OutboxStatus.PENDING);
+		assertThat(blocked.getStatus()).isEqualTo(OutboxStatus.PROCESSING);
 	}
 
 	private ClaimAttempt claim(int batchSize, CountDownLatch start, CountDownLatch bothSelected) {
