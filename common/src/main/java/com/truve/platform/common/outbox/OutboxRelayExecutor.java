@@ -1,7 +1,9 @@
 package com.truve.platform.common.outbox;
 
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -18,7 +20,12 @@ public class OutboxRelayExecutor {
 	private final KafkaTemplate<String, String> kafkaTemplate;
 
 	public void execute(List<? extends OutboxEvent> pendingEvents) {
+		Set<RelayKey> failedKeys = new HashSet<>();
 		for (OutboxEvent event : pendingEvents) {
+			RelayKey relayKey = new RelayKey(event.getTopic(), event.getMessageKey());
+			if (failedKeys.contains(relayKey)) {
+				continue;
+			}
 			try {
 				ProducerRecord<String, String> record =
 					new ProducerRecord<>(event.getTopic(), event.getMessageKey(), event.getPayload());
@@ -31,8 +38,12 @@ public class OutboxRelayExecutor {
 					event.getTopic(), event.getMessageKey(), event.getEventType(), event.getPayload());
 			} catch (Exception e) {
 				event.markFailed();
+				failedKeys.add(relayKey);
 				log.error("[Outbox Relay] Failed - id: {}, retryCount: {}", event.getId(), event.getRetryCount(), e);
 			}
 		}
+	}
+
+	private record RelayKey(String topic, String messageKey) {
 	}
 }

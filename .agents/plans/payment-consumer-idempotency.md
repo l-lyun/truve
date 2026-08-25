@@ -20,13 +20,16 @@
 - 카드 결제, 가상계좌 발급, 입금 완료 상태 전이 검증
 - 의미상 중복 이벤트와 취소 후 지연 이벤트 방어
 - 실제 MySQL 낙관적 락 동시성 테스트
+- Payment Outbox의 FAILED 재시도와 topic·messageKey별 선행 이벤트 순서 보장
+- 신규 PENDING·FAILED 재시도 배치 분리 및 예약별 실패 격리
 
 ### 제외
 
 - Inbox 테이블과 eventId 처리 이력
 - Ticketing Transactional Outbox
 - Kafka retry topic·DLT·redrive 정책과 실제 재전달 통합 테스트
-- Payment Outbox Relay 다중 인스턴스 claim 및 인과 순서 보장
+- Payment Outbox Relay 다중 인스턴스 배타적 claim
+- FAILED 재시도의 backoff·최대 횟수·운영자 재처리
 - 결제 취소의 외부 호출·락 경계 재설계
 
 ## 구현 순서
@@ -39,6 +42,8 @@
 - [x] 실제 MySQL 낙관적 락 검증
 - [x] 전체 영향 모듈 테스트와 독립 리뷰
 - [x] PR #6 제목·본문 수정
+- [x] 결제 리뷰: 선행 이벤트 실패 재시도와 후속 이벤트 차단
+- [x] 결제 리뷰: 영구 실패 이벤트와 신규 배치 격리
 
 ## 검증
 
@@ -46,6 +51,8 @@
 - 같은 카드 결제·가상계좌·입금 완료 이벤트를 순차 호출해 Ticket과 SOLD 후속 처리가 한 번만 수행되는지 확인
 - 실제 MySQL에서 Reservation 엔티티를 동시에 변경해 하나의 커밋과 하나의 낙관적 락 실패가 발생하는지 확인
 - 취소 후 지연된 결제 이벤트가 Reservation을 CONFIRMED로 되돌리지 않는지 확인
+- 실패한 선행 Outbox가 같은 topic·messageKey의 후속 이벤트만 차단하는지 확인
+- FAILED 100건과 신규 PENDING 배치를 분리해 신규 이벤트가 고갈되지 않는지 확인
 
 ## 알려진 후속 작업
 
