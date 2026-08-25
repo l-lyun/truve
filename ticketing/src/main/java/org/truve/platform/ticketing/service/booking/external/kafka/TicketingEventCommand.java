@@ -66,4 +66,27 @@ public class TicketingEventCommand {
 			return "SOLD_CONFIRMED";
 		}
 	}
+
+	@Getter
+	@Builder
+	@AllArgsConstructor
+	@NoArgsConstructor
+	public static class SaleCanceled implements TicketingEvent {
+		private String reservationNumber;
+		private UUID userId;
+		private List<Long> scheduledSeatIds;
+
+		public static SaleCanceled of(Reservation reservation, List<Long> scheduledSeatIds) {
+			return SaleCanceled.builder()
+				.reservationNumber(reservation.getNumber())
+				.userId(reservation.getUserId())
+				.scheduledSeatIds(List.copyOf(scheduledSeatIds))
+				.build();
+		}
+
+		@Override
+		public String getEventType() {
+			return "SALE_CANCELED";
+		}
+	}
 }

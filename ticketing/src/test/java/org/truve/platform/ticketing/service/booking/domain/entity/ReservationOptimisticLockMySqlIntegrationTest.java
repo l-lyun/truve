@@ -32,6 +32,8 @@ import org.truve.platform.ticketing.service.booking.domain.constant.ReservationS
 import org.truve.platform.ticketing.service.booking.domain.constant.TicketStatus;
 import org.truve.platform.ticketing.service.booking.domain.entity.Reservation.PaymentTransitionResult;
 import org.truve.platform.ticketing.service.booking.domain.entity.embedded.ShowInfo;
+import org.truve.platform.ticketing.service.booking.outbox.domain.entity.TicketingOutboxEvent;
+import org.truve.platform.ticketing.service.booking.outbox.repository.TicketingOutboxEventRepository;
 import org.truve.platform.ticketing.service.booking.repository.ReservationRepository;
 
 @DataJpaTest(properties = "spring.jpa.hibernate.ddl-auto=create-drop")
@@ -66,10 +68,13 @@ class ReservationOptimisticLockMySqlIntegrationTest {
 	@Autowired
 	private ReservationRepository reservationRepository;
 	@Autowired
+	private TicketingOutboxEventRepository outboxRepository;
+	@Autowired
 	private PlatformTransactionManager transactionManager;
 
 	@BeforeEach
 	void cleanDatabase() {
+		outboxRepository.deleteAll();
 		reservationRepository.deleteAll();
 	}
 
@@ -103,6 +108,10 @@ class ReservationOptimisticLockMySqlIntegrationTest {
 		assertThat(saved.getStatus()).isEqualTo(ReservationStatus.CONFIRMED);
 		assertThat(saved.getTickets()).allMatch(ticket -> ticket.getStatus() == TicketStatus.ISSUED);
 		assertThat(saved.getVersion()).isEqualTo(1L);
+		assertThat(outboxRepository.findAll())
+			.singleElement()
+			.extracting(TicketingOutboxEvent::getMessageKey)
+			.isEqualTo("R-001");
 	}
 
 	@Test
@@ -134,6 +143,9 @@ class ReservationOptimisticLockMySqlIntegrationTest {
 				await(reservationsLoaded, 5);
 				await(updateStart, 5);
 				reservation.confirm(LocalDateTime.now(), LocalDateTime.now(), "카드", null);
+				outboxRepository.save(TicketingOutboxEvent.create(
+					"booking.ticketing", reservation.getNumber(), "{}", "SOLD_CONFIRMED"
+				));
 			});
 			return new Attempt(null);
 		} catch (RuntimeException exception) {

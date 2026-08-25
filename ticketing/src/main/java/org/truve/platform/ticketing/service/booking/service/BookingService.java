@@ -23,7 +23,7 @@ import org.truve.platform.ticketing.service.booking.external.kafka.BookingEventC
 import org.truve.platform.ticketing.service.booking.external.kafka.PaymentEventCommand;
 import org.truve.platform.ticketing.service.booking.external.kafka.PaymentPublisher;
 import org.truve.platform.ticketing.service.booking.external.kafka.TicketingEventCommand;
-import org.truve.platform.ticketing.service.booking.external.kafka.TicketingPublisher;
+import org.truve.platform.ticketing.service.booking.outbox.service.TicketingOutboxPublisher;
 import org.truve.platform.ticketing.service.booking.risk.service.BookingBotRiskService;
 import org.truve.platform.ticketing.service.booking.repository.ReservationRepository;
 import org.truve.platform.ticketing.service.booking.util.NumberGenerator;
@@ -48,7 +48,7 @@ public class BookingService {
 	private final SeatHoldLockService seatHoldLockService;
 	private final PaymentPublisher paymentPublisher;
 	private final PaymentClient paymentClient;
-	private final TicketingPublisher ticketingPublisher;
+	private final TicketingOutboxPublisher ticketingOutboxPublisher;
 	private final BookingBotRiskService bookingBotRiskService;
 
 	public BookingResponse.Create create(UUID userId, String sessionToken, BookingRequest.Create request) {
@@ -236,7 +236,7 @@ public class BookingService {
 		List<Long> scheduledSeatIds = reservation.getTickets().stream()
 			.map(Ticket::getScheduledSeatId)
 			.toList();
-		ticketingPublisher.publish(TicketingEventCommand.SoldConfirmed.of(reservation, scheduledSeatIds));
+		ticketingOutboxPublisher.publish(TicketingEventCommand.SoldConfirmed.of(reservation, scheduledSeatIds));
 	}
 
 	@Transactional(readOnly = true)
@@ -273,7 +273,7 @@ public class BookingService {
 		);
 
 		reservation.cancel(ticketIds, canceledAt);
-		ticketingPublisher.publish(TicketingEventCommand.HoldReleased.of(reservation, scheduledSeatIds));
+		ticketingOutboxPublisher.publish(TicketingEventCommand.SaleCanceled.of(reservation, scheduledSeatIds));
 
 		return new BookingResponse.CanceledTickets(ticketIds);
 	}

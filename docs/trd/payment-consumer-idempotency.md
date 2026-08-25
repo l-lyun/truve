@@ -58,7 +58,7 @@ Reservation의 `@Version`은 두 트랜잭션이 같은 버전을 읽고 동시�
 ## 이번 범위의 한계
 
 - Kafka retry topic·DLT·redrive 정책과 실제 Kafka 재전달 통합 테스트가 아직 없다. 따라서 낙관적 락 패자가 실제 운영에서 최종 성공할 때까지 재전달된다고 아직 주장할 수 없다.
-- 현재 Ticketing의 `SOLD_CONFIRMED`는 DB 커밋 전에 Kafka로 직접 발행된다. 동시 중복 요청은 양쪽 모두 SOLD를 발행한 뒤 낙관적 락 패자의 DB만 롤백될 수 있으므로, 동시 상황에서 SOLD 한 번 발행은 아직 보장하지 않는다. DB 변경과 후속 이벤트 발행의 원자성은 다음 Ticketing Transactional Outbox 단계에서 보강한다.
+- 후속 Ticketing Transactional Outbox 단계에서 `SOLD_CONFIRMED`를 Reservation·Ticket 변경과 같은 DB 트랜잭션에 기록하도록 보강했다. 다만 Relay는 at-least-once 방식이므로 Kafka에 물리적으로 한 번만 발행된다고 보장하지 않으며, 상세 범위는 `ticketing-transactional-outbox.md`를 따른다.
 - Payment Outbox Relay는 DB 기준의 예약별 선두와 실패 재시도를 보강했지만, 다중 인스턴스의 배타적 claim은 아직 없어 같은 이벤트가 중복 발행될 수 있다. Consumer 상태 머신이 의미상 중복을 방어하지만 Relay 자체의 exactly-once는 보장하지 않는다.
 - FAILED 이벤트의 시간 기반 backoff·최대 재시도·운영자 재처리 정책은 아직 없다.
 - 취소된 예약에 실제 결제가 완료된 상황은 상태를 되돌리지는 않지만 자동 환불이나 운영 알림까지 해결하지 않는다.
