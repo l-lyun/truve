@@ -1,15 +1,12 @@
 package org.truve.platform.ticketing.service.ticketing.repository;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
-import org.springframework.util.StringUtils;
 import org.truve.platform.ticketing.service.ticketing.dto.SessionTicketValueDTO;
 import org.truve.platform.ticketing.service.global.support.RedisSupport;
-
-import com.truve.platform.common.exception.ErrorCode;
-import com.truve.platform.common.support.Preconditions;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,8 +27,8 @@ public class TicketingRedisRepository {
 		return redisSupport.consumeIfEquals(readyUserKey(showId, userId), admissionToken);
 	}
 
-	public void saveSessionToken(String sessionToken, UUID userId, Long showId, Duration ttl) {
-		SessionTicketValueDTO value = SessionTicketValueDTO.of(userId, showId);
+	public void saveSessionToken(String sessionToken, UUID userId, Long showScheduleId, Duration ttl) {
+		SessionTicketValueDTO value = SessionTicketValueDTO.of(userId, showScheduleId);
 		redisSupport.setJsonValueWithTtl(sessionTokenKey(sessionToken), value, ttl);
 	}
 
@@ -61,13 +58,48 @@ public class TicketingRedisRepository {
 		return redisSupport.setIfAbsent(seatHoldKey(showScheduleId, scheduledSeatId), sessionToken, Duration.ofMinutes(10));
 	}
 
-	public boolean deleteHoldSeat(Long showScheduleId, Long scheduledSeatId) {
-		return redisSupport.delete(seatHoldKey(showScheduleId, scheduledSeatId));
+	public boolean deleteHoldSeat(Long showScheduleId, Long scheduledSeatId, String sessionToken) {
+		return redisSupport.consumeIfEquals(seatHoldKey(showScheduleId, scheduledSeatId), sessionToken);
 	}
 
 	public String getHoldSeatSessionToken(Long showScheduleId, Long scheduledSeatId) {
 		return redisSupport.getValue(seatHoldKey(showScheduleId, scheduledSeatId));
 	}
+
+	public boolean claimHoldSeats(
+		Long showScheduleId,
+		List<Long> scheduledSeatIds,
+		String sessionToken,
+		String claimValue
+	) {
+		return redisSupport.replaceAllIfEquals(
+			seatHoldKeys(showScheduleId, scheduledSeatIds),
+			sessionToken,
+			claimValue
+		);
+	}
+
+	public boolean releaseClaimedSeats(
+		Long showScheduleId,
+		List<Long> scheduledSeatIds,
+		String claimValue
+	) {
+		return redisSupport.deleteAllIfEquals(seatHoldKeys(showScheduleId, scheduledSeatIds), claimValue);
+	}
+
+	public boolean restoreClaimedSeats(
+		Long showScheduleId,
+		List<Long> scheduledSeatIds,
+		String claimValue,
+		String sessionToken
+	) {
+		return redisSupport.replaceEachIfEquals(
+			seatHoldKeys(showScheduleId, scheduledSeatIds),
+			claimValue,
+			sessionToken
+		);
+	}
+
 	public String validateMacro(String sessionTicket) {
 		String key = secureKey(sessionTicket);
 		return redisSupport.getValue(key);
@@ -86,6 +118,12 @@ public class TicketingRedisRepository {
 
 	private String seatHoldKey(Long showScheduleId, Long scheduledSeatId) {
 		return SEAT_HOLD_KEY_PREFIX + showScheduleId + ":" + scheduledSeatId;
+	}
+
+	private List<String> seatHoldKeys(Long showScheduleId, List<Long> scheduledSeatIds) {
+		return scheduledSeatIds.stream()
+			.map(scheduledSeatId -> seatHoldKey(showScheduleId, scheduledSeatId))
+			.toList();
 	}
 
 	private String secureKey(String sessionTicket) {

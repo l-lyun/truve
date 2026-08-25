@@ -427,16 +427,16 @@ class TicketingServiceTest {
 			ReflectionTestUtils.setField(scheduledSeat1.getSeat(), "id", 100L);
 			ReflectionTestUtils.setField(scheduledSeat2.getSeat(), "id", 101L);
 			given(scheduledSeatRepository.findAllById(List.of(10L, 11L))).willReturn(List.of(scheduledSeat1, scheduledSeat2));
-			given(ticketingRedisRepository.getHoldSeatSessionToken(showScheduleId, 10L)).willReturn(sessionToken);
-			given(ticketingRedisRepository.getHoldSeatSessionToken(showScheduleId, 11L)).willReturn(sessionToken);
+			given(ticketingRedisRepository.deleteHoldSeat(showScheduleId, 10L, sessionToken)).willReturn(true);
+			given(ticketingRedisRepository.deleteHoldSeat(showScheduleId, 11L, sessionToken)).willReturn(true);
 
 			// when
 			ticketingService.cancelHoldSeat(showScheduleId, userId, sessionToken, List.of(10L, 11L));
 
 			// then
 			assertAll(
-				() -> verify(ticketingRedisRepository).deleteHoldSeat(showScheduleId, 10L),
-				() -> verify(ticketingRedisRepository).deleteHoldSeat(showScheduleId, 11L)
+				() -> verify(ticketingRedisRepository).deleteHoldSeat(showScheduleId, 10L, sessionToken),
+				() -> verify(ticketingRedisRepository).deleteHoldSeat(showScheduleId, 11L, sessionToken)
 			);
 		}
 
@@ -446,7 +446,7 @@ class TicketingServiceTest {
 			// given
 			ScheduledSeat scheduledSeat = createScheduledSeat(10L, showScheduleId, SeatStatus.AVAILABLE);
 			given(scheduledSeatRepository.findAllById(List.of(10L))).willReturn(List.of(scheduledSeat));
-			given(ticketingRedisRepository.getHoldSeatSessionToken(showScheduleId, 10L)).willReturn("other-session");
+			given(ticketingRedisRepository.deleteHoldSeat(showScheduleId, 10L, sessionToken)).willReturn(false);
 
 			// when
 			CustomException exception = assertThrows(
@@ -457,7 +457,7 @@ class TicketingServiceTest {
 			// then
 			assertAll(
 				() -> assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_HOLD_SEAT),
-				() -> verify(ticketingRedisRepository, never()).deleteHoldSeat(showScheduleId, 10L)
+				() -> verify(ticketingRedisRepository).deleteHoldSeat(showScheduleId, 10L, sessionToken)
 			);
 		}
 	}

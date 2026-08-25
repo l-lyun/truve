@@ -31,22 +31,6 @@ class BookingConsumerTest {
 	private BookingConsumer bookingConsumer;
 
 	@Test
-	@DisplayName("HOLD_REQUESTED 이벤트면 좌석 점유 서비스에 위임한다.")
-	void hold이벤트_소비성공() {
-		TicketingEventCommand.HoldRequested event = new TicketingEventCommand.HoldRequested(
-			"R-001",
-			UUID.fromString("11111111-1111-1111-1111-111111111111"),
-			List.of(10L, 11L)
-		);
-		given(jsonConverter.convert("payload", TicketingEventCommand.HoldRequested.class)).willReturn(event);
-
-		bookingConsumer.consume("payload", "HOLD_REQUESTED");
-
-		verify(jsonConverter).convert("payload", TicketingEventCommand.HoldRequested.class);
-		verify(scheduledSeatStatusService).holdSeats(event);
-	}
-
-	@Test
 	@DisplayName("HOLD_RELEASED 이벤트면 좌석 해제 서비스에 위임한다.")
 	void release이벤트_소비성공() {
 		TicketingEventCommand.HoldReleased event = new TicketingEventCommand.HoldReleased(

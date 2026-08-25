@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -28,6 +29,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -36,7 +38,13 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "reservations")
+@Table(
+	name = "reservations",
+	uniqueConstraints = @UniqueConstraint(
+		name = "uk_reservation_user_schedule_block_booking",
+		columnNames = {"user_id", "show_schedule_id", "block_booking"}
+	)
+)
 public class Reservation extends BaseEntity {
 	private static final Long TICKET_SERVICE_FEE = 2000L;
 
@@ -61,6 +69,9 @@ public class Reservation extends BaseEntity {
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	private ReservationStatus status;
+
+	@Column(name = "block_booking")
+	private Boolean blockBooking;
 
 	@Column
 	private LocalDateTime bookedAt;
@@ -98,6 +109,7 @@ public class Reservation extends BaseEntity {
 		this.gradeSummary = gradeSummary;
 		this.showInfo = showInfo;
 		this.status = ReservationStatus.CREATED;
+		this.blockBooking = true;
 	}
 
 	public static Reservation create(
@@ -229,18 +241,37 @@ public class Reservation extends BaseEntity {
 	}
 
 	public void cancel(List<Long> ticketIds, LocalDateTime canceledAt) {
-		this.status = new HashSet<>(ticketIds).size() == tickets.size() ? ReservationStatus.CANCELED :
-			ReservationStatus.PARTIAL_CANCELED;
 		this.canceledAt = canceledAt;
 
 		tickets.stream()
 			.filter(ticket -> ticketIds.contains(ticket.getId()))
 			.forEach(ticket -> ticket.cancel(canceledAt));
+
+		boolean allTicketsCanceled = tickets.stream().allMatch(Ticket::isCanceled);
+		this.status = allTicketsCanceled ? ReservationStatus.CANCELED : ReservationStatus.PARTIAL_CANCELED;
+		if (allTicketsCanceled) {
+			this.blockBooking = null;
+		}
 	}
 
 	public void validateTicketId(List<Long> ticketIds) {
+		Preconditions.validate(
+			ticketIds != null
+				&& !ticketIds.isEmpty()
+				&& ticketIds.stream().noneMatch(Objects::isNull)
+				&& new HashSet<>(ticketIds).size() == ticketIds.size(),
+			ErrorCode.INVALID_TICKET_ID
+		);
 		Set<Long> validIds = tickets.stream().map(Ticket::getId).collect(Collectors.toSet());
 		Preconditions.validate(validIds.containsAll(ticketIds), ErrorCode.INVALID_TICKET_ID);
+	}
+
+	public void validateCancelableTicketIds(List<Long> ticketIds) {
+		validateTicketId(ticketIds);
+		boolean allCancelable = tickets.stream()
+			.filter(ticket -> ticketIds.contains(ticket.getId()))
+			.noneMatch(Ticket::isCanceled);
+		Preconditions.validate(allCancelable, ErrorCode.ALREADY_CANCELED_TICKET);
 	}
 
 	public void validateCancelStatus() {

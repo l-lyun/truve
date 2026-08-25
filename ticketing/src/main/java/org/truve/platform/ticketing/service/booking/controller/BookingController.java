@@ -27,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/bookings")
 public class BookingController {
 	private static final String USER_ID_HEADER = "X-User-Id";
+	private static final String SESSION_HEADER = "X-Session-Ticket";
 
 	private final BookingService bookingService;
 
@@ -34,8 +35,9 @@ public class BookingController {
 	@PostMapping
 	public ApiResult<BookingResponse.Create> create(
 		@RequestHeader(USER_ID_HEADER) UUID userId,
+		@RequestHeader(SESSION_HEADER) String sessionToken,
 		@RequestBody @Valid BookingRequest.Create request) {
-		return ApiResult.ok(bookingService.create(userId, request));
+		return ApiResult.ok(bookingService.create(userId, sessionToken, request));
 	}
 
 	@Operation(summary = "예매 주문 정보 조회", description = "좌석 선택 후 생성된 예매 주문 정보를 조회합니다.")

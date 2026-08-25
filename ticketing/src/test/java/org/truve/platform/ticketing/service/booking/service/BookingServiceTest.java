@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,8 +24,6 @@ import org.truve.platform.ticketing.service.booking.domain.entity.embedded.ShowI
 import org.truve.platform.ticketing.service.booking.dto.BookingRequest;
 import org.truve.platform.ticketing.service.booking.dto.BookingResponse;
 import org.truve.platform.ticketing.service.booking.external.client.payment.PaymentClient;
-import org.truve.platform.ticketing.service.booking.external.client.ticketing.TicketingClient;
-import org.truve.platform.ticketing.service.booking.external.client.ticketing.TicketingResponse;
 import org.truve.platform.ticketing.service.booking.external.kafka.BookingEventCommand;
 import org.truve.platform.ticketing.service.booking.external.kafka.PaymentEventCommand;
 import org.truve.platform.ticketing.service.booking.external.kafka.PaymentPublisher;
@@ -32,6 +31,10 @@ import org.truve.platform.ticketing.service.booking.external.kafka.TicketingEven
 import org.truve.platform.ticketing.service.booking.external.kafka.TicketingPublisher;
 import org.truve.platform.ticketing.service.booking.risk.service.BookingBotRiskService;
 import org.truve.platform.ticketing.service.booking.repository.ReservationRepository;
+import org.truve.platform.ticketing.service.ticketing.service.SeatHoldService;
+
+import com.truve.platform.common.exception.CustomException;
+import com.truve.platform.common.exception.ErrorCode;
 
 @ExtendWith(MockitoExtension.class)
 class BookingServiceTest {
@@ -39,7 +42,11 @@ class BookingServiceTest {
 	@Mock
 	private ReservationRepository reservationRepository;
 	@Mock
-	private TicketingClient ticketingClient;
+	private BookingCreationService bookingCreationService;
+	@Mock
+	private BookingLockService bookingLockService;
+	@Mock
+	private SeatHoldService seatHoldService;
 	@Mock
 	private TicketingPublisher ticketingPublisher;
 	@Mock
@@ -58,53 +65,91 @@ class BookingServiceTest {
 		// given
 		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
 		List<Long> seatIds = List.of(10L, 11L, 12L);
-		BookingRequest.Create request = new BookingRequest.Create(seatIds);
-
-		TicketingResponse.Seat seat1 = new TicketingResponse.Seat(10L, "Section1", 1L, "VIP", "A", 10L, 10000L);
-		TicketingResponse.Seat seat2 = new TicketingResponse.Seat(11L, "Section2", 2L, "S", "B", 20L, 20000L);
-		TicketingResponse.Seat seat3 = new TicketingResponse.Seat(12L, "Section3", 3L, "VIP", "C", 30L, 30000L);
-		List<TicketingResponse.Seat> seats = List.of(seat1, seat2, seat3);
-		TicketingResponse.SeatInfo seatInfo = new TicketingResponse.SeatInfo(
-			1L,
-			100L,
-			"title",
-			"venue",
-			LocalDateTime.now(),
-			"poster",
-			seats);
-		given(ticketingClient.getSeatInfo(seatIds)).willReturn(seatInfo);
+		BookingRequest.Create request = new BookingRequest.Create(100L, seatIds);
+		BookingLockService.BookingLock bookingLock = new BookingLockService.BookingLock(userId, 100L, "lock-token");
+		SeatHoldService.SeatClaim claim = new SeatHoldService.SeatClaim(
+			100L, seatIds, "session-token", "claim-token"
+		);
+		given(bookingLockService.acquire(userId, 100L)).willReturn(bookingLock);
+		given(reservationRepository.existsBlockingBooking(userId, 100L)).willReturn(false);
+		given(seatHoldService.claim(eq(100L), eq(seatIds), eq("session-token"), anyString())).willReturn(claim);
+		given(bookingCreationService.create(eq(userId), eq(100L), eq(seatIds), anyString()))
+			.willAnswer(invocation -> new BookingResponse.Create(invocation.getArgument(3)));
 
 		// when
-		bookingService.create(userId, request);
+		BookingResponse.Create response = bookingService.create(userId, "session-token", request);
 
 		// then
-		ArgumentCaptor<Reservation> captor = ArgumentCaptor.forClass(Reservation.class);
-		ArgumentCaptor<TicketingEventCommand.TicketingEvent> eventCaptor =
-			ArgumentCaptor.forClass(TicketingEventCommand.TicketingEvent.class);
-		verify(reservationRepository).save(captor.capture());
-		verify(ticketingPublisher).publish(eventCaptor.capture());
-		Reservation savedReservation = captor.getValue();
-		TicketingEventCommand.HoldRequested holdRequested =
-			(TicketingEventCommand.HoldRequested)eventCaptor.getValue();
-
 		assertAll(
-			() -> assertThat(savedReservation.calculateTicketAmount()).isEqualTo(60000L),
-			() -> assertThat(savedReservation.getGradeSummary()).isEqualTo("VIP석 2인\nS석 1인"),
-			() -> assertThat(savedReservation.getShowInfo().getShowScheduleId()).isEqualTo(100L),
-			() -> assertThat(savedReservation.getTickets()).hasSize(3),
-			() -> assertThat(savedReservation.getServiceFee()).isEqualTo(6000L),
-			() -> assertThat(savedReservation.getTickets().getFirst().getScheduledSeatId()).isEqualTo(10L),
-			() -> assertThat(holdRequested.getReservationNumber()).isEqualTo(savedReservation.getNumber()),
-			() -> assertThat(holdRequested.getUserId()).isEqualTo(userId),
-			() -> assertThat(holdRequested.getScheduledSeatIds()).containsExactlyElementsOf(seatIds),
-			() -> {
-				assertNotNull(savedReservation.getTickets());
-				assertThat(savedReservation.getTickets().get(1).getPriceSnapshot()).isEqualTo(20000L);
-				assertThat(savedReservation.getTickets().getLast().getStatus()).isEqualTo(TicketStatus.PENDING);
-				assertThat(savedReservation.getTickets().get(1).getUsedAt()).isNull();
-				assertThat(savedReservation.getTickets().getFirst().getSeatDetail()).isEqualTo("1층 Section1구역 A열 10번");
-			}
+			() -> assertThat(response.getReservationNumber()).isNotBlank(),
+			() -> verify(seatHoldService).validateSession(userId, 100L, "session-token"),
+			() -> verify(seatHoldService).release(claim),
+			() -> verify(bookingLockService).release(bookingLock),
+			() -> verify(ticketingPublisher, never()).publish(any())
 		);
+	}
+
+	@Test
+	@DisplayName("같은 사용자의 동일 회차 활성 예약이 있으면 새 예약을 만들지 않는다.")
+	void 예매생성_기존활성예약_차단() {
+		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+		BookingRequest.Create request = new BookingRequest.Create(100L, List.of(10L));
+		BookingLockService.BookingLock bookingLock = new BookingLockService.BookingLock(userId, 100L, "lock-token");
+		given(bookingLockService.acquire(userId, 100L)).willReturn(bookingLock);
+		given(reservationRepository.existsBlockingBooking(userId, 100L)).willReturn(true);
+
+		CustomException exception = assertThrows(
+			CustomException.class,
+			() -> bookingService.create(userId, "session-token", request)
+		);
+
+		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ALREADY_BOOKED_SHOW);
+		verify(seatHoldService, never()).claim(anyLong(), anyList(), anyString(), anyString());
+		verify(bookingCreationService, never()).create(any(), anyLong(), anyList(), anyString());
+		verify(bookingLockService).release(bookingLock);
+	}
+
+	@Test
+	@DisplayName("좌석 ID 목록에 null이 있으면 Redis와 DB 작업을 시작하지 않는다.")
+	void 예매생성_null좌석ID_차단() {
+		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+		BookingRequest.Create request = new BookingRequest.Create(100L, Collections.singletonList(null));
+
+		CustomException exception = assertThrows(
+			CustomException.class,
+			() -> bookingService.create(userId, "session-token", request)
+		);
+
+		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.NOT_CORRECT_SEAT);
+		verify(seatHoldService, never()).validateSession(any(), anyLong(), anyString());
+		verify(bookingLockService, never()).acquire(any(), anyLong());
+		verify(bookingCreationService, never()).create(any(), anyLong(), anyList(), anyString());
+	}
+
+	@Test
+	@DisplayName("DB 예약 생성이 실패하면 좌석 claim을 기존 세션으로 복원하고 사용자 락을 정리한다.")
+	void 예매생성_DB실패_보상() {
+		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+		List<Long> seatIds = List.of(10L, 11L);
+		BookingRequest.Create request = new BookingRequest.Create(100L, seatIds);
+		BookingLockService.BookingLock bookingLock = new BookingLockService.BookingLock(userId, 100L, "lock-token");
+		SeatHoldService.SeatClaim claim = new SeatHoldService.SeatClaim(
+			100L, seatIds, "session-token", "claim-token"
+		);
+		given(bookingLockService.acquire(userId, 100L)).willReturn(bookingLock);
+		given(seatHoldService.claim(eq(100L), eq(seatIds), eq("session-token"), anyString())).willReturn(claim);
+		given(bookingCreationService.create(eq(userId), eq(100L), eq(seatIds), anyString()))
+			.willThrow(new CustomException(ErrorCode.ALREADY_HOLD_SEAT));
+
+		CustomException exception = assertThrows(
+			CustomException.class,
+			() -> bookingService.create(userId, "session-token", request)
+		);
+
+		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ALREADY_HOLD_SEAT);
+		verify(seatHoldService).restore(claim);
+		verify(seatHoldService, never()).release(claim);
+		verify(bookingLockService).release(bookingLock);
 	}
 
 	@Test
@@ -200,7 +245,7 @@ class BookingServiceTest {
 		Reservation reservation = createReservation();
 		confirmByCard(reservation);
 		BookingRequest.Cancel request = new BookingRequest.Cancel("단순변심", List.of(1L));
-		given(reservationRepository.findByNumber("R-001")).willReturn(reservation);
+		given(reservationRepository.findByNumberForUpdate("R-001")).willReturn(reservation);
 
 		BookingResponse.CanceledTickets response = bookingService.cancel("R-001", request);
 
@@ -217,8 +262,40 @@ class BookingServiceTest {
 			() -> assertThat(holdReleased.getReservationNumber()).isEqualTo("R-001"),
 			() -> assertThat(holdReleased.getScheduledSeatIds()).containsExactly(1L),
 			() -> assertThat(reservation.getTickets().getFirst().isCanceled()).isTrue(),
-			() -> assertThat(reservation.getTickets().getLast().isCanceled()).isFalse()
+			() -> assertThat(reservation.getTickets().getLast().isCanceled()).isFalse(),
+			() -> assertThat(reservation.getBlockBooking()).isTrue()
 		);
+	}
+
+	@Test
+	@DisplayName("모든 티켓을 취소하면 blockBooking을 null로 변경한다.")
+	void 예매전체취소_blockBooking해제() {
+		Reservation reservation = createReservation();
+		confirmByCard(reservation);
+		BookingRequest.Cancel request = new BookingRequest.Cancel("단순변심", List.of(1L, 2L));
+		given(reservationRepository.findByNumberForUpdate("R-001")).willReturn(reservation);
+
+		bookingService.cancel("R-001", request);
+
+		assertThat(reservation.getBlockBooking()).isNull();
+	}
+
+	@Test
+	@DisplayName("이미 취소된 티켓이 포함된 요청은 결제 취소를 호출하지 않는다.")
+	void 이미_취소된_티켓_중복환불_차단() {
+		Reservation reservation = createReservation();
+		confirmByCard(reservation);
+		reservation.cancel(List.of(1L), LocalDateTime.now());
+		BookingRequest.Cancel request = new BookingRequest.Cancel("단순변심", List.of(1L, 2L));
+		given(reservationRepository.findByNumberForUpdate("R-001")).willReturn(reservation);
+
+		CustomException exception = assertThrows(
+			CustomException.class,
+			() -> bookingService.cancel("R-001", request)
+		);
+
+		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ALREADY_CANCELED_TICKET);
+		verify(paymentClient, never()).cancel(anyString(), anyString(), any());
 	}
 
 	private Reservation createReservation() {

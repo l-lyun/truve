@@ -14,10 +14,10 @@ import lombok.NoArgsConstructor;
 @Getter
 public class ShowInfo {
 
-	@Column(nullable = false)
+	@Column(name = "show_id", nullable = false)
 	private Long showId;
 
-	@Column(nullable = false)
+	@Column(name = "show_schedule_id", nullable = false)
 	private Long showScheduleId;
 
 	@Column(nullable = false)

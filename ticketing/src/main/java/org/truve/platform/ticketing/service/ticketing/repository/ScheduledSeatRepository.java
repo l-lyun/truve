@@ -3,6 +3,7 @@ package org.truve.platform.ticketing.service.ticketing.repository;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.truve.platform.ticketing.service.booking.external.client.ticketing.TicketingResponse;
@@ -11,7 +12,20 @@ import org.truve.platform.ticketing.service.ticketing.domain.entity.ScheduledSea
 import org.truve.platform.ticketing.service.ticketing.dto.SeatSectionsDto;
 import org.truve.platform.ticketing.service.ticketing.dto.TicketingInternalResponse;
 
+import jakarta.persistence.LockModeType;
+
 public interface ScheduledSeatRepository extends JpaRepository<ScheduledSeat, Long> {
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("""
+		select ss
+		from ScheduledSeat ss
+		join fetch ss.seat s
+		join fetch s.seatSection sc
+		where ss.id in :ids
+		order by ss.id asc
+		""")
+	List<ScheduledSeat> findAllByIdForUpdate(@Param("ids") List<Long> ids);
 
 	// TODO: N+1, 성능 개선 등 확인 필요
 	@Query("""

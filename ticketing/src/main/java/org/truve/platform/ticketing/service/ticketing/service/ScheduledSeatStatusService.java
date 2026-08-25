@@ -20,23 +20,16 @@ public class ScheduledSeatStatusService {
 	private final ScheduledSeatRepository scheduledSeatRepository;
 
 	@Transactional
-	public void holdSeats(TicketingEventCommand.HoldRequested event) {
-		List<ScheduledSeat> scheduledSeats = scheduledSeatRepository.findAllById(event.getScheduledSeatIds());
-		Preconditions.validate(scheduledSeats.size() == event.getScheduledSeatIds().size(), ErrorCode.NOT_CORRECT_SEAT);
-		scheduledSeats.forEach(ScheduledSeat::holdSeat);
-	}
-
-	@Transactional
 	public void releaseSeats(TicketingEventCommand.HoldReleased event) {
-		List<ScheduledSeat> scheduledSeats = scheduledSeatRepository.findAllById(event.getScheduledSeatIds());
+		List<ScheduledSeat> scheduledSeats = scheduledSeatRepository.findAllByIdForUpdate(event.getScheduledSeatIds());
 		Preconditions.validate(scheduledSeats.size() == event.getScheduledSeatIds().size(), ErrorCode.NOT_CORRECT_SEAT);
-		scheduledSeats.forEach(ScheduledSeat::releaseSeat);
+		scheduledSeats.forEach(seat -> seat.releaseSeat(event.getReservationNumber()));
 	}
 
 	@Transactional
 	public void purchaseSeats(TicketingEventCommand.SoldConfirmed event) {
-		List<ScheduledSeat> scheduledSeats = scheduledSeatRepository.findAllById(event.getScheduledSeatIds());
+		List<ScheduledSeat> scheduledSeats = scheduledSeatRepository.findAllByIdForUpdate(event.getScheduledSeatIds());
 		Preconditions.validate(scheduledSeats.size() == event.getScheduledSeatIds().size(), ErrorCode.NOT_CORRECT_SEAT);
-		scheduledSeats.forEach(ScheduledSeat::purchaseSeat);
+		scheduledSeats.forEach(seat -> seat.purchaseSeat(event.getReservationNumber()));
 	}
 }

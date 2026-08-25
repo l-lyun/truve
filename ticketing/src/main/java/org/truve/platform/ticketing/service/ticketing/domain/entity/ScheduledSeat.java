@@ -1,5 +1,8 @@
 package org.truve.platform.ticketing.service.ticketing.domain.entity;
 
+import java.time.LocalDateTime;
+import java.util.Objects;
+
 import org.truve.platform.ticketing.service.ticketing.constant.SeatStatus;
 
 import com.truve.platform.common.exception.CustomException;
@@ -36,6 +39,12 @@ public class ScheduledSeat extends BaseEntity {
 	@Enumerated(EnumType.STRING)
 	private SeatStatus status;
 
+	@Column
+	private String reservationNumber;
+
+	@Column
+	private LocalDateTime reservedAt;
+
 	@Builder
 	public ScheduledSeat(
 		Seat seat,
@@ -50,20 +59,30 @@ public class ScheduledSeat extends BaseEntity {
 		return status == SeatStatus.AVAILABLE;
 	}
 
-	public void holdSeat() {
-		if (this.status == SeatStatus.SOLD || this.status == SeatStatus.HOLD) {
-			return;
+	public void reserve(String reservationNumber, LocalDateTime reservedAt) {
+		if (!isAvailable()) {
+			throw new CustomException(ErrorCode.ALREADY_HOLD_SEAT);
 		}
 		this.status = SeatStatus.HOLD;
+		this.reservationNumber = reservationNumber;
+		this.reservedAt = reservedAt;
 	}
 
-	public void releaseSeat() {
+	public void releaseSeat(String reservationNumber) {
+		if (this.status != SeatStatus.HOLD || !Objects.equals(this.reservationNumber, reservationNumber)) {
+			return;
+		}
 		this.status = SeatStatus.AVAILABLE;
+		this.reservationNumber = null;
+		this.reservedAt = null;
 	}
 
-	public void purchaseSeat() {
-		if (this.status == SeatStatus.SOLD) {
-			throw new CustomException(ErrorCode.ALREADY_SOLD_SEAT);
+	public void purchaseSeat(String reservationNumber) {
+		if (this.status == SeatStatus.SOLD && Objects.equals(this.reservationNumber, reservationNumber)) {
+			return;
+		}
+		if (this.status != SeatStatus.HOLD || !Objects.equals(this.reservationNumber, reservationNumber)) {
+			throw new CustomException(ErrorCode.INVALID_HOLD_SEAT);
 		}
 		this.status = SeatStatus.SOLD;
 	}
