@@ -50,6 +50,24 @@ class TicketingOutboxEventRepositoryTest {
 		assertThat(heads).containsExactly(next);
 	}
 
+	@Test
+	void 실패한_SOLD가_남아있으면_후속_판매취소는_선택하지_않는다() {
+		TicketingOutboxEvent sold = outboxRepository.save(event("R-001", "SOLD_CONFIRMED"));
+		sold.markFailed();
+		outboxRepository.save(event("R-001", "SALE_CANCELED"));
+		outboxRepository.flush();
+
+		List<TicketingOutboxEvent> pendingHeads = outboxRepository.findRelayHeads(
+			OutboxStatus.PENDING, ACTIVE_STATUSES, PageRequest.of(0, 100)
+		);
+		List<TicketingOutboxEvent> failedHeads = outboxRepository.findRelayHeads(
+			OutboxStatus.FAILED, ACTIVE_STATUSES, PageRequest.of(0, 100)
+		);
+
+		assertThat(pendingHeads).isEmpty();
+		assertThat(failedHeads).containsExactly(sold);
+	}
+
 	private TicketingOutboxEvent event(String reservationNumber, String eventType) {
 		return TicketingOutboxEvent.create("booking.ticketing", reservationNumber, "{}", eventType);
 	}
