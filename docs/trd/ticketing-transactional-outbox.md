@@ -146,6 +146,7 @@ Relay는 at-least-once 성격을 가진다. claim은 정상적인 다중 인스�
 ## 스케줄
 
 - claim Relay 활성화: `ticketing.outbox.claim-enabled`, 기본 `false`
+- `local` 프로필의 claim Relay 활성화: `true` (구 Relay가 없는 신규 로컬/Compose 실행)
 - Relay: `ticketing.outbox.relay.fixed-delay-ms`, 기본 3,000ms
 - claim timeout: `ticketing.outbox.claim-timeout-ms`, 기본 300,000ms
 - 만료 claim 검사: `ticketing.outbox.claim-recovery-delay-ms`, 기본 30,000ms
@@ -168,6 +169,7 @@ Relay는 at-least-once 성격을 가진다. claim은 정상적인 다중 인스�
 - Scheduler가 PENDING을 FAILED보다 먼저 Relay에 전달하고, PUBLISHED 행을 정리하는지 단위 검증한다.
 - 테스트 외부 트랜잭션을 끈 상태에서 실제 Repository와 mock KafkaTemplate을 연결해, Kafka 호출 시 DB 트랜잭션이 없고 실패가 FAILED와 retryCount로 저장된 뒤 다음 Relay 성공 시 PUBLISHED로 커밋되는지 H2 DB 통합 검증한다.
 - H2에서 잘못된 claimToken으로는 PROCESSING 상태를 변경할 수 없고, 올바른 token만 PUBLISHED/FAILED를 반영하는지 검증한다.
+- Spring이 `claimBatch`를 `READ_COMMITTED` 트랜잭션으로 해석하는지 검증해 격리 수준 설정의 회귀를 차단한다.
 - H2에서 만료된 PROCESSING을 FAILED로 회수하고 새 token으로 다시 claim하는지 검증한다.
 - PENDING이 batch size보다 많아도 FAILED 배치를 별도로 claim해 재시도가 굶지 않는지 검증한다.
 - 실제 MySQL 8.4에서 두 트랜잭션이 commit 전까지 동시에 열린 상태로 `SKIP LOCKED` claim을 수행해 선택 행이 겹치지 않고, 남은 행이 다음 poll에서 모두 claim되는지 검증한다.
@@ -205,4 +207,4 @@ claim 기능 배포도 DDL과 애플리케이션 전환을 구분해야 한다. 
 
 기본값을 `false`로 둔 이유는 실수로 신 Relay와 구 Relay가 섞이는 것보다 일시적으로 Relay가 멈춰 PENDING이 쌓이는 편이 복구 가능하고 순서 정합성에 안전하기 때문이다. 모든 구 Relay가 제거되고 claim 기능을 켠 이후부터 정상적인 다중 인스턴스 경쟁에서 동일 행 중복 claim 방지 보장이 성립한다. 이 단계적 배포와 Kubernetes 다중 Pod 전환은 아직 실제 환경에서 검증하지 않았다.
 
-롤백할 때도 claim Relay를 먼저 비활성화하고 PROCESSING이 없을 때까지 회수·처리한 뒤 구 버전으로 내려야 한다. PROCESSING을 남긴 채 구 버전을 실행하면 구 버전 쿼리가 해당 상태를 이해하지 못한다.
+구 버전으로 롤백할 때는 **claim Relay부터 비활성화하면 안 된다.** 같은 플래그가 신규 claim과 timeout 회수를 함께 멈추므로 PROCESSING을 회수할 주체도 사라진다. 먼저 Ticketing으로 들어오는 결제 완료·취소 이벤트 생산을 중단하거나 점검 모드로 전환하고, 신 Relay를 활성화한 채 PENDING·FAILED·PROCESSING이 모두 사라질 때까지 drain한다. 그다음 claim Relay를 비활성화하고 구 버전으로 내린다. 이벤트 생산을 멈출 수 없는 무중단 롤백과 자동 drain은 이번 구현 범위에 포함하지 않으며, PROCESSING을 남긴 채 구 버전을 실행하면 구 버전 쿼리가 해당 상태를 이해하지 못한다.

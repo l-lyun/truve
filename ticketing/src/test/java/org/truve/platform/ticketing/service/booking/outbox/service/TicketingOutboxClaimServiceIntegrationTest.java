@@ -11,6 +11,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
+import org.springframework.transaction.interceptor.TransactionAttribute;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.truve.platform.ticketing.service.booking.outbox.domain.entity.TicketingOutboxEvent;
@@ -27,6 +30,18 @@ class TicketingOutboxClaimServiceIntegrationTest {
 	private TicketingOutboxEventRepository outboxRepository;
 	@Autowired
 	private TicketingOutboxClaimService claimService;
+
+	@Test
+	void claimBatch는_READ_COMMITTED_트랜잭션으로_구성된다() throws NoSuchMethodException {
+		AnnotationTransactionAttributeSource attributeSource = new AnnotationTransactionAttributeSource();
+		TransactionAttribute attribute = attributeSource.getTransactionAttribute(
+			TicketingOutboxClaimService.class.getMethod("claimBatch", int.class),
+			TicketingOutboxClaimService.class
+		);
+
+		assertThat(attribute).isNotNull();
+		assertThat(attribute.getIsolationLevel()).isEqualTo(TransactionDefinition.ISOLATION_READ_COMMITTED);
+	}
 
 	@BeforeEach
 	void setUp() {
