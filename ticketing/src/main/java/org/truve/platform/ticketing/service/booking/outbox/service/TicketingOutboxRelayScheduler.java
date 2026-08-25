@@ -26,7 +26,6 @@ public class TicketingOutboxRelayScheduler {
 	private final OutboxRelayExecutor outboxRelayExecutor;
 
 	@Scheduled(fixedDelayString = "${ticketing.outbox.relay.fixed-delay-ms:3000}")
-	@Transactional
 	public void relay() {
 		PageRequest batch = PageRequest.of(0, RELAY_BATCH_SIZE);
 		List<TicketingOutboxEvent> pending = outboxRepository.findRelayHeads(
@@ -39,6 +38,7 @@ public class TicketingOutboxRelayScheduler {
 			.toList();
 		if (!relayTargets.isEmpty()) {
 			outboxRelayExecutor.execute(relayTargets);
+			outboxRepository.saveAll(relayTargets);
 		}
 	}
 

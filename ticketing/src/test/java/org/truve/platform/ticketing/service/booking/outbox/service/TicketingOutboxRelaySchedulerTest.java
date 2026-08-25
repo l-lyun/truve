@@ -43,6 +43,7 @@ class TicketingOutboxRelaySchedulerTest {
 		scheduler.relay();
 
 		verify(outboxRelayExecutor).execute(List.of(pending, failed));
+		verify(outboxRepository).saveAll(List.of(pending, failed));
 	}
 
 	@Test
