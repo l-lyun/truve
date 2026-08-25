@@ -33,6 +33,7 @@ import org.truve.platform.ticketing.service.booking.external.kafka.PaymentEventC
 import org.truve.platform.ticketing.service.booking.external.kafka.PaymentPublisher;
 import org.truve.platform.ticketing.service.booking.external.kafka.TicketingEventCommand;
 import org.truve.platform.ticketing.service.booking.external.kafka.TicketingPublisher;
+import org.truve.platform.ticketing.service.booking.outbox.service.TicketingOutboxPublisher;
 import org.truve.platform.ticketing.service.booking.risk.service.BookingBotRiskService;
 import org.truve.platform.ticketing.service.booking.repository.ReservationRepository;
 import org.truve.platform.ticketing.service.ticketing.service.SeatHoldService;
@@ -56,6 +57,8 @@ class BookingServiceTest {
 	private SeatHoldLockService seatHoldLockService;
 	@Mock
 	private TicketingPublisher ticketingPublisher;
+	@Mock
+	private TicketingOutboxPublisher ticketingOutboxPublisher;
 	@Mock
 	private PaymentPublisher paymentPublisher;
 	@Mock
@@ -194,7 +197,7 @@ class BookingServiceTest {
 		// then
 		ArgumentCaptor<TicketingEventCommand.TicketingEvent> eventCaptor =
 			ArgumentCaptor.forClass(TicketingEventCommand.TicketingEvent.class);
-		verify(ticketingPublisher).publish(eventCaptor.capture());
+		verify(ticketingOutboxPublisher).publish(eventCaptor.capture());
 
 		TicketingEventCommand.SoldConfirmed soldConfirmed =
 			(TicketingEventCommand.SoldConfirmed)eventCaptor.getValue();
@@ -218,7 +221,7 @@ class BookingServiceTest {
 		bookingService.confirm(event);
 		bookingService.confirm(event);
 
-		verify(ticketingPublisher, times(1)).publish(any(TicketingEventCommand.SoldConfirmed.class));
+		verify(ticketingOutboxPublisher, times(1)).publish(any(TicketingEventCommand.SoldConfirmed.class));
 	}
 
 	@Test
@@ -241,7 +244,7 @@ class BookingServiceTest {
 		assertAll(
 			() -> assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.PENDING_DEPOSIT),
 			() -> assertThat(reservation.getTickets()).allMatch(ticket -> ticket.getStatus() == TicketStatus.PENDING),
-			() -> verify(ticketingPublisher, never()).publish(any())
+			() -> verify(ticketingOutboxPublisher, never()).publish(any())
 		);
 	}
 
@@ -265,7 +268,7 @@ class BookingServiceTest {
 
 		assertAll(
 			() -> assertThat(reservation.getTickets()).allMatch(ticket -> ticket.getStatus() == TicketStatus.ISSUED),
-			() -> verify(ticketingPublisher).publish(argThat(
+			() -> verify(ticketingOutboxPublisher).publish(argThat(
 				event -> event instanceof TicketingEventCommand.SoldConfirmed
 			))
 		);
@@ -291,7 +294,7 @@ class BookingServiceTest {
 		bookingService.depositReceive(event);
 		bookingService.depositReceive(event);
 
-		verify(ticketingPublisher, times(1)).publish(any(TicketingEventCommand.SoldConfirmed.class));
+		verify(ticketingOutboxPublisher, times(1)).publish(any(TicketingEventCommand.SoldConfirmed.class));
 	}
 
 	@Test
