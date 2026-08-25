@@ -27,6 +27,7 @@ import org.truve.platform.ticketing.service.booking.risk.service.BookingBotRiskS
 import org.truve.platform.ticketing.service.booking.repository.ReservationRepository;
 import org.truve.platform.ticketing.service.booking.util.NumberGenerator;
 import org.truve.platform.ticketing.service.ticketing.service.SeatHoldService;
+import org.truve.platform.ticketing.service.ticketing.service.SeatHoldLockService;
 
 import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
@@ -43,6 +44,7 @@ public class BookingService {
 	private final BookingCreationService bookingCreationService;
 	private final BookingLockService bookingLockService;
 	private final SeatHoldService seatHoldService;
+	private final SeatHoldLockService seatHoldLockService;
 	private final PaymentPublisher paymentPublisher;
 	private final PaymentClient paymentClient;
 	private final TicketingPublisher ticketingPublisher;
@@ -64,7 +66,8 @@ public class BookingService {
 			);
 
 			String reservationNumber = NumberGenerator.generateReservationNumber();
-			SeatHoldService.SeatClaim claim = seatHoldService.claim(
+			SeatHoldService.SeatClaim claim = claimSeatsWithLock(
+				userId,
 				showScheduleId,
 				scheduledSeatIds,
 				sessionToken,
@@ -93,6 +96,26 @@ public class BookingService {
 			}
 		} finally {
 			releaseBookingLock(bookingLock);
+		}
+	}
+
+	private SeatHoldService.SeatClaim claimSeatsWithLock(
+		UUID userId,
+		Long showScheduleId,
+		List<Long> scheduledSeatIds,
+		String sessionToken,
+		String reservationNumber
+	) {
+		SeatHoldLockService.SeatHoldLock seatHoldLock = seatHoldLockService.acquire(userId, showScheduleId);
+		try {
+			return seatHoldService.claim(
+				showScheduleId,
+				scheduledSeatIds,
+				sessionToken,
+				reservationNumber
+			);
+		} finally {
+			releaseSeatHoldLock(seatHoldLock);
 		}
 	}
 
@@ -132,6 +155,16 @@ public class BookingService {
 			bookingLockService.release(bookingLock);
 		} catch (RuntimeException exception) {
 			log.warn("예매 생성 락 해제에 실패했습니다. lockToken={}", bookingLock.lockToken(), exception);
+		}
+	}
+
+	private void releaseSeatHoldLock(SeatHoldLockService.SeatHoldLock seatHoldLock) {
+		try {
+			if (!seatHoldLockService.release(seatHoldLock)) {
+				log.warn("예매 생성 중 좌석 요청 락이 만료됐습니다. lockToken={}", seatHoldLock.lockToken());
+			}
+		} catch (RuntimeException exception) {
+			log.warn("예매 생성 중 좌석 요청 락 해제에 실패했습니다. lockToken={}", seatHoldLock.lockToken(), exception);
 		}
 	}
 

@@ -34,6 +34,7 @@ import org.truve.platform.ticketing.service.ticketing.dto.TicketingResponse;
 import org.truve.platform.ticketing.service.ticketing.repository.ScheduledSeatRepository;
 import org.truve.platform.ticketing.service.ticketing.repository.ShowScheduledRepository;
 import org.truve.platform.ticketing.service.ticketing.repository.TicketingRedisRepository;
+import org.truve.platform.ticketing.service.ticketing.repository.TicketingRedisRepository.SeatHoldResult;
 
 import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
@@ -53,6 +54,8 @@ class TicketingServiceTest {
 	private ShowScheduledRepository showScheduledRepository;
 	@Mock
 	private TicketingSecurityService ticketingSecurityService;
+	@Mock
+	private SeatHoldLockService seatHoldLockService;
 
 	@InjectMocks
 	private TicketingService ticketingService;
@@ -61,6 +64,7 @@ class TicketingServiceTest {
 	private UUID userId;
 	private String admissionToken;
 	private String sessionToken;
+	private SeatHoldLockService.SeatHoldLock seatHoldLock;
 
 	@BeforeEach
 	void setUp() {
@@ -68,7 +72,10 @@ class TicketingServiceTest {
 		userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
 		admissionToken = "admission-token";
 		sessionToken = "session-token";
+		seatHoldLock = new SeatHoldLockService.SeatHoldLock(userId, showScheduleId, "seat-hold-lock-token");
 		lenient().when(ticketingProperties.getSessionTtlSec()).thenReturn(300L);
+		lenient().when(seatHoldLockService.acquire(userId, showScheduleId)).thenReturn(seatHoldLock);
+		lenient().when(seatHoldLockService.release(seatHoldLock)).thenReturn(true);
 	}
 
 	@Nested
@@ -249,8 +256,8 @@ class TicketingServiceTest {
 			// given
 			given(showScheduledRepository.findById(showScheduleId)).willReturn(Optional.of(showScheduled));
 			given(scheduledSeatRepository.findAllById(List.of(10L, 11L))).willReturn(List.of(scheduledSeat1, scheduledSeat2));
-			given(ticketingRedisRepository.tryHoldSeat(showScheduleId, 10L, sessionToken)).willReturn(true);
-			given(ticketingRedisRepository.tryHoldSeat(showScheduleId, 11L, sessionToken)).willReturn(true);
+			given(ticketingRedisRepository.holdSeats(showScheduleId, List.of(10L, 11L), sessionToken, 4))
+				.willReturn(SeatHoldResult.SUCCESS);
 
 			// when
 			ticketingService.holdSeat(showScheduleId, userId, sessionToken, List.of(10L, 11L));
@@ -258,8 +265,8 @@ class TicketingServiceTest {
 			// then
 			assertAll(
 				() -> verify(ticketingSecurityService).findMacro(sessionToken),
-				() -> verify(ticketingRedisRepository).tryHoldSeat(showScheduleId, 10L, sessionToken),
-				() -> verify(ticketingRedisRepository).tryHoldSeat(showScheduleId, 11L, sessionToken)
+				() -> verify(ticketingRedisRepository).holdSeats(showScheduleId, List.of(10L, 11L), sessionToken, 4),
+				() -> verify(seatHoldLockService).release(seatHoldLock)
 			);
 		}
 
@@ -282,7 +289,7 @@ class TicketingServiceTest {
 				() -> verify(ticketingSecurityService).findMacro(sessionToken),
 				() -> verify(showScheduledRepository, never()).findById(anyLong()),
 				() -> verify(scheduledSeatRepository, never()).findAllById(anyIterable()),
-				() -> verify(ticketingRedisRepository, never()).tryHoldSeat(anyLong(), anyLong(), anyString())
+				() -> verify(ticketingRedisRepository, never()).holdSeats(anyLong(), anyList(), anyString(), anyInt())
 			);
 		}
 
@@ -376,8 +383,8 @@ class TicketingServiceTest {
 			// given
 			given(showScheduledRepository.findById(showScheduleId)).willReturn(Optional.of(showScheduled));
 			given(scheduledSeatRepository.findAllById(List.of(10L))).willReturn(List.of(scheduledSeat1));
-			given(ticketingRedisRepository.tryHoldSeat(showScheduleId, 10L, sessionToken)).willReturn(false);
-			given(ticketingRedisRepository.getHoldSeatSessionToken(showScheduleId, 10L)).willReturn("other-session");
+			given(ticketingRedisRepository.holdSeats(showScheduleId, List.of(10L), sessionToken, 4))
+				.willReturn(SeatHoldResult.CONFLICT);
 
 			// when
 			CustomException exception = assertThrows(
@@ -395,14 +402,14 @@ class TicketingServiceTest {
 			// given
 			given(showScheduledRepository.findById(showScheduleId)).willReturn(Optional.of(showScheduled));
 			given(scheduledSeatRepository.findAllById(List.of(10L))).willReturn(List.of(scheduledSeat1));
-			given(ticketingRedisRepository.tryHoldSeat(showScheduleId, 10L, sessionToken)).willReturn(false);
-			given(ticketingRedisRepository.getHoldSeatSessionToken(showScheduleId, 10L)).willReturn(sessionToken);
+			given(ticketingRedisRepository.holdSeats(showScheduleId, List.of(10L), sessionToken, 4))
+				.willReturn(SeatHoldResult.SUCCESS);
 
 			// when
 			ticketingService.holdSeat(showScheduleId, userId, sessionToken, List.of(10L));
 
 			// then
-			verify(ticketingRedisRepository).getHoldSeatSessionToken(showScheduleId, 10L);
+			verify(ticketingRedisRepository).holdSeats(showScheduleId, List.of(10L), sessionToken, 4);
 		}
 	}
 
@@ -427,16 +434,18 @@ class TicketingServiceTest {
 			ReflectionTestUtils.setField(scheduledSeat1.getSeat(), "id", 100L);
 			ReflectionTestUtils.setField(scheduledSeat2.getSeat(), "id", 101L);
 			given(scheduledSeatRepository.findAllById(List.of(10L, 11L))).willReturn(List.of(scheduledSeat1, scheduledSeat2));
-			given(ticketingRedisRepository.deleteHoldSeat(showScheduleId, 10L, sessionToken)).willReturn(true);
-			given(ticketingRedisRepository.deleteHoldSeat(showScheduleId, 11L, sessionToken)).willReturn(true);
+			given(ticketingRedisRepository.releaseHeldSeats(showScheduleId, List.of(10L, 11L), sessionToken))
+				.willReturn(true);
 
 			// when
 			ticketingService.cancelHoldSeat(showScheduleId, userId, sessionToken, List.of(10L, 11L));
 
 			// then
 			assertAll(
-				() -> verify(ticketingRedisRepository).deleteHoldSeat(showScheduleId, 10L, sessionToken),
-				() -> verify(ticketingRedisRepository).deleteHoldSeat(showScheduleId, 11L, sessionToken)
+				() -> verify(ticketingRedisRepository).releaseHeldSeats(
+					showScheduleId, List.of(10L, 11L), sessionToken
+				),
+				() -> verify(seatHoldLockService).release(seatHoldLock)
 			);
 		}
 
@@ -446,7 +455,8 @@ class TicketingServiceTest {
 			// given
 			ScheduledSeat scheduledSeat = createScheduledSeat(10L, showScheduleId, SeatStatus.AVAILABLE);
 			given(scheduledSeatRepository.findAllById(List.of(10L))).willReturn(List.of(scheduledSeat));
-			given(ticketingRedisRepository.deleteHoldSeat(showScheduleId, 10L, sessionToken)).willReturn(false);
+			given(ticketingRedisRepository.releaseHeldSeats(showScheduleId, List.of(10L), sessionToken))
+				.willReturn(false);
 
 			// when
 			CustomException exception = assertThrows(
@@ -457,7 +467,7 @@ class TicketingServiceTest {
 			// then
 			assertAll(
 				() -> assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_HOLD_SEAT),
-				() -> verify(ticketingRedisRepository).deleteHoldSeat(showScheduleId, 10L, sessionToken)
+				() -> verify(ticketingRedisRepository).releaseHeldSeats(showScheduleId, List.of(10L), sessionToken)
 			);
 		}
 	}
@@ -530,6 +540,7 @@ class TicketingServiceTest {
 
 			// then
 			assertAll(
+				() -> verify(ticketingRedisRepository).releaseSessionHeldSeats(showScheduleId, sessionToken),
 				() -> verify(ticketingRedisRepository).expireSessionToken(sessionToken),
 				() -> verify(ticketingRedisRepository).exitTicketing(showScheduleId, sessionToken)
 			);

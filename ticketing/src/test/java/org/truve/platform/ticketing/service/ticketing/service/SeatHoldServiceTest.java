@@ -10,6 +10,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -55,6 +56,28 @@ class SeatHoldServiceTest {
 		);
 
 		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_BOOKING_SEAT_HOLD);
+	}
+
+	@Test
+	void 예매_claim은_세션별로_구분되는_소유권_값을_사용한다() {
+		List<Long> seatIds = List.of(10L, 11L);
+		given(ticketingRedisRepository.claimHoldSeats(
+			org.mockito.ArgumentMatchers.eq(100L),
+			org.mockito.ArgumentMatchers.eq(seatIds),
+			org.mockito.ArgumentMatchers.eq("session-token"),
+			org.mockito.ArgumentMatchers.anyString()
+		)).willReturn(true);
+
+		seatHoldService.claim(100L, seatIds, "session-token", "R-001");
+
+		ArgumentCaptor<String> claimValue = ArgumentCaptor.forClass(String.class);
+		verify(ticketingRedisRepository).claimHoldSeats(
+			org.mockito.ArgumentMatchers.eq(100L),
+			org.mockito.ArgumentMatchers.eq(seatIds),
+			org.mockito.ArgumentMatchers.eq("session-token"),
+			claimValue.capture()
+		);
+		assertThat(claimValue.getValue()).startsWith("booking:session-token:R-001:");
 	}
 
 	@Test

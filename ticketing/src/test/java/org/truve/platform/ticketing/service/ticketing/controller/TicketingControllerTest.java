@@ -229,6 +229,28 @@ class TicketingControllerTest {
 	}
 
 	@Test
+	@DisplayName("좌석 5개 선점 요청은 기존 T10 오류 계약을 유지한다")
+	void 좌석선점_최대수량초과_T10응답() throws Exception {
+		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+		List<Long> seatIds = List.of(1L, 2L, 3L, 4L, 5L);
+		TicketingRequest.HoldSeat request = new TicketingRequest.HoldSeat(seatIds);
+		willThrow(new CustomException(ErrorCode.EXCEEDED_MAX_TICKET_COUNT))
+			.given(ticketingService)
+			.holdSeat(1L, userId, "session-token", seatIds);
+
+		ResultActions resultActions = mockMvc.perform(post("/api/ticketing/{showScheduleId}/hold/seat", 1L)
+			.contentType(MediaType.APPLICATION_JSON)
+			.header(USER_ID_HEADER, userId)
+			.header(SESSION_HEADER, "session-token")
+			.content(objectMapper.writeValueAsString(request)));
+
+		resultActions.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.message").value(ErrorCode.EXCEEDED_MAX_TICKET_COUNT.getMessage()))
+			.andExpect(jsonPath("$.code").value("T10"));
+		verify(ticketingService).holdSeat(1L, userId, "session-token", seatIds);
+	}
+
+	@Test
 	@DisplayName("좌석 선점 취소 요청 바디 에러")
 	void 좌석선점취소_요청검증실패() throws Exception {
 		// given

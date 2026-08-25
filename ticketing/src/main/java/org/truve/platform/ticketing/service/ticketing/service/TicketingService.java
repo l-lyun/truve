@@ -1,7 +1,9 @@
 package org.truve.platform.ticketing.service.ticketing.service;
 
 import java.time.Duration;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -16,16 +18,20 @@ import org.truve.platform.ticketing.service.global.jwt.AdmissionTokenService;
 import org.truve.platform.ticketing.service.ticketing.repository.ScheduledSeatRepository;
 import org.truve.platform.ticketing.service.ticketing.repository.ShowScheduledRepository;
 import org.truve.platform.ticketing.service.ticketing.repository.TicketingRedisRepository;
+import org.truve.platform.ticketing.service.ticketing.repository.TicketingRedisRepository.SeatHoldResult;
 
 import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
 import com.truve.platform.common.support.Preconditions;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TicketingService {
+	private static final int MAX_HOLD_SEAT_COUNT = 4;
 
 	private final TicketingRedisRepository ticketingRedisRepository;
 	private final AdmissionTokenService admissionTokenService;
@@ -33,6 +39,7 @@ public class TicketingService {
 	private final ScheduledSeatRepository scheduledSeatRepository;
 	private final ShowScheduledRepository showScheduledRepository;
 	private final TicketingSecurityService  ticketingSecurityService;
+	private final SeatHoldLockService seatHoldLockService;
 
 	public TicketingResponse.Enter enter(Long showScheduleId, UUID userId, String admissionToken) {
 		AdmissionTokenClaimsDTO claims = admissionTokenService.parseAdmissionToken(admissionToken, showScheduleId, userId);
@@ -68,15 +75,15 @@ public class TicketingService {
 	public void holdSeat(Long showScheduleId, UUID userId, String sessionToken, List<Long> scheduledSeatIds) {
 		ticketingSecurityService.findMacro(sessionToken);
 		heartbeat(showScheduleId, userId, sessionToken);
-
-		Preconditions.validate(scheduledSeatIds.size() <= 4, ErrorCode.EXCEEDED_MAX_TICKET_COUNT);
+		validateSeatIds(scheduledSeatIds);
+		List<Long> sortedSeatIds = scheduledSeatIds.stream().sorted().toList();
 
 		ShowScheduled showScheduled = showScheduledRepository.findById(showScheduleId)
 			.orElseThrow(() -> new CustomException(ErrorCode.INVALID_SHOW_SCHEDULE));
 
-		List<ScheduledSeat> scheduledSeats = scheduledSeatRepository.findAllById(scheduledSeatIds);
+		List<ScheduledSeat> scheduledSeats = scheduledSeatRepository.findAllById(sortedSeatIds);
 
-		Preconditions.validate(scheduledSeatIds.size() == scheduledSeats.size(), ErrorCode.NOT_CORRECT_SEAT);
+		Preconditions.validate(sortedSeatIds.size() == scheduledSeats.size(), ErrorCode.NOT_CORRECT_SEAT);
 
 		for(ScheduledSeat seat: scheduledSeats) {
 
@@ -95,24 +102,32 @@ public class TicketingService {
 				ErrorCode.NOT_CORRECT_SEAT
 			);
 
-			Long scheduledSeatId = seat.getId();
-			boolean tryHoldSeatLock = ticketingRedisRepository.tryHoldSeat(showScheduleId, scheduledSeatId, sessionToken);
-
-			if (!tryHoldSeatLock) {
-				String savesSessionToken = ticketingRedisRepository.getHoldSeatSessionToken(showScheduleId, scheduledSeatId);
-				Preconditions.validate(sessionToken.equals(savesSessionToken), ErrorCode.ALREADY_HOLD_SEAT);
-			}
 		}
 
+		SeatHoldLockService.SeatHoldLock lock = seatHoldLockService.acquire(userId, showScheduleId);
+		try {
+			SeatHoldResult result = ticketingRedisRepository.holdSeats(
+				showScheduleId,
+				sortedSeatIds,
+				sessionToken,
+				MAX_HOLD_SEAT_COUNT
+			);
+			Preconditions.validate(result != SeatHoldResult.LIMIT_EXCEEDED, ErrorCode.EXCEEDED_MAX_TICKET_COUNT);
+			Preconditions.validate(result == SeatHoldResult.SUCCESS, ErrorCode.ALREADY_HOLD_SEAT);
+		} finally {
+			releaseSeatHoldLock(lock);
+		}
 	}
 
 	public void cancelHoldSeat(Long showScheduleId, UUID userId, String sessionToken, List<Long> scheduledSeatIds) {
 
 		heartbeat(showScheduleId, userId, sessionToken);
+		validateSeatIds(scheduledSeatIds);
+		List<Long> sortedSeatIds = scheduledSeatIds.stream().sorted().toList();
 
-		List<ScheduledSeat> seats = scheduledSeatRepository.findAllById(scheduledSeatIds);
+		List<ScheduledSeat> seats = scheduledSeatRepository.findAllById(sortedSeatIds);
 
-		Preconditions.validate(scheduledSeatIds.size() == seats.size(), ErrorCode.NOT_CORRECT_SEAT);
+		Preconditions.validate(sortedSeatIds.size() == seats.size(), ErrorCode.NOT_CORRECT_SEAT);
 
 		for (ScheduledSeat seat : seats) {
 			Preconditions.validate(
@@ -120,9 +135,18 @@ public class TicketingService {
 				ErrorCode.NOT_CORRECT_SEAT
 			);
 
-			Long scheduledSeatId = seat.getId();
-			boolean deleted = ticketingRedisRepository.deleteHoldSeat(showScheduleId, scheduledSeatId, sessionToken);
-			Preconditions.validate(deleted, ErrorCode.INVALID_HOLD_SEAT);
+		}
+
+		SeatHoldLockService.SeatHoldLock lock = seatHoldLockService.acquire(userId, showScheduleId);
+		try {
+			boolean released = ticketingRedisRepository.releaseHeldSeats(
+				showScheduleId,
+				sortedSeatIds,
+				sessionToken
+			);
+			Preconditions.validate(released, ErrorCode.INVALID_HOLD_SEAT);
+		} finally {
+			releaseSeatHoldLock(lock);
 		}
 	}
 
@@ -149,10 +173,43 @@ public class TicketingService {
 
 	public void exitTicketing(Long showScheduleId, UUID userId, String sessionToken) {
 		isCorrectSessionToken(showScheduleId, userId, sessionToken);
-		ticketingRedisRepository.expireSessionToken(sessionToken);
-		ticketingRedisRepository.exitTicketing(showScheduleId, sessionToken);
+		SeatHoldLockService.SeatHoldLock lock = seatHoldLockService.acquire(userId, showScheduleId);
+		try {
+			ticketingRedisRepository.releaseSessionHeldSeats(showScheduleId, sessionToken);
+			ticketingRedisRepository.expireSessionToken(sessionToken);
+			ticketingRedisRepository.exitTicketing(showScheduleId, sessionToken);
+		} finally {
+			releaseSeatHoldLock(lock);
+		}
+	}
 
-		// TODO: 현재 프론트 로직이라면 선점한 좌석 만료가 필요함
+	private void validateSeatIds(List<Long> scheduledSeatIds) {
+		Preconditions.validate(
+			scheduledSeatIds != null && !scheduledSeatIds.isEmpty(),
+			ErrorCode.NOT_CORRECT_SEAT
+		);
+		Preconditions.validate(
+			scheduledSeatIds.size() <= MAX_HOLD_SEAT_COUNT,
+			ErrorCode.EXCEEDED_MAX_TICKET_COUNT
+		);
+		Preconditions.validate(
+			scheduledSeatIds.stream().noneMatch(Objects::isNull),
+			ErrorCode.NOT_CORRECT_SEAT
+		);
+		Preconditions.validate(
+			new HashSet<>(scheduledSeatIds).size() == scheduledSeatIds.size(),
+			ErrorCode.NOT_CORRECT_SEAT
+		);
+	}
+
+	private void releaseSeatHoldLock(SeatHoldLockService.SeatHoldLock lock) {
+		try {
+			if (!seatHoldLockService.release(lock)) {
+				log.warn("좌석 요청 락이 만료됐거나 소유권이 변경되었습니다. lockToken={}", lock.lockToken());
+			}
+		} catch (RuntimeException exception) {
+			log.warn("좌석 요청 락 해제에 실패했습니다. lockToken={}", lock.lockToken(), exception);
+		}
 	}
 
 	private void isCorrectSessionToken(Long showScheduleId, UUID userId, String sessionToken) {
