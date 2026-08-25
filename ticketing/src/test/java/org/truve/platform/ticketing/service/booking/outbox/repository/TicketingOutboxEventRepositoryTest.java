@@ -23,7 +23,7 @@ class TicketingOutboxEventRepositoryTest {
 		TicketingOutboxEvent otherReservation = outboxRepository.save(event("R-002", "SOLD_CONFIRMED"));
 		outboxRepository.flush();
 
-		List<TicketingOutboxEvent> heads = outboxRepository.findClaimableHeadsForUpdate(100);
+		List<TicketingOutboxEvent> heads = outboxRepository.findClaimableHeadsForUpdate("PENDING", 100);
 
 		assertThat(heads).containsExactly(first, otherReservation);
 		assertThat(heads).doesNotContain(blocked);
@@ -37,7 +37,7 @@ class TicketingOutboxEventRepositoryTest {
 		first.markPublished();
 		outboxRepository.flush();
 
-		List<TicketingOutboxEvent> heads = outboxRepository.findClaimableHeadsForUpdate(100);
+		List<TicketingOutboxEvent> heads = outboxRepository.findClaimableHeadsForUpdate("PENDING", 100);
 
 		assertThat(heads).containsExactly(next);
 	}
@@ -49,7 +49,7 @@ class TicketingOutboxEventRepositoryTest {
 		outboxRepository.save(event("R-001", "SALE_CANCELED"));
 		outboxRepository.flush();
 
-		List<TicketingOutboxEvent> heads = outboxRepository.findClaimableHeadsForUpdate(100);
+		List<TicketingOutboxEvent> heads = outboxRepository.findClaimableHeadsForUpdate("FAILED", 100);
 
 		assertThat(heads).containsExactly(sold);
 	}

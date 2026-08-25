@@ -153,7 +153,7 @@ class TicketingOutboxMultiInstanceMySqlIntegrationTest {
 			transactionTemplate.setIsolationLevel(org.springframework.transaction.TransactionDefinition.ISOLATION_READ_COMMITTED);
 			List<Long> ids = transactionTemplate.execute(status -> {
 				await(start, 5);
-				List<TicketingOutboxEvent> selected = outboxRepository.findClaimableHeadsForUpdate(batchSize);
+				List<TicketingOutboxEvent> selected = outboxRepository.findClaimableHeadsForUpdate("PENDING", batchSize);
 				selected.forEach(event -> event.claim(token, LocalDateTime.now()));
 				outboxRepository.flush();
 				bothSelected.countDown();

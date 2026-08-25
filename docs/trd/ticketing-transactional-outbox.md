@@ -73,7 +73,7 @@ PROCESSING ─ claim timeout -> FAILED(retryCount + 1) -> 재claim 가능
 ```sql
 SELECT event.*
 FROM ticketing_outbox_events event
-WHERE event.status IN ('PENDING', 'FAILED')
+WHERE event.status = :status -- PENDING과 FAILED를 각각 조회
   AND NOT EXISTS (
     SELECT 1
     FROM ticketing_outbox_events older
@@ -82,10 +82,7 @@ WHERE event.status IN ('PENDING', 'FAILED')
       AND older.id < event.id
       AND older.status IN ('PENDING', 'FAILED', 'PROCESSING')
   )
-ORDER BY
-  CASE WHEN event.status = 'PENDING' THEN 0 ELSE 1 END,
-  event.retry_count,
-  event.id
+ORDER BY event.retry_count, event.id
 LIMIT 100
 FOR UPDATE SKIP LOCKED;
 ```
@@ -93,6 +90,7 @@ FOR UPDATE SKIP LOCKED;
 - `FOR UPDATE`는 선택한 행을 claim 트랜잭션 동안 다른 Relay가 변경하지 못하게 한다.
 - `SKIP LOCKED`는 다른 Relay가 잡은 행의 해제를 기다리지 않고 현재 조회에서 건너뛰게 한다.
 - `NOT EXISTS`는 같은 topic·messageKey의 오래된 PENDING·FAILED·PROCESSING이 있으면 후속 이벤트를 선택하지 않는다.
+- PENDING과 FAILED를 각각 최대 100건 조회한다. PENDING이 계속 유입돼도 FAILED 재시도 배치가 굶지 않으며, Kafka 전달 목록에서는 PENDING 배치를 먼저 둔다.
 - claim 트랜잭션은 `READ COMMITTED`를 사용해 MySQL 기본 `REPEATABLE READ`의 불필요한 gap/next-key lock 범위를 줄인다.
 - 조회 직후 같은 트랜잭션에서 PROCESSING과 claim 정보를 기록하고 즉시 commit한다. Kafka 호출 동안 비관적 row lock이나 DB 트랜잭션을 유지하지 않는다.
 
@@ -151,7 +149,7 @@ Relay는 at-least-once 성격을 가진다. claim은 정상적인 다중 인스�
 - claim timeout: `ticketing.outbox.claim-timeout-ms`, 기본 300,000ms
 - 만료 claim 검사: `ticketing.outbox.claim-recovery-delay-ms`, 기본 30,000ms
 - PUBLISHED 정리: `ticketing.outbox.cleanup.cron`, 기본 매일 03:00
-- 한 번의 claim 배치 크기: 최대 100건
+- 한 번의 상태별 claim 배치 크기: PENDING 최대 100건 + FAILED 최대 100건
 
 ## 검증 범위
 
@@ -170,6 +168,7 @@ Relay는 at-least-once 성격을 가진다. claim은 정상적인 다중 인스�
 - 테스트 외부 트랜잭션을 끈 상태에서 실제 Repository와 mock KafkaTemplate을 연결해, Kafka 호출 시 DB 트랜잭션이 없고 실패가 FAILED와 retryCount로 저장된 뒤 다음 Relay 성공 시 PUBLISHED로 커밋되는지 H2 DB 통합 검증한다.
 - H2에서 잘못된 claimToken으로는 PROCESSING 상태를 변경할 수 없고, 올바른 token만 PUBLISHED/FAILED를 반영하는지 검증한다.
 - H2에서 만료된 PROCESSING을 FAILED로 회수하고 새 token으로 다시 claim하는지 검증한다.
+- PENDING이 batch size보다 많아도 FAILED 배치를 별도로 claim해 재시도가 굶지 않는지 검증한다.
 - 실제 MySQL 8.4에서 두 트랜잭션이 commit 전까지 동시에 열린 상태로 `SKIP LOCKED` claim을 수행해 선택 행이 겹치지 않고, 남은 행이 다음 poll에서 모두 claim되는지 검증한다.
 - 실제 MySQL 8.4에서 한 Relay가 SOLD를 claim한 동안 다른 Relay가 같은 예약의 SALE_CANCELED를 추월하지 못하는지 검증한다.
 

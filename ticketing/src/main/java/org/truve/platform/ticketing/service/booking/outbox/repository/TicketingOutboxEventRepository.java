@@ -16,7 +16,7 @@ public interface TicketingOutboxEventRepository extends OutboxEventRepository<Ti
 	@Query(value = """
 		select event.*
 		from ticketing_outbox_events event
-		where event.status in ('PENDING', 'FAILED')
+		where event.status = :status
 		  and not exists (
 			select 1
 			from ticketing_outbox_events older
@@ -25,13 +25,13 @@ public interface TicketingOutboxEventRepository extends OutboxEventRepository<Ti
 			  and older.id < event.id
 			  and older.status in ('PENDING', 'FAILED', 'PROCESSING')
 		  )
-		order by case when event.status = 'PENDING' then 0 else 1 end,
-		         event.retry_count asc,
+		order by event.retry_count asc,
 		         event.id asc
 		limit :batchSize
 		for update skip locked
 		""", nativeQuery = true)
 	List<TicketingOutboxEvent> findClaimableHeadsForUpdate(
+		@Param("status") String status,
 		@Param("batchSize") int batchSize
 	);
 

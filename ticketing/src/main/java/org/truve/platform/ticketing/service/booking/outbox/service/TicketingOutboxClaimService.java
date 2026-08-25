@@ -28,8 +28,16 @@ public class TicketingOutboxClaimService {
 		}
 		UUID claimToken = UUID.randomUUID();
 		LocalDateTime claimedAt = LocalDateTime.now();
-		List<TicketingOutboxEvent> events = outboxRepository.findClaimableHeadsForUpdate(batchSize);
-		events.forEach(event -> event.claim(claimToken, claimedAt));
+		List<TicketingOutboxEvent> pending = outboxRepository.findClaimableHeadsForUpdate(
+			OutboxStatus.PENDING.name(), batchSize
+		);
+		pending.forEach(event -> event.claim(claimToken, claimedAt));
+		outboxRepository.flush();
+		List<TicketingOutboxEvent> failed = outboxRepository.findClaimableHeadsForUpdate(
+			OutboxStatus.FAILED.name(), batchSize
+		);
+		failed.forEach(event -> event.claim(claimToken, claimedAt));
+		List<TicketingOutboxEvent> events = java.util.stream.Stream.concat(pending.stream(), failed.stream()).toList();
 		return events.stream().map(ClaimedOutboxEvent::from).toList();
 	}
 

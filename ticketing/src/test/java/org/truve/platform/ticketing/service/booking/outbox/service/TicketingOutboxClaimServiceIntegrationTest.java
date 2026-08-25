@@ -84,6 +84,21 @@ class TicketingOutboxClaimServiceIntegrationTest {
 		assertThat(processing.getClaimToken()).isEqualTo(reclaimed.claimToken());
 	}
 
+	@Test
+	void PENDING이_batchSize보다_많아도_FAILED_재시도_batch를_별도로_claim한다() {
+		for (int index = 0; index < 101; index++) {
+			outboxRepository.save(event("P-" + index));
+		}
+		TicketingOutboxEvent failed = event("F-001");
+		failed.markFailed();
+		outboxRepository.saveAndFlush(failed);
+
+		List<ClaimedOutboxEvent> claimed = claimService.claimBatch(100);
+
+		assertThat(claimed).hasSize(101);
+		assertThat(claimed).extracting(ClaimedOutboxEvent::id).contains(failed.getId());
+	}
+
 	private TicketingOutboxEvent event(String reservationNumber) {
 		return TicketingOutboxEvent.create(
 			"booking.ticketing", reservationNumber, "{}", "SOLD_CONFIRMED"
