@@ -41,6 +41,11 @@ public class TicketingOutboxMessageRelay {
 			log.info("[Ticketing Outbox Relay] Published - id: {}, topic: {}, key: {}, eventType: {}",
 				event.id(), event.topic(), event.messageKey(), event.eventType());
 			return OutboxRelayResult.published(event);
+		} catch (InterruptedException exception) {
+			Thread.currentThread().interrupt();
+			log.error("[Ticketing Outbox Relay] Interrupted - id: {}, claimToken: {}",
+				event.id(), event.claimToken(), exception);
+			return OutboxRelayResult.failed(event);
 		} catch (Exception exception) {
 			log.error("[Ticketing Outbox Relay] Failed - id: {}, claimToken: {}",
 				event.id(), event.claimToken(), exception);
