@@ -179,6 +179,7 @@ class BookingServiceTest {
 	void 결제확정_SOLD_이벤트_발행() {
 		// given
 		Reservation reservation = createReservation();
+		reservation.readyForPayment(null);
 		given(reservationRepository.findByNumber("R-001")).willReturn(reservation);
 
 		BookingEventCommand.Confirmed event = new BookingEventCommand.Confirmed(
@@ -200,6 +201,97 @@ class BookingServiceTest {
 			() -> assertThat(soldConfirmed.getScheduledSeatIds()).containsExactly(1L, 2L),
 			() -> assertThat(reservation.getTickets()).allMatch(ticket -> ticket.getStatus() == TicketStatus.ISSUED)
 		);
+	}
+
+	@Test
+	@DisplayName("서로 다른 eventId로 같은 카드 결제 결과를 받아도 SOLD_CONFIRMED는 한 번만 발행한다.")
+	void 카드결제_의미중복_SOLD_한번만_발행() {
+		Reservation reservation = createReservation();
+		reservation.readyForPayment(null);
+		given(reservationRepository.findByNumber("R-001")).willReturn(reservation);
+		BookingEventCommand.Confirmed event = new BookingEventCommand.Confirmed(
+			"R-001", LocalDateTime.now(), LocalDateTime.now(), "카드", null
+		);
+
+		bookingService.confirm(event);
+		bookingService.confirm(event);
+
+		verify(ticketingPublisher, times(1)).publish(any(TicketingEventCommand.SoldConfirmed.class));
+	}
+
+	@Test
+	@DisplayName("가상계좌 발급 단계에서는 티켓을 발급하거나 SOLD_CONFIRMED를 발행하지 않는다.")
+	void 가상계좌발급_SOLD_이벤트_미발행() {
+		Reservation reservation = createReservation();
+		reservation.readyForPayment(null);
+		given(reservationRepository.findByNumber("R-001")).willReturn(reservation);
+		LocalDateTime dueDate = LocalDateTime.now().plusDays(1);
+		BookingEventCommand.Confirmed event = new BookingEventCommand.Confirmed(
+			"R-001",
+			LocalDateTime.now(),
+			null,
+			"가상계좌",
+			new BookingEventCommand.Confirmed.VirtualAccount("111-111", "은행", "홍길동", dueDate)
+		);
+
+		bookingService.confirm(event);
+
+		assertAll(
+			() -> assertThat(reservation.getStatus()).isEqualTo(
+				org.truve.platform.ticketing.service.booking.domain.constant.ReservationStatus.PENDING_DEPOSIT
+			),
+			() -> assertThat(reservation.getTickets()).allMatch(ticket -> ticket.getStatus() == TicketStatus.PENDING),
+			() -> verify(ticketingPublisher, never()).publish(any())
+		);
+	}
+
+	@Test
+	@DisplayName("가상계좌 입금 완료 후 티켓을 발급하고 SOLD_CONFIRMED를 발행한다.")
+	void 가상계좌입금완료_SOLD_이벤트_발행() {
+		Reservation reservation = createReservation();
+		reservation.readyForPayment(null);
+		LocalDateTime now = LocalDateTime.now();
+		reservation.confirm(
+			now,
+			null,
+			"가상계좌",
+			new org.truve.platform.ticketing.service.booking.domain.entity.embedded.VirtualAccount(
+				"111-111", "은행", "홍길동", now.plusDays(1)
+			)
+		);
+		given(reservationRepository.findByNumber("R-001")).willReturn(reservation);
+
+		bookingService.depositReceive(new BookingEventCommand.DepositReceived("R-001", now));
+
+		assertAll(
+			() -> assertThat(reservation.getTickets()).allMatch(ticket -> ticket.getStatus() == TicketStatus.ISSUED),
+			() -> verify(ticketingPublisher).publish(argThat(
+				event -> event instanceof TicketingEventCommand.SoldConfirmed
+			))
+		);
+	}
+
+	@Test
+	@DisplayName("가상계좌 입금 완료 이벤트가 중복돼도 SOLD_CONFIRMED는 한 번만 발행한다.")
+	void 가상계좌입금_의미중복_SOLD_한번만_발행() {
+		Reservation reservation = createReservation();
+		reservation.readyForPayment(null);
+		LocalDateTime now = LocalDateTime.now();
+		reservation.confirm(
+			now,
+			null,
+			"가상계좌",
+			new org.truve.platform.ticketing.service.booking.domain.entity.embedded.VirtualAccount(
+				"111-111", "은행", "홍길동", now.plusDays(1)
+			)
+		);
+		given(reservationRepository.findByNumber("R-001")).willReturn(reservation);
+		BookingEventCommand.DepositReceived event = new BookingEventCommand.DepositReceived("R-001", now);
+
+		bookingService.depositReceive(event);
+		bookingService.depositReceive(event);
+
+		verify(ticketingPublisher, times(1)).publish(any(TicketingEventCommand.SoldConfirmed.class));
 	}
 
 	@Test
@@ -344,6 +436,7 @@ class BookingServiceTest {
 	}
 
 	private void confirmByCard(Reservation reservation) {
+		reservation.readyForPayment(null);
 		reservation.confirm(LocalDateTime.now(), LocalDateTime.now(), "카드", null);
 	}
 }

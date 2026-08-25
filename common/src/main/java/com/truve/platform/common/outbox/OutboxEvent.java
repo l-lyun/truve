@@ -1,5 +1,7 @@
 package com.truve.platform.common.outbox;
 
+import java.util.UUID;
+
 import com.truve.platform.common.support.BaseEntity;
 
 import jakarta.persistence.Column;
@@ -14,6 +16,9 @@ import lombok.NoArgsConstructor;
 @MappedSuperclass
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class OutboxEvent extends BaseEntity {
+
+	@Column(name = "event_id", nullable = false, unique = true, updatable = false)
+	protected UUID eventId;
 
 	@Column(nullable = false)
 	protected String topic;
@@ -35,6 +40,7 @@ public abstract class OutboxEvent extends BaseEntity {
 	protected int retryCount;
 
 	protected OutboxEvent(String topic, String messageKey, String payload, String eventType) {
+		this.eventId = UUID.randomUUID();
 		this.topic = topic;
 		this.messageKey = messageKey;
 		this.payload = payload;

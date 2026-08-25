@@ -19,6 +19,7 @@ import org.truve.platform.ticketing.service.booking.domain.constant.ReservationS
 import org.truve.platform.ticketing.service.booking.domain.constant.TicketStatus;
 import org.truve.platform.ticketing.service.booking.domain.entity.embedded.ShowInfo;
 import org.truve.platform.ticketing.service.booking.domain.entity.embedded.VirtualAccount;
+import org.truve.platform.ticketing.service.booking.domain.entity.Reservation.PaymentTransitionResult;
 
 import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
@@ -49,6 +50,7 @@ public class ReservationTest {
 		// given
 		Reservation reservation = createReservationWithTickets();
 		LocalDateTime now = LocalDateTime.now();
+		reservation.readyForPayment(null);
 
 		// when
 		reservation.confirm(now, now, "카드", null);
@@ -67,6 +69,7 @@ public class ReservationTest {
 		Reservation reservation = createReservationWithTickets();
 		LocalDateTime now = LocalDateTime.now();
 		VirtualAccount virtualAccount = new VirtualAccount("1111-11-1111111", "bank", "customer", now);
+		reservation.readyForPayment(null);
 
 		// when
 		reservation.confirm(now, now, "무통장입금", virtualAccount);
@@ -86,6 +89,7 @@ public class ReservationTest {
 		Reservation reservation = createReservationWithTickets();
 		LocalDateTime now = LocalDateTime.now();
 		VirtualAccount virtualAccount = new VirtualAccount("1111-11-1111111", "bank", "customer", now.plusDays(1));
+		reservation.readyForPayment(null);
 		reservation.confirm(now, null, "무통장입금", virtualAccount);
 
 		// when
@@ -104,6 +108,7 @@ public class ReservationTest {
 	void 데드라인_CONFIRMED() {
 		// given
 		Reservation reservation = createReservation();
+		reservation.readyForPayment(null);
 		reservation.confirm(LocalDateTime.now(), LocalDateTime.now(), "카드", null);
 
 		// when
@@ -119,6 +124,7 @@ public class ReservationTest {
 		// given
 		Reservation reservation = createReservation();
 		VirtualAccount virtualAccount = new VirtualAccount("1111-11-1111111", "bank", "customer", LocalDateTime.now());
+		reservation.readyForPayment(null);
 		reservation.confirm(LocalDateTime.now(), LocalDateTime.now(), "무통장입금", virtualAccount);
 
 		// when
@@ -141,6 +147,7 @@ public class ReservationTest {
 		ReflectionTestUtils.setField(tickets.getFirst(), "id", 1L);
 		ReflectionTestUtils.setField(tickets.getLast(), "id", 2L);
 		reservation.addTickets(tickets);
+		reservation.readyForPayment(null);
 		reservation.confirm(LocalDateTime.now(), LocalDateTime.now(), "카드", null);
 		LocalDateTime canceledAt = reservation.getBookedAt().plusDays(daysSinceBooked);
 
@@ -149,6 +156,91 @@ public class ReservationTest {
 
 		// then
 		assertThat(refundAmount).isEqualTo(expectedRefundAmount);
+	}
+
+	@Test
+	@DisplayName("결제 대기 전에는 결제 완료 상태로 직접 전환할 수 없다.")
+	void CREATED에서_결제확정_차단() {
+		Reservation reservation = createReservationWithTickets();
+
+		CustomException exception = assertThrows(
+			CustomException.class,
+			() -> reservation.confirm(LocalDateTime.now(), LocalDateTime.now(), "카드", null)
+		);
+
+		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_RESERVATION_STATUS);
+	}
+
+	@Test
+	@DisplayName("이미 확정된 카드 결제 이벤트는 티켓을 다시 발급하지 않는다.")
+	void 카드결제_의미중복_noop() {
+		Reservation reservation = createReservationWithTickets();
+		LocalDateTime now = LocalDateTime.now();
+		reservation.readyForPayment(null);
+		reservation.confirm(now, now, "카드", null);
+
+		PaymentTransitionResult result = reservation.confirm(now, now, "카드", null);
+
+		assertAll(
+			() -> assertThat(result).isEqualTo(PaymentTransitionResult.ALREADY_APPLIED),
+			() -> assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.CONFIRMED),
+			() -> assertThat(reservation.getTickets()).allMatch(ticket -> ticket.getStatus() == TicketStatus.ISSUED)
+		);
+	}
+
+	@Test
+	@DisplayName("가상계좌 발급 이벤트가 중복되면 대기 상태와 PENDING 티켓을 유지한다.")
+	void 가상계좌발급_의미중복_noop() {
+		Reservation reservation = createReservationWithTickets();
+		LocalDateTime now = LocalDateTime.now();
+		VirtualAccount virtualAccount = new VirtualAccount(
+			"1111-11-1111111", "bank", "customer", now.plusDays(1)
+		);
+		reservation.readyForPayment(null);
+		reservation.confirm(now, null, "가상계좌", virtualAccount);
+
+		PaymentTransitionResult result = reservation.confirm(now, null, "가상계좌", virtualAccount);
+
+		assertAll(
+			() -> assertThat(result).isEqualTo(PaymentTransitionResult.ALREADY_APPLIED),
+			() -> assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.PENDING_DEPOSIT),
+			() -> assertThat(reservation.getTickets()).allMatch(ticket -> ticket.getStatus() == TicketStatus.PENDING)
+		);
+	}
+
+	@Test
+	@DisplayName("가상계좌 발급 전에 입금 완료 이벤트가 오면 상태를 변경하지 않는다.")
+	void 가상계좌입금_순서역전_차단() {
+		Reservation reservation = createReservationWithTickets();
+		reservation.readyForPayment(null);
+
+		CustomException exception = assertThrows(
+			CustomException.class,
+			() -> reservation.depositReceive(LocalDateTime.now())
+		);
+
+		assertAll(
+			() -> assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_RESERVATION_STATUS),
+			() -> assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.PENDING_PAYMENT),
+			() -> assertThat(reservation.getTickets()).allMatch(ticket -> ticket.getStatus() == TicketStatus.PENDING)
+		);
+	}
+
+	@Test
+	@DisplayName("취소된 예약은 늦은 결제 완료 이벤트가 복구하지 못한다.")
+	void 취소후_늦은결제_상태복구_차단() {
+		Reservation reservation = createReservationWithTickets();
+		ReflectionTestUtils.setField(reservation, "status", ReservationStatus.CANCELED);
+
+		PaymentTransitionResult result = reservation.confirm(
+			LocalDateTime.now(), LocalDateTime.now(), "카드", null
+		);
+
+		assertAll(
+			() -> assertThat(result).isEqualTo(PaymentTransitionResult.TERMINAL_IGNORED),
+			() -> assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.CANCELED),
+			() -> assertThat(reservation.getTickets()).allMatch(ticket -> ticket.getStatus() == TicketStatus.PENDING)
+		);
 	}
 
 	@Test

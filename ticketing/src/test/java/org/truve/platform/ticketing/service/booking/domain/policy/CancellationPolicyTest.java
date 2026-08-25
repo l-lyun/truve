@@ -127,6 +127,7 @@ public class CancellationPolicyTest {
 
 		reservation.addTickets(List.of(ticket1));
 
+		reservation.readyForPayment(null);
 		reservation.confirm(bookedAt, bookedAt, "카드", null);
 
 		return reservation;

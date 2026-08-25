@@ -23,7 +23,9 @@ public class OutboxRelayScheduler {
 	@Scheduled(fixedDelay = 3000)
 	@Transactional
 	public void relay() {
-		List<PaymentOutboxEvent> pending = outboxRepository.findByStatus(OutboxStatus.PENDING);
+		List<PaymentOutboxEvent> pending = outboxRepository.findTop100ByStatusInOrderByIdAsc(
+			List.of(OutboxStatus.PENDING, OutboxStatus.FAILED)
+		);
 		if (!pending.isEmpty()) {
 			outboxRelayExecutor.execute(pending);
 		}
