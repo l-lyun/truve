@@ -212,6 +212,9 @@ public class BookingService {
 		);
 		if (result == PaymentTransitionResult.CONFIRMED) {
 			publishSoldConfirmed(reservation);
+		} else if (result == PaymentTransitionResult.TERMINAL_IGNORED) {
+			log.warn("취소 또는 완료된 예약의 결제 완료 이벤트를 상태 변경 없이 종료합니다. reservationNumber={}",
+				event.getReservationNumber());
 		}
 		return result;
 	}
@@ -222,6 +225,9 @@ public class BookingService {
 		PaymentTransitionResult result = reservation.depositReceive(event.getPaidAt());
 		if (result == PaymentTransitionResult.CONFIRMED) {
 			publishSoldConfirmed(reservation);
+		} else if (result == PaymentTransitionResult.TERMINAL_IGNORED) {
+			log.warn("취소 또는 완료된 예약의 입금 완료 이벤트를 상태 변경 없이 종료합니다. reservationNumber={}",
+				event.getReservationNumber());
 		}
 		return result;
 	}

@@ -19,10 +19,12 @@ import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.truve.platform.ticketing.service.booking.domain.constant.ReservationStatus;
 import org.truve.platform.ticketing.service.booking.domain.constant.TicketStatus;
 import org.truve.platform.ticketing.service.booking.domain.entity.Reservation;
 import org.truve.platform.ticketing.service.booking.domain.entity.Ticket;
 import org.truve.platform.ticketing.service.booking.domain.entity.embedded.ShowInfo;
+import org.truve.platform.ticketing.service.booking.domain.entity.embedded.VirtualAccount;
 import org.truve.platform.ticketing.service.booking.dto.BookingRequest;
 import org.truve.platform.ticketing.service.booking.dto.BookingResponse;
 import org.truve.platform.ticketing.service.booking.external.client.payment.PaymentClient;
@@ -204,7 +206,7 @@ class BookingServiceTest {
 	}
 
 	@Test
-	@DisplayName("서로 다른 eventId로 같은 카드 결제 결과를 받아도 SOLD_CONFIRMED는 한 번만 발행한다.")
+	@DisplayName("같은 카드 결제 결과를 반복해서 받아도 SOLD_CONFIRMED는 한 번만 발행한다.")
 	void 카드결제_의미중복_SOLD_한번만_발행() {
 		Reservation reservation = createReservation();
 		reservation.readyForPayment(null);
@@ -237,9 +239,7 @@ class BookingServiceTest {
 		bookingService.confirm(event);
 
 		assertAll(
-			() -> assertThat(reservation.getStatus()).isEqualTo(
-				org.truve.platform.ticketing.service.booking.domain.constant.ReservationStatus.PENDING_DEPOSIT
-			),
+			() -> assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.PENDING_DEPOSIT),
 			() -> assertThat(reservation.getTickets()).allMatch(ticket -> ticket.getStatus() == TicketStatus.PENDING),
 			() -> verify(ticketingPublisher, never()).publish(any())
 		);
@@ -255,7 +255,7 @@ class BookingServiceTest {
 			now,
 			null,
 			"가상계좌",
-			new org.truve.platform.ticketing.service.booking.domain.entity.embedded.VirtualAccount(
+			new VirtualAccount(
 				"111-111", "은행", "홍길동", now.plusDays(1)
 			)
 		);
@@ -281,7 +281,7 @@ class BookingServiceTest {
 			now,
 			null,
 			"가상계좌",
-			new org.truve.platform.ticketing.service.booking.domain.entity.embedded.VirtualAccount(
+			new VirtualAccount(
 				"111-111", "은행", "홍길동", now.plusDays(1)
 			)
 		);

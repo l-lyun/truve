@@ -1,11 +1,7 @@
-package org.truve.platform.ticketing.service.booking.inbox.service;
+package org.truve.platform.ticketing.service.booking.domain.entity;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,18 +11,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
-import org.springframework.context.annotation.Import;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,21 +30,16 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 import org.truve.platform.ticketing.service.booking.domain.constant.ReservationStatus;
 import org.truve.platform.ticketing.service.booking.domain.constant.TicketStatus;
-import org.truve.platform.ticketing.service.booking.domain.entity.Reservation;
-import org.truve.platform.ticketing.service.booking.domain.entity.Ticket;
+import org.truve.platform.ticketing.service.booking.domain.entity.Reservation.PaymentTransitionResult;
 import org.truve.platform.ticketing.service.booking.domain.entity.embedded.ShowInfo;
-import org.truve.platform.ticketing.service.booking.external.kafka.BookingEventCommand;
-import org.truve.platform.ticketing.service.booking.inbox.repository.PaymentEventInboxRepository;
 import org.truve.platform.ticketing.service.booking.repository.ReservationRepository;
-import org.truve.platform.ticketing.service.booking.service.BookingService;
 
 @DataJpaTest(properties = "spring.jpa.hibernate.ddl-auto=create-drop")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import({PaymentEventInboxHandler.class, PaymentEventProcessor.class})
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 @Testcontainers
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-class PaymentEventInboxMySqlIntegrationTest {
+class ReservationOptimisticLockMySqlIntegrationTest {
 	private static final String MYSQL_DATABASE = "ticketing_test";
 	private static final String MYSQL_USERNAME = "test";
 	private static final String MYSQL_PASSWORD = "test";
@@ -76,72 +64,27 @@ class PaymentEventInboxMySqlIntegrationTest {
 	}
 
 	@Autowired
-	private PaymentEventInboxHandler handler;
-	@Autowired
-	private PaymentEventInboxRepository inboxRepository;
-	@Autowired
 	private ReservationRepository reservationRepository;
 	@Autowired
 	private PlatformTransactionManager transactionManager;
-	@MockitoBean
-	private BookingService bookingService;
 
 	@BeforeEach
 	void cleanDatabase() {
-		inboxRepository.deleteAll();
 		reservationRepository.deleteAll();
 	}
 
 	@Test
-	void 두_인스턴스가_동일_eventId를_처리해도_Inbox와_비즈니스_처리는_한_건만_커밋된다() throws Exception {
-		UUID eventId = UUID.fromString("11111111-1111-1111-1111-111111111111");
-		BookingEventCommand.Confirmed event = confirmedEvent();
-		ExecutorService executor = Executors.newFixedThreadPool(2);
-		CountDownLatch ready = new CountDownLatch(2);
-		CountDownLatch start = new CountDownLatch(1);
-
-		try {
-			Future<?> first = executor.submit(() -> handleAfterSignal(eventId, event, ready, start));
-			Future<?> second = executor.submit(() -> handleAfterSignal(eventId, event, ready, start));
-			assertThat(ready.await(5, SECONDS)).isTrue();
-			start.countDown();
-			first.get(10, SECONDS);
-			second.get(10, SECONDS);
-		} finally {
-			executor.shutdownNow();
-		}
-
-		assertThat(inboxRepository.count()).isEqualTo(1L);
-		verify(bookingService, times(1)).confirm(event);
-	}
-
-	@Test
-	void 서로_다른_eventId의_동시_결제는_낙관적락_패자의_Inbox까지_롤백하고_재처리된다() throws Exception {
+	void 동일_예약을_동시에_결제완료하면_하나만_커밋되고_패자는_낙관적락으로_실패한다() throws Exception {
 		savePendingPaymentReservation();
-		UUID firstEventId = UUID.fromString("22222222-2222-2222-2222-222222222222");
-		UUID secondEventId = UUID.fromString("33333333-3333-3333-3333-333333333333");
-		BookingEventCommand.Confirmed event = confirmedEvent();
 		CountDownLatch reservationsLoaded = new CountDownLatch(2);
 		CountDownLatch updateStart = new CountDownLatch(1);
-		AtomicInteger calls = new AtomicInteger();
-
-		doAnswer(invocation -> {
-			Reservation reservation = reservationRepository.findByNumber("R-001");
-			if (calls.incrementAndGet() <= 2) {
-				reservationsLoaded.countDown();
-				await(reservationsLoaded, 5);
-				await(updateStart, 5);
-			}
-			reservation.confirm(LocalDateTime.now(), LocalDateTime.now(), "카드", null);
-			return null;
-		}).when(bookingService).confirm(any(BookingEventCommand.Confirmed.class));
-
 		ExecutorService executor = Executors.newFixedThreadPool(2);
 		Attempt first;
 		Attempt second;
+
 		try {
-			Future<Attempt> firstFuture = executor.submit(() -> attempt(firstEventId, event));
-			Future<Attempt> secondFuture = executor.submit(() -> attempt(secondEventId, event));
+			Future<Attempt> firstFuture = executor.submit(() -> attemptConfirm(reservationsLoaded, updateStart));
+			Future<Attempt> secondFuture = executor.submit(() -> attemptConfirm(reservationsLoaded, updateStart));
 			assertThat(reservationsLoaded.await(5, SECONDS)).isTrue();
 			updateStart.countDown();
 			first = firstFuture.get(10, SECONDS);
@@ -155,34 +98,46 @@ class PaymentEventInboxMySqlIntegrationTest {
 		assertThat(attempts).filteredOn(attempt -> attempt.failure() != null).hasSize(1);
 		Attempt failed = attempts.stream().filter(attempt -> attempt.failure() != null).findFirst().orElseThrow();
 		assertThat(isOptimisticLockFailure(failed.failure())).isTrue();
-		assertThat(inboxRepository.count()).isEqualTo(1L);
-
-		handler.handle(failed.eventId(), "CONFIRMED", event);
 
 		Reservation saved = reservationRepository.findByNumber("R-001");
-		assertThat(inboxRepository.count()).isEqualTo(2L);
 		assertThat(saved.getStatus()).isEqualTo(ReservationStatus.CONFIRMED);
 		assertThat(saved.getTickets()).allMatch(ticket -> ticket.getStatus() == TicketStatus.ISSUED);
 		assertThat(saved.getVersion()).isEqualTo(1L);
 	}
 
-	private void handleAfterSignal(
-		UUID eventId,
-		BookingEventCommand.Confirmed event,
-		CountDownLatch ready,
-		CountDownLatch start
-	) {
-		ready.countDown();
-		await(start, 5);
-		handler.handle(eventId, "CONFIRMED", event);
+	@Test
+	void 커밋된_결제완료를_새_트랜잭션에서_다시_처리하면_상태와_버전을_변경하지_않는다() {
+		savePendingPaymentReservation();
+
+		PaymentTransitionResult first = new TransactionTemplate(transactionManager).execute(status -> {
+			Reservation reservation = reservationRepository.findByNumber("R-001");
+			return reservation.confirm(LocalDateTime.now(), LocalDateTime.now(), "카드", null);
+		});
+		PaymentTransitionResult duplicate = new TransactionTemplate(transactionManager).execute(status -> {
+			Reservation reservation = reservationRepository.findByNumber("R-001");
+			return reservation.confirm(LocalDateTime.now(), LocalDateTime.now(), "카드", null);
+		});
+
+		Reservation saved = reservationRepository.findByNumber("R-001");
+		assertThat(first).isEqualTo(PaymentTransitionResult.CONFIRMED);
+		assertThat(duplicate).isEqualTo(PaymentTransitionResult.ALREADY_APPLIED);
+		assertThat(saved.getStatus()).isEqualTo(ReservationStatus.CONFIRMED);
+		assertThat(saved.getTickets()).allMatch(ticket -> ticket.getStatus() == TicketStatus.ISSUED);
+		assertThat(saved.getVersion()).isEqualTo(1L);
 	}
 
-	private Attempt attempt(UUID eventId, BookingEventCommand.Confirmed event) {
+	private Attempt attemptConfirm(CountDownLatch reservationsLoaded, CountDownLatch updateStart) {
 		try {
-			handler.handle(eventId, "CONFIRMED", event);
-			return new Attempt(eventId, null);
+			new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
+				Reservation reservation = reservationRepository.findByNumber("R-001");
+				reservationsLoaded.countDown();
+				await(reservationsLoaded, 5);
+				await(updateStart, 5);
+				reservation.confirm(LocalDateTime.now(), LocalDateTime.now(), "카드", null);
+			});
+			return new Attempt(null);
 		} catch (RuntimeException exception) {
-			return new Attempt(eventId, exception);
+			return new Attempt(exception);
 		}
 	}
 
@@ -209,12 +164,6 @@ class PaymentEventInboxMySqlIntegrationTest {
 		});
 	}
 
-	private BookingEventCommand.Confirmed confirmedEvent() {
-		return new BookingEventCommand.Confirmed(
-			"R-001", LocalDateTime.now(), LocalDateTime.now(), "카드", null
-		);
-	}
-
 	private void await(CountDownLatch latch, long timeoutSeconds) {
 		try {
 			if (!latch.await(timeoutSeconds, TimeUnit.SECONDS)) {
@@ -238,6 +187,6 @@ class PaymentEventInboxMySqlIntegrationTest {
 		return false;
 	}
 
-	private record Attempt(UUID eventId, RuntimeException failure) {
+	private record Attempt(RuntimeException failure) {
 	}
 }
