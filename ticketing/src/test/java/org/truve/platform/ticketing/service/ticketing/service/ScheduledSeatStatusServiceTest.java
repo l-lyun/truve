@@ -105,6 +105,27 @@ class ScheduledSeatStatusServiceTest {
 	}
 
 	@Test
+	@DisplayName("SALE_CANCELED 요청이면 같은 예약의 SOLD 좌석만 AVAILABLE로 되돌린다.")
+	void 판매취소_좌석복구_성공() {
+		TicketingEventCommand.SaleCanceled event = new TicketingEventCommand.SaleCanceled(
+			"R-001",
+			UUID.fromString("11111111-1111-1111-1111-111111111111"),
+			List.of(10L, 11L)
+		);
+		ScheduledSeat soldSeat = createScheduledSeat(10L, SeatStatus.SOLD);
+		ScheduledSeat otherReservationSeat = createScheduledSeat(11L, SeatStatus.SOLD, "R-NEW");
+		given(scheduledSeatRepository.findAllByIdForUpdate(event.getScheduledSeatIds()))
+			.willReturn(List.of(soldSeat, otherReservationSeat));
+
+		scheduledSeatStatusService.cancelSales(event);
+
+		assertThat(soldSeat.getStatus()).isEqualTo(SeatStatus.AVAILABLE);
+		assertThat(soldSeat.getReservationNumber()).isNull();
+		assertThat(otherReservationSeat.getStatus()).isEqualTo(SeatStatus.SOLD);
+		assertThat(otherReservationSeat.getReservationNumber()).isEqualTo("R-NEW");
+	}
+
+	@Test
 	@DisplayName("좌석 개수가 맞지 않으면 NOT_CORRECT_SEAT 예외가 발생한다.")
 	void sold요청_좌석개수불일치() {
 		TicketingEventCommand.SoldConfirmed event = new TicketingEventCommand.SoldConfirmed(

@@ -87,4 +87,13 @@ public class ScheduledSeat extends BaseEntity {
 		this.status = SeatStatus.SOLD;
 	}
 
+	public void cancelSale(String reservationNumber) {
+		if (this.status != SeatStatus.SOLD || !Objects.equals(this.reservationNumber, reservationNumber)) {
+			return;
+		}
+		this.status = SeatStatus.AVAILABLE;
+		this.reservationNumber = null;
+		this.reservedAt = null;
+	}
+
 }

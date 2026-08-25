@@ -32,7 +32,6 @@ import org.truve.platform.ticketing.service.booking.external.kafka.BookingEventC
 import org.truve.platform.ticketing.service.booking.external.kafka.PaymentEventCommand;
 import org.truve.platform.ticketing.service.booking.external.kafka.PaymentPublisher;
 import org.truve.platform.ticketing.service.booking.external.kafka.TicketingEventCommand;
-import org.truve.platform.ticketing.service.booking.external.kafka.TicketingPublisher;
 import org.truve.platform.ticketing.service.booking.outbox.service.TicketingOutboxPublisher;
 import org.truve.platform.ticketing.service.booking.risk.service.BookingBotRiskService;
 import org.truve.platform.ticketing.service.booking.repository.ReservationRepository;
@@ -55,8 +54,6 @@ class BookingServiceTest {
 	private SeatHoldService seatHoldService;
 	@Mock
 	private SeatHoldLockService seatHoldLockService;
-	@Mock
-	private TicketingPublisher ticketingPublisher;
 	@Mock
 	private TicketingOutboxPublisher ticketingOutboxPublisher;
 	@Mock
@@ -109,7 +106,7 @@ class BookingServiceTest {
 			() -> verify(seatHoldLockService).release(any()),
 			() -> verify(seatHoldService).release(claim),
 			() -> verify(bookingLockService).release(bookingLock),
-			() -> verify(ticketingPublisher, never()).publish(any())
+			() -> verify(ticketingOutboxPublisher, never()).publish(any())
 		);
 		lockBoundary.verify(seatHoldLockService).acquire(userId, 100L);
 		lockBoundary.verify(seatHoldLockService).release(any());
@@ -357,7 +354,7 @@ class BookingServiceTest {
 	}
 
 	@Test
-	@DisplayName("예매 취소 시 결제 취소 후 HOLD_RELEASED 이벤트를 발행한다.")
+	@DisplayName("예매 취소 시 결제 취소 후 SALE_CANCELED 이벤트를 Outbox에 기록한다.")
 	void 예매취소_좌석해제이벤트발행_성공() {
 		Reservation reservation = createReservation();
 		confirmByCard(reservation);
@@ -369,15 +366,15 @@ class BookingServiceTest {
 		ArgumentCaptor<TicketingEventCommand.TicketingEvent> eventCaptor =
 			ArgumentCaptor.forClass(TicketingEventCommand.TicketingEvent.class);
 		verify(paymentClient).cancel(eq("R-001"), anyString(), any());
-		verify(ticketingPublisher).publish(eventCaptor.capture());
+		verify(ticketingOutboxPublisher).publish(eventCaptor.capture());
 
-		TicketingEventCommand.HoldReleased holdReleased =
-			(TicketingEventCommand.HoldReleased)eventCaptor.getValue();
+		TicketingEventCommand.SaleCanceled saleCanceled =
+			(TicketingEventCommand.SaleCanceled)eventCaptor.getValue();
 
 		assertAll(
 			() -> assertThat(response.getCanceledTicketIds()).containsExactly(1L),
-			() -> assertThat(holdReleased.getReservationNumber()).isEqualTo("R-001"),
-			() -> assertThat(holdReleased.getScheduledSeatIds()).containsExactly(1L),
+			() -> assertThat(saleCanceled.getReservationNumber()).isEqualTo("R-001"),
+			() -> assertThat(saleCanceled.getScheduledSeatIds()).containsExactly(1L),
 			() -> assertThat(reservation.getTickets().getFirst().isCanceled()).isTrue(),
 			() -> assertThat(reservation.getTickets().getLast().isCanceled()).isFalse(),
 			() -> assertThat(reservation.getBlockBooking()).isTrue()
