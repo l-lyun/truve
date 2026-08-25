@@ -12,6 +12,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.truve.platform.ticketing.service.booking.domain.entity.Reservation;
+import org.truve.platform.ticketing.service.booking.domain.entity.Reservation.PaymentTransitionResult;
 import org.truve.platform.ticketing.service.booking.domain.entity.Ticket;
 import org.truve.platform.ticketing.service.booking.domain.entity.embedded.VirtualAccount;
 import org.truve.platform.ticketing.service.booking.dto.BookingRequest;
@@ -201,25 +202,41 @@ public class BookingService {
 	}
 
 	@Transactional
-	public void confirm(BookingEventCommand.Confirmed event) {
+	public PaymentTransitionResult confirm(BookingEventCommand.Confirmed event) {
 		Reservation reservation = reservationRepository.findByNumber(event.getReservationNumber());
-		reservation.confirm(
+		PaymentTransitionResult result = reservation.confirm(
 			event.getBookedAt(),
 			event.getPaidAt(),
 			event.getMethod(),
 			VirtualAccount.from(event.getVirtualAccount())
 		);
+		if (result == PaymentTransitionResult.CONFIRMED) {
+			publishSoldConfirmed(reservation);
+		} else if (result == PaymentTransitionResult.TERMINAL_IGNORED) {
+			log.warn("취소 또는 완료된 예약의 결제 완료 이벤트를 상태 변경 없이 종료합니다. reservationNumber={}",
+				event.getReservationNumber());
+		}
+		return result;
+	}
 
+	@Transactional
+	public PaymentTransitionResult depositReceive(BookingEventCommand.DepositReceived event) {
+		Reservation reservation = reservationRepository.findByNumber(event.getReservationNumber());
+		PaymentTransitionResult result = reservation.depositReceive(event.getPaidAt());
+		if (result == PaymentTransitionResult.CONFIRMED) {
+			publishSoldConfirmed(reservation);
+		} else if (result == PaymentTransitionResult.TERMINAL_IGNORED) {
+			log.warn("취소 또는 완료된 예약의 입금 완료 이벤트를 상태 변경 없이 종료합니다. reservationNumber={}",
+				event.getReservationNumber());
+		}
+		return result;
+	}
+
+	private void publishSoldConfirmed(Reservation reservation) {
 		List<Long> scheduledSeatIds = reservation.getTickets().stream()
 			.map(Ticket::getScheduledSeatId)
 			.toList();
 		ticketingPublisher.publish(TicketingEventCommand.SoldConfirmed.of(reservation, scheduledSeatIds));
-	}
-
-	@Transactional
-	public void depositReceive(BookingEventCommand.DepositReceived event) {
-		Reservation reservation = reservationRepository.findByNumber(event.getReservationNumber());
-		reservation.depositReceive(event.getPaidAt());
 	}
 
 	@Transactional(readOnly = true)

@@ -1,7 +1,9 @@
 package com.truve.platform.payment.service.external.kafka;
 
 import java.util.List;
+import java.util.stream.Stream;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +18,9 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class OutboxRelayScheduler {
+	private static final int RELAY_BATCH_SIZE = 100;
+	private static final List<OutboxStatus> ACTIVE_STATUSES =
+		List.of(OutboxStatus.PENDING, OutboxStatus.FAILED);
 
 	private final PaymentOutboxEventRepository outboxRepository;
 	private final OutboxRelayExecutor outboxRelayExecutor;
@@ -23,9 +28,17 @@ public class OutboxRelayScheduler {
 	@Scheduled(fixedDelay = 3000)
 	@Transactional
 	public void relay() {
-		List<PaymentOutboxEvent> pending = outboxRepository.findByStatus(OutboxStatus.PENDING);
-		if (!pending.isEmpty()) {
-			outboxRelayExecutor.execute(pending);
+		PageRequest batch = PageRequest.of(0, RELAY_BATCH_SIZE);
+		List<PaymentOutboxEvent> pending = outboxRepository.findRelayHeads(
+			OutboxStatus.PENDING, ACTIVE_STATUSES, batch
+		);
+		List<PaymentOutboxEvent> failed = outboxRepository.findRelayHeads(
+			OutboxStatus.FAILED, ACTIVE_STATUSES, batch
+		);
+		List<PaymentOutboxEvent> relayTargets = Stream.concat(pending.stream(), failed.stream())
+			.toList();
+		if (!relayTargets.isEmpty()) {
+			outboxRelayExecutor.execute(relayTargets);
 		}
 	}
 

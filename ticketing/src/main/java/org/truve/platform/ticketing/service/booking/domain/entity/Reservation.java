@@ -12,6 +12,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.truve.platform.ticketing.service.booking.domain.constant.ReservationStatus;
+import org.truve.platform.ticketing.service.booking.domain.constant.TicketStatus;
 import org.truve.platform.ticketing.service.booking.domain.entity.embedded.Applicant;
 import org.truve.platform.ticketing.service.booking.domain.entity.embedded.ShowInfo;
 import org.truve.platform.ticketing.service.booking.domain.entity.embedded.VirtualAccount;
@@ -30,6 +31,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -69,6 +71,9 @@ public class Reservation extends BaseEntity {
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	private ReservationStatus status;
+
+	@Version
+	private Long version;
 
 	@Column(name = "block_booking")
 	private Boolean blockBooking;
@@ -141,9 +146,21 @@ public class Reservation extends BaseEntity {
 		this.status = ReservationStatus.PENDING_PAYMENT;
 	}
 
-	// TODO: 메서드 분리
-	public void confirm(LocalDateTime bookedAt, LocalDateTime paidAt, String paymentMethod,
+	public PaymentTransitionResult confirm(LocalDateTime bookedAt, LocalDateTime paidAt, String paymentMethod,
 		VirtualAccount virtualAccount) {
+		if (status == ReservationStatus.CONFIRMED) {
+			validateAllTicketsIssued();
+			return PaymentTransitionResult.ALREADY_APPLIED;
+		}
+		if (status == ReservationStatus.PENDING_DEPOSIT && isVirtualAccountPayment(virtualAccount)) {
+			validateAllTicketsPending();
+			return PaymentTransitionResult.ALREADY_APPLIED;
+		}
+		if (isTerminalPaymentState()) {
+			return PaymentTransitionResult.TERMINAL_IGNORED;
+		}
+		Preconditions.validate(status == ReservationStatus.PENDING_PAYMENT, ErrorCode.INVALID_RESERVATION_STATUS);
+
 		this.bookedAt = bookedAt;
 		this.paidAt = paidAt;
 		this.paymentMethod = paymentMethod;
@@ -151,9 +168,11 @@ public class Reservation extends BaseEntity {
 		if (isVirtualAccountPayment(virtualAccount)) {
 			this.virtualAccount = virtualAccount;
 			this.status = ReservationStatus.PENDING_DEPOSIT;
+			return PaymentTransitionResult.PENDING_DEPOSIT;
 		} else {
 			this.status = ReservationStatus.CONFIRMED;
 			issueTickets();
+			return PaymentTransitionResult.CONFIRMED;
 		}
 	}
 
@@ -161,14 +180,51 @@ public class Reservation extends BaseEntity {
 		return virtualAccount != null;
 	}
 
-	public void depositReceive(LocalDateTime paidAt) {
+	public PaymentTransitionResult depositReceive(LocalDateTime paidAt) {
+		if (status == ReservationStatus.CONFIRMED) {
+			validateAllTicketsIssued();
+			return PaymentTransitionResult.ALREADY_APPLIED;
+		}
+		if (isTerminalPaymentState()) {
+			return PaymentTransitionResult.TERMINAL_IGNORED;
+		}
+		Preconditions.validate(status == ReservationStatus.PENDING_DEPOSIT, ErrorCode.INVALID_RESERVATION_STATUS);
+
 		this.paidAt = paidAt;
 		this.status = ReservationStatus.CONFIRMED;
 		issueTickets();
+		return PaymentTransitionResult.CONFIRMED;
 	}
 
 	private void issueTickets() {
 		tickets.forEach(Ticket::issue);
+	}
+
+	private boolean isTerminalPaymentState() {
+		return status == ReservationStatus.CANCELED
+			|| status == ReservationStatus.PARTIAL_CANCELED
+			|| status == ReservationStatus.COMPLETED;
+	}
+
+	private void validateAllTicketsIssued() {
+		Preconditions.validate(
+			tickets.stream().allMatch(ticket -> ticket.getStatus() == TicketStatus.ISSUED),
+			ErrorCode.INVALID_TICKET_STATUS
+		);
+	}
+
+	private void validateAllTicketsPending() {
+		Preconditions.validate(
+			tickets.stream().allMatch(ticket -> ticket.getStatus() == TicketStatus.PENDING),
+			ErrorCode.INVALID_TICKET_STATUS
+		);
+	}
+
+	public enum PaymentTransitionResult {
+		CONFIRMED,
+		PENDING_DEPOSIT,
+		ALREADY_APPLIED,
+		TERMINAL_IGNORED
 	}
 
 	public boolean isCancelable() {
