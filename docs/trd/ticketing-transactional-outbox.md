@@ -21,7 +21,7 @@ Kafka payment.booking
      -> ticketing_outbox_events PENDING 저장
   -> DB commit
 
-TicketingOutboxRelayScheduler (기본 3초 간격)
+TicketingOutboxRelayScheduler (`ticketing.outbox.claim-enabled=true`, 기본 3초 간격)
   -> [짧은 DB 트랜잭션, READ COMMITTED]
      -> 예약별 PENDING/FAILED 선두를 FOR UPDATE SKIP LOCKED로 조회
      -> PROCESSING + claimToken + claimedAt 기록
@@ -145,6 +145,7 @@ Relay는 at-least-once 성격을 가진다. claim은 정상적인 다중 인스�
 
 ## 스케줄
 
+- claim Relay 활성화: `ticketing.outbox.claim-enabled`, 기본 `false`
 - Relay: `ticketing.outbox.relay.fixed-delay-ms`, 기본 3,000ms
 - claim timeout: `ticketing.outbox.claim-timeout-ms`, 기본 300,000ms
 - 만료 claim 검사: `ticketing.outbox.claim-recovery-delay-ms`, 기본 30,000ms
@@ -171,6 +172,11 @@ Relay는 at-least-once 성격을 가진다. claim은 정상적인 다중 인스�
 - PENDING이 batch size보다 많아도 FAILED 배치를 별도로 claim해 재시도가 굶지 않는지 검증한다.
 - 실제 MySQL 8.4에서 두 트랜잭션이 commit 전까지 동시에 열린 상태로 `SKIP LOCKED` claim을 수행해 선택 행이 겹치지 않고, 남은 행이 다음 poll에서 모두 claim되는지 검증한다.
 - 실제 MySQL 8.4에서 한 Relay가 SOLD를 claim한 동안 다른 Relay가 같은 예약의 SALE_CANCELED를 추월하지 못하는지 검증한다.
+- 선행 SOLD가 PROCESSING으로 commit된 뒤 다음 poll에서도 후속 SALE_CANCELED가 선택되지 않고, SOLD가 PUBLISHED가 된 뒤에만 선택되는지 검증한다.
+- timeout으로 회수된 행을 새 token이 재claim한 뒤 오래된 token의 실패 결과가 도착해도 새 PROCESSING 상태를 덮어쓰지 못하는지 검증한다.
+- timeout이 지나지 않은 PROCESSING은 회수 대상에서 제외되는지 검증한다.
+- Relay 스레드가 중단되면 Kafka 결과를 확인하지 못한 행을 즉시 FAILED로 단정하지 않고 PROCESSING으로 남겨 timeout 회수에 맡기는지 검증한다.
+- `ticketing.outbox.claim-enabled=false`에서는 claim Relay Scheduler Bean이 생성되지 않는지 검증한다.
 
 ## 아직 검증하거나 주장하지 않는 내용
 
@@ -188,4 +194,15 @@ Outbox 기록 코드와 Relay를 한 번에 처음 배포한 뒤 구 버전으�
 
 `SALE_CANCELED`는 새 이벤트 타입이므로 구 Consumer와 신 Producer가 공존하는 Rolling Update에서 바로 발행하면 안 된다. 구 Consumer는 알 수 없는 타입을 정상 반환하므로 메시지를 처리하지 않고 ACK할 수 있다. 다중 인스턴스 배포에서는 먼저 `SALE_CANCELED` 소비 지원만 배포하고 모든 구 Consumer가 제거된 것을 확인한 뒤, Outbox Relay와 생산 경로를 활성화해야 한다.
 
-claim 기능 배포도 DDL과 애플리케이션 전환을 구분해야 한다. 먼저 nullable `claim_token`, `claimed_at` 컬럼과 PROCESSING 상태를 DB가 수용하도록 배포한 뒤 애플리케이션을 교체한다. 구 Relay는 claim을 사용하지 않으므로 구·신 버전이 공존하는 동안에는 동일 행 중복 발행 방지 효과를 주장할 수 없다. 모든 구 Relay가 제거된 이후부터 다중 인스턴스 claim 보장이 성립한다. 이 단계적 배포와 Kubernetes 다중 Pod 전환은 아직 실제 환경에서 검증하지 않았다.
+claim 기능 배포도 DDL과 애플리케이션 전환을 구분해야 한다. 구 Relay는 PROCESSING을 활성 선행 이벤트로 인식하지 않으므로 구·신 Relay를 동시에 실행하면, 신 Relay가 SOLD를 PROCESSING으로 claim한 사이 구 Relay가 후속 SALE_CANCELED를 선택할 수 있다. 따라서 단순히 같은 Rolling Update 안에서 신 Relay를 바로 켜지 않는다.
+
+안전한 전환 순서는 다음과 같다.
+
+1. nullable `claim_token`, `claimed_at` 컬럼과 PROCESSING 상태를 DB가 수용하도록 먼저 반영한다.
+2. `ticketing.outbox.claim-enabled=false`로 신 버전을 배포한다. 신 Pod에서는 claim Scheduler가 생성되지 않고, 남아 있는 구 Pod의 Relay만 계속 동작한다.
+3. 모든 구 버전 Pod가 제거됐는지 확인한다.
+4. `TICKETING_OUTBOX_CLAIM_ENABLED=true`로 설정을 바꿔 claim Relay를 활성화한다. 이 전환 중 false인 신 Pod는 Relay를 실행하지 않으므로 true인 Pod와 소유권 방식이 충돌하지 않는다.
+
+기본값을 `false`로 둔 이유는 실수로 신 Relay와 구 Relay가 섞이는 것보다 일시적으로 Relay가 멈춰 PENDING이 쌓이는 편이 복구 가능하고 순서 정합성에 안전하기 때문이다. 모든 구 Relay가 제거되고 claim 기능을 켠 이후부터 정상적인 다중 인스턴스 경쟁에서 동일 행 중복 claim 방지 보장이 성립한다. 이 단계적 배포와 Kubernetes 다중 Pod 전환은 아직 실제 환경에서 검증하지 않았다.
+
+롤백할 때도 claim Relay를 먼저 비활성화하고 PROCESSING이 없을 때까지 회수·처리한 뒤 구 버전으로 내려야 한다. PROCESSING을 남긴 채 구 버전을 실행하면 구 버전 쿼리가 해당 상태를 이해하지 못한다.
