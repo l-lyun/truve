@@ -18,7 +18,12 @@ public class TicketingRedisRepository {
 	private static final String TICKET_ACTIVE_SHOW_USER_PREFIX = "ticket:active:";
 	private static final String READY_KEY_PREFIX = "queue:ready:";
 	private static final String SEAT_HOLD_KEY_PREFIX = "seat:hold:";
+	private static final String SEAT_HOLD_LOCK_KEY_PREFIX = "seat:hold:lock:";
+	private static final String SESSION_HELD_SEATS_KEY_PREFIX = "seat:holds:";
 	private static final String BLOCKED_TICKET_PREFIX = "blocked_ticket:";
+	private static final Duration SEAT_HOLD_TTL = Duration.ofMinutes(10);
+	private static final Duration SESSION_HELD_SEATS_TTL = Duration.ofMinutes(11);
+	private static final Duration SEAT_HOLD_LOCK_TTL = Duration.ofSeconds(10);
 
 
 	private final RedisSupport redisSupport;
@@ -53,13 +58,47 @@ public class TicketingRedisRepository {
 		return redisSupport.expireSeconds(sessionTokenKey(sessionToken), ttlSeconds);
 	}
 
-	public boolean tryHoldSeat(Long showScheduleId, Long scheduledSeatId, String sessionToken) {
-		// TODO: 좌석 점유 시간 기획측과 논의
-		return redisSupport.setIfAbsent(seatHoldKey(showScheduleId, scheduledSeatId), sessionToken, Duration.ofMinutes(10));
+	public boolean tryLockSeatHold(UUID userId, Long showScheduleId, String lockToken) {
+		return redisSupport.setIfAbsent(seatHoldLockKey(showScheduleId, userId), lockToken, SEAT_HOLD_LOCK_TTL);
 	}
 
-	public boolean deleteHoldSeat(Long showScheduleId, Long scheduledSeatId, String sessionToken) {
-		return redisSupport.consumeIfEquals(seatHoldKey(showScheduleId, scheduledSeatId), sessionToken);
+	public boolean unlockSeatHold(UUID userId, Long showScheduleId, String lockToken) {
+		return redisSupport.consumeIfEquals(seatHoldLockKey(showScheduleId, userId), lockToken);
+	}
+
+	public SeatHoldResult holdSeats(
+		Long showScheduleId,
+		List<Long> scheduledSeatIds,
+		String sessionToken,
+		int maxSeatCount
+	) {
+		long result = redisSupport.holdSeatsWithLimit(
+			seatHoldKeysWithSessionSet(showScheduleId, scheduledSeatIds, sessionToken),
+			scheduledSeatIds,
+			sessionToken,
+			seatHoldKeyPrefix(showScheduleId),
+			bookingClaimPrefix(sessionToken),
+			SEAT_HOLD_TTL,
+			SESSION_HELD_SEATS_TTL,
+			maxSeatCount
+		);
+		return SeatHoldResult.from(result);
+	}
+
+	public boolean releaseHeldSeats(Long showScheduleId, List<Long> scheduledSeatIds, String sessionToken) {
+		return redisSupport.releaseHeldSeats(
+			seatHoldKeysWithSessionSet(showScheduleId, scheduledSeatIds, sessionToken),
+			scheduledSeatIds,
+			sessionToken
+		);
+	}
+
+	public long releaseSessionHeldSeats(Long showScheduleId, String sessionToken) {
+		return redisSupport.releaseSessionHeldSeats(
+			sessionHeldSeatsKey(showScheduleId, sessionToken),
+			seatHoldKeyPrefix(showScheduleId),
+			sessionToken
+		);
 	}
 
 	public String getHoldSeatSessionToken(Long showScheduleId, Long scheduledSeatId) {
@@ -72,8 +111,9 @@ public class TicketingRedisRepository {
 		String sessionToken,
 		String claimValue
 	) {
-		return redisSupport.replaceAllIfEquals(
-			seatHoldKeys(showScheduleId, scheduledSeatIds),
+		return redisSupport.claimHeldSeats(
+			seatHoldKeysWithSessionSet(showScheduleId, scheduledSeatIds, sessionToken),
+			scheduledSeatIds,
 			sessionToken,
 			claimValue
 		);
@@ -82,9 +122,14 @@ public class TicketingRedisRepository {
 	public boolean releaseClaimedSeats(
 		Long showScheduleId,
 		List<Long> scheduledSeatIds,
+		String sessionToken,
 		String claimValue
 	) {
-		return redisSupport.deleteAllIfEquals(seatHoldKeys(showScheduleId, scheduledSeatIds), claimValue);
+		return redisSupport.releaseClaimedSeats(
+			seatHoldKeysWithSessionSet(showScheduleId, scheduledSeatIds, sessionToken),
+			scheduledSeatIds,
+			claimValue
+		);
 	}
 
 	public boolean restoreClaimedSeats(
@@ -93,10 +138,12 @@ public class TicketingRedisRepository {
 		String claimValue,
 		String sessionToken
 	) {
-		return redisSupport.replaceEachIfEquals(
-			seatHoldKeys(showScheduleId, scheduledSeatIds),
+		return redisSupport.restoreClaimedSeats(
+			seatHoldKeysWithSessionSet(showScheduleId, scheduledSeatIds, sessionToken),
+			scheduledSeatIds,
 			claimValue,
-			sessionToken
+			sessionToken,
+			SESSION_HELD_SEATS_TTL
 		);
 	}
 
@@ -117,13 +164,40 @@ public class TicketingRedisRepository {
 	}
 
 	private String seatHoldKey(Long showScheduleId, Long scheduledSeatId) {
-		return SEAT_HOLD_KEY_PREFIX + showScheduleId + ":" + scheduledSeatId;
+		return seatHoldKeyPrefix(showScheduleId) + scheduledSeatId;
+	}
+
+	private String bookingClaimPrefix(String sessionToken) {
+		return "booking:" + sessionToken + ":";
+	}
+
+	private String seatHoldKeyPrefix(Long showScheduleId) {
+		return SEAT_HOLD_KEY_PREFIX + showScheduleId + ":";
 	}
 
 	private List<String> seatHoldKeys(Long showScheduleId, List<Long> scheduledSeatIds) {
 		return scheduledSeatIds.stream()
 			.map(scheduledSeatId -> seatHoldKey(showScheduleId, scheduledSeatId))
 			.toList();
+	}
+
+	private List<String> seatHoldKeysWithSessionSet(
+		Long showScheduleId,
+		List<Long> scheduledSeatIds,
+		String sessionToken
+	) {
+		List<String> keys = new java.util.ArrayList<>();
+		keys.add(sessionHeldSeatsKey(showScheduleId, sessionToken));
+		keys.addAll(seatHoldKeys(showScheduleId, scheduledSeatIds));
+		return keys;
+	}
+
+	private String seatHoldLockKey(Long showScheduleId, UUID userId) {
+		return SEAT_HOLD_LOCK_KEY_PREFIX + showScheduleId + ":" + userId;
+	}
+
+	private String sessionHeldSeatsKey(Long showScheduleId, String sessionToken) {
+		return SESSION_HELD_SEATS_KEY_PREFIX + showScheduleId + ":" + sessionToken;
 	}
 
 	private String secureKey(String sessionTicket) {
@@ -140,6 +214,22 @@ public class TicketingRedisRepository {
 
 	private String readyUserKey(Long showId, UUID userId) {
 		return READY_KEY_PREFIX + showId + ":" + userId;
+	}
+
+	public enum SeatHoldResult {
+		SUCCESS,
+		CONFLICT,
+		LIMIT_EXCEEDED;
+
+		private static SeatHoldResult from(long result) {
+			if (result == 1L) {
+				return SUCCESS;
+			}
+			if (result == -1L) {
+				return LIMIT_EXCEEDED;
+			}
+			return CONFLICT;
+		}
 	}
 
 }

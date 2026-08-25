@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class SeatHoldService {
-	private static final String BOOKING_CLAIM_FORMAT = "booking:%s:%s";
+	private static final String BOOKING_CLAIM_FORMAT = "booking:%s:%s:%s";
 
 	private final TicketingRedisRepository ticketingRedisRepository;
 
@@ -34,7 +34,7 @@ public class SeatHoldService {
 		String sessionToken,
 		String reservationNumber
 	) {
-		String claimValue = BOOKING_CLAIM_FORMAT.formatted(reservationNumber, UUID.randomUUID());
+		String claimValue = BOOKING_CLAIM_FORMAT.formatted(sessionToken, reservationNumber, UUID.randomUUID());
 		boolean claimed = ticketingRedisRepository.claimHoldSeats(
 			showScheduleId,
 			scheduledSeatIds,
@@ -49,6 +49,7 @@ public class SeatHoldService {
 		ticketingRedisRepository.releaseClaimedSeats(
 			claim.showScheduleId(),
 			claim.scheduledSeatIds(),
+			claim.sessionToken(),
 			claim.claimValue()
 		);
 	}

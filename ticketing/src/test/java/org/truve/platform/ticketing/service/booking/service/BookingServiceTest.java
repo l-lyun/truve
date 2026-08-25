@@ -10,10 +10,12 @@ import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -32,6 +34,7 @@ import org.truve.platform.ticketing.service.booking.external.kafka.TicketingPubl
 import org.truve.platform.ticketing.service.booking.risk.service.BookingBotRiskService;
 import org.truve.platform.ticketing.service.booking.repository.ReservationRepository;
 import org.truve.platform.ticketing.service.ticketing.service.SeatHoldService;
+import org.truve.platform.ticketing.service.ticketing.service.SeatHoldLockService;
 
 import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
@@ -48,6 +51,8 @@ class BookingServiceTest {
 	@Mock
 	private SeatHoldService seatHoldService;
 	@Mock
+	private SeatHoldLockService seatHoldLockService;
+	@Mock
 	private TicketingPublisher ticketingPublisher;
 	@Mock
 	private PaymentPublisher paymentPublisher;
@@ -58,6 +63,17 @@ class BookingServiceTest {
 
 	@InjectMocks
 	private BookingService bookingService;
+
+	@BeforeEach
+	void setUpSeatHoldLock() {
+		lenient().when(seatHoldLockService.acquire(any(), anyLong()))
+			.thenAnswer(invocation -> new SeatHoldLockService.SeatHoldLock(
+				invocation.getArgument(0),
+				invocation.getArgument(1),
+				"seat-hold-lock-token"
+			));
+		lenient().when(seatHoldLockService.release(any())).thenReturn(true);
+	}
 
 	@Test
 	@DisplayName("예매 내역과 티켓을 생성하고 예매 번호를 반환한다.")
@@ -80,13 +96,19 @@ class BookingServiceTest {
 		BookingResponse.Create response = bookingService.create(userId, "session-token", request);
 
 		// then
+		InOrder lockBoundary = inOrder(seatHoldLockService, bookingCreationService);
 		assertAll(
 			() -> assertThat(response.getReservationNumber()).isNotBlank(),
 			() -> verify(seatHoldService).validateSession(userId, 100L, "session-token"),
+			() -> verify(seatHoldLockService).acquire(userId, 100L),
+			() -> verify(seatHoldLockService).release(any()),
 			() -> verify(seatHoldService).release(claim),
 			() -> verify(bookingLockService).release(bookingLock),
 			() -> verify(ticketingPublisher, never()).publish(any())
 		);
+		lockBoundary.verify(seatHoldLockService).acquire(userId, 100L);
+		lockBoundary.verify(seatHoldLockService).release(any());
+		lockBoundary.verify(bookingCreationService).create(eq(userId), eq(100L), eq(seatIds), anyString());
 	}
 
 	@Test

@@ -3,6 +3,8 @@ package org.truve.platform.ticketing.service.ticketing.dto;
 import java.util.List;
 
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -12,13 +14,15 @@ public class TicketingRequest {
 	@AllArgsConstructor
 	public static class HoldSeat {
 		@NotEmpty
-		List<Long> scheduledSeatIds;
+		@Size(max = 4)
+		List<@NotNull Long> scheduledSeatIds;
 	}
 
 	@Getter
 	@AllArgsConstructor
 	public static class DeleteHoldSeat {
 		@NotEmpty
-		List<Long> scheduledSeatIds;
+		@Size(max = 4)
+		List<@NotNull Long> scheduledSeatIds;
 	}
 }
