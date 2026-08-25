@@ -1,6 +1,7 @@
 package org.truve.platform.ticketing.service.booking.outbox.service;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -20,7 +21,15 @@ public class TicketingOutboxMessageRelay {
 
 	public List<OutboxRelayResult> relay(List<ClaimedOutboxEvent> events) {
 		List<PendingSend> pendingSends = events.stream().map(this::send).toList();
-		return pendingSends.stream().map(this::awaitResult).toList();
+		List<OutboxRelayResult> results = new ArrayList<>();
+		for (PendingSend pendingSend : pendingSends) {
+			OutboxRelayResult result = awaitResult(pendingSend);
+			if (result == null) {
+				break;
+			}
+			results.add(result);
+		}
+		return List.copyOf(results);
 	}
 
 	private PendingSend send(ClaimedOutboxEvent event) {
@@ -43,9 +52,9 @@ public class TicketingOutboxMessageRelay {
 			return OutboxRelayResult.published(event);
 		} catch (InterruptedException exception) {
 			Thread.currentThread().interrupt();
-			log.error("[Ticketing Outbox Relay] Interrupted - id: {}, claimToken: {}",
+			log.warn("[Ticketing Outbox Relay] Interrupted; 미확정 claim은 timeout 회수에 맡깁니다. id={}, claimToken={}",
 				event.id(), event.claimToken(), exception);
-			return OutboxRelayResult.failed(event);
+			return null;
 		} catch (Exception exception) {
 			log.error("[Ticketing Outbox Relay] Failed - id: {}, claimToken: {}",
 				event.id(), event.claimToken(), exception);

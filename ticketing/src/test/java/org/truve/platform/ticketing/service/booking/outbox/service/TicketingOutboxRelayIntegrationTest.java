@@ -21,7 +21,7 @@ import org.truve.platform.ticketing.service.booking.outbox.repository.TicketingO
 
 import com.truve.platform.common.outbox.OutboxStatus;
 
-@DataJpaTest
+@DataJpaTest(properties = "ticketing.outbox.claim-enabled=true")
 @Import({
 	TicketingOutboxRelayScheduler.class,
 	TicketingOutboxClaimService.class,

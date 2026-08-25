@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +16,7 @@ import com.truve.platform.common.outbox.OutboxStatus;
 import lombok.RequiredArgsConstructor;
 
 @Component
+@ConditionalOnProperty(prefix = "ticketing.outbox", name = "claim-enabled", havingValue = "true")
 @RequiredArgsConstructor
 public class TicketingOutboxRelayScheduler {
 	private static final int RELAY_BATCH_SIZE = 100;
