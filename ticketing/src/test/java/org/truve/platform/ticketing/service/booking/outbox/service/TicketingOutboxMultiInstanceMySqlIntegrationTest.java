@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -72,10 +73,21 @@ class TicketingOutboxMultiInstanceMySqlIntegrationTest {
 	private PlatformTransactionManager transactionManager;
 	@Autowired
 	private TicketingOutboxClaimService claimService;
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
 
 	@BeforeEach
 	void cleanDatabase() {
 		outboxRepository.deleteAll();
+	}
+
+	@Test
+	void MySQL_기본_트랜잭션_격리수준은_REPEATABLE_READ이다() {
+		String isolation = new TransactionTemplate(transactionManager).execute(
+			status -> jdbcTemplate.queryForObject("select @@transaction_isolation", String.class)
+		);
+
+		assertThat(isolation).isEqualTo("REPEATABLE-READ");
 	}
 
 	@Test
@@ -161,12 +173,10 @@ class TicketingOutboxMultiInstanceMySqlIntegrationTest {
 		UUID token = UUID.randomUUID();
 		try {
 			TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
-			transactionTemplate.setIsolationLevel(org.springframework.transaction.TransactionDefinition.ISOLATION_READ_COMMITTED);
 			List<Long> ids = transactionTemplate.execute(status -> {
 				await(start, 5);
 				List<TicketingOutboxEvent> selected = outboxRepository.findClaimableHeadsForUpdate("PENDING", batchSize);
 				selected.forEach(event -> event.claim(token, LocalDateTime.now()));
-				outboxRepository.flush();
 				bothSelected.countDown();
 				await(bothSelected, 5);
 				return selected.stream().map(TicketingOutboxEvent::getId).toList();
