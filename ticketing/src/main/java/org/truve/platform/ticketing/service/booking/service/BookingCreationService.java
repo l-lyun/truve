@@ -72,7 +72,7 @@ public class BookingCreationService {
 
 		LocalDateTime reservedAt = LocalDateTime.now();
 		scheduledSeats.forEach(seat -> seat.reserve(reservationNumber, reservedAt));
-		reservationRepository.saveAndFlush(reservation);
+		reservationRepository.save(reservation);
 
 		return new BookingResponse.Create(reservationNumber);
 	}

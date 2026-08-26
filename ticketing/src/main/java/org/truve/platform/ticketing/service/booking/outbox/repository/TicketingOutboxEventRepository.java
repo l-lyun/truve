@@ -35,7 +35,7 @@ public interface TicketingOutboxEventRepository extends OutboxEventRepository<Ti
 		@Param("batchSize") int batchSize
 	);
 
-	@Modifying(clearAutomatically = true, flushAutomatically = true)
+	@Modifying
 	@Query("""
 		update TicketingOutboxEvent event
 		set event.status = :published,
@@ -52,7 +52,7 @@ public interface TicketingOutboxEventRepository extends OutboxEventRepository<Ti
 		@Param("published") OutboxStatus published
 	);
 
-	@Modifying(clearAutomatically = true, flushAutomatically = true)
+	@Modifying
 	@Query("""
 		update TicketingOutboxEvent event
 		set event.status = :failed,
@@ -70,7 +70,7 @@ public interface TicketingOutboxEventRepository extends OutboxEventRepository<Ti
 		@Param("failed") OutboxStatus failed
 	);
 
-	@Modifying(clearAutomatically = true, flushAutomatically = true)
+	@Modifying
 	@Query("""
 		update TicketingOutboxEvent event
 		set event.status = :failed,

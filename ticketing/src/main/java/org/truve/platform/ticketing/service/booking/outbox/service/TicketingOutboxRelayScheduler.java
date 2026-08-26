@@ -14,10 +14,12 @@ import org.truve.platform.ticketing.service.booking.outbox.repository.TicketingO
 import com.truve.platform.common.outbox.OutboxStatus;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @ConditionalOnProperty(prefix = "ticketing.outbox", name = "claim-enabled", havingValue = "true")
 @RequiredArgsConstructor
+@Slf4j
 public class TicketingOutboxRelayScheduler {
 	private static final int RELAY_BATCH_SIZE = 100;
 
@@ -30,10 +32,14 @@ public class TicketingOutboxRelayScheduler {
 
 	@Scheduled(fixedDelayString = "${ticketing.outbox.relay.fixed-delay-ms:3000}")
 	public void relay() {
-		List<ClaimedOutboxEvent> claimedEvents = claimService.claimBatch(RELAY_BATCH_SIZE);
-		if (!claimedEvents.isEmpty()) {
-			List<OutboxRelayResult> results = messageRelay.relay(claimedEvents);
-			claimService.complete(results);
+		try {
+			List<ClaimedOutboxEvent> claimedEvents = claimService.claimBatch(RELAY_BATCH_SIZE);
+			if (!claimedEvents.isEmpty()) {
+				List<OutboxRelayResult> results = messageRelay.relay(claimedEvents);
+				claimService.complete(results);
+			}
+		} catch (RuntimeException exception) {
+			log.error("[Ticketing Outbox Relay] 배치 처리 중 예외가 발생했습니다.", exception);
 		}
 	}
 

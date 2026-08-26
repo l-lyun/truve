@@ -32,7 +32,7 @@ class TicketingOutboxClaimServiceIntegrationTest {
 	private TicketingOutboxClaimService claimService;
 
 	@Test
-	void claimBatch는_READ_COMMITTED_트랜잭션으로_구성된다() throws NoSuchMethodException {
+	void claimBatch는_데이터소스의_기본_격리수준을_사용한다() throws NoSuchMethodException {
 		AnnotationTransactionAttributeSource attributeSource = new AnnotationTransactionAttributeSource();
 		TransactionAttribute attribute = attributeSource.getTransactionAttribute(
 			TicketingOutboxClaimService.class.getMethod("claimBatch", int.class),
@@ -40,7 +40,7 @@ class TicketingOutboxClaimServiceIntegrationTest {
 		);
 
 		assertThat(attribute).isNotNull();
-		assertThat(attribute.getIsolationLevel()).isEqualTo(TransactionDefinition.ISOLATION_READ_COMMITTED);
+		assertThat(attribute.getIsolationLevel()).isEqualTo(TransactionDefinition.ISOLATION_DEFAULT);
 	}
 
 	@BeforeEach

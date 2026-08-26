@@ -58,7 +58,7 @@ class BookingCreationServiceTest {
 		bookingCreationService.create(UUID.randomUUID(), 100L, List.of(11L, 10L), "R-001");
 
 		ArgumentCaptor<Reservation> captor = ArgumentCaptor.forClass(Reservation.class);
-		verify(reservationRepository).saveAndFlush(captor.capture());
+		verify(reservationRepository).save(captor.capture());
 		Reservation reservation = captor.getValue();
 		assertAll(
 			() -> assertThat(reservation.getBlockBooking()).isTrue(),
@@ -85,7 +85,7 @@ class BookingCreationServiceTest {
 
 		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ALREADY_HOLD_SEAT);
 		assertThat(available.getStatus()).isEqualTo(SeatStatus.AVAILABLE);
-		verify(reservationRepository, never()).saveAndFlush(org.mockito.ArgumentMatchers.any());
+		verify(reservationRepository, never()).save(org.mockito.ArgumentMatchers.any());
 	}
 
 	private ScheduledSeat createScheduledSeat(Long id, SeatStatus status) {

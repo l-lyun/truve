@@ -18,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.truve.platform.ticketing.service.booking.domain.constant.ReservationStatus;
 import org.truve.platform.ticketing.service.booking.domain.constant.TicketStatus;
@@ -171,6 +172,32 @@ class BookingServiceTest {
 		);
 
 		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ALREADY_HOLD_SEAT);
+		verify(seatHoldService).restore(claim);
+		verify(seatHoldService, never()).release(claim);
+		verify(bookingLockService).release(bookingLock);
+	}
+
+	@Test
+	@DisplayName("DB 활성 예약 제약조건이 충돌하면 좌석 claim을 복원하고 공개 오류로 변환한다.")
+	void 예매생성_DB제약조건충돌_보상() {
+		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+		List<Long> seatIds = List.of(10L, 11L);
+		BookingRequest.Create request = new BookingRequest.Create(100L, seatIds);
+		BookingLockService.BookingLock bookingLock = new BookingLockService.BookingLock(userId, 100L, "lock-token");
+		SeatHoldService.SeatClaim claim = new SeatHoldService.SeatClaim(
+			100L, seatIds, "session-token", "claim-token"
+		);
+		given(bookingLockService.acquire(userId, 100L)).willReturn(bookingLock);
+		given(seatHoldService.claim(eq(100L), eq(seatIds), eq("session-token"), anyString())).willReturn(claim);
+		given(bookingCreationService.create(eq(userId), eq(100L), eq(seatIds), anyString()))
+			.willThrow(new DataIntegrityViolationException("duplicate active reservation"));
+
+		CustomException exception = assertThrows(
+			CustomException.class,
+			() -> bookingService.create(userId, "session-token", request)
+		);
+
+		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.ALREADY_BOOKED_SHOW);
 		verify(seatHoldService).restore(claim);
 		verify(seatHoldService, never()).release(claim);
 		verify(bookingLockService).release(bookingLock);

@@ -1,6 +1,7 @@
 package org.truve.platform.ticketing.service.booking.outbox.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -50,6 +51,16 @@ class TicketingOutboxRelaySchedulerTest {
 		given(claimService.claimBatch(100)).willReturn(List.of());
 
 		scheduler.relay();
+
+		verify(messageRelay, never()).relay(org.mockito.ArgumentMatchers.anyList());
+		verify(claimService, never()).complete(org.mockito.ArgumentMatchers.anyList());
+	}
+
+	@Test
+	void claim_중_예외가_발생하면_해당_배치를_종료하고_다음_스케줄에_맡긴다() {
+		given(claimService.claimBatch(100)).willThrow(new IllegalStateException("invalid outbox state"));
+
+		assertThatCode(scheduler::relay).doesNotThrowAnyException();
 
 		verify(messageRelay, never()).relay(org.mockito.ArgumentMatchers.anyList());
 		verify(claimService, never()).complete(org.mockito.ArgumentMatchers.anyList());

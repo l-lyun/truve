@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.truve.platform.ticketing.service.booking.outbox.domain.entity.TicketingOutboxEvent;
 import org.truve.platform.ticketing.service.booking.outbox.repository.TicketingOutboxEventRepository;
@@ -21,18 +20,14 @@ import lombok.extern.slf4j.Slf4j;
 public class TicketingOutboxClaimService {
 	private final TicketingOutboxEventRepository outboxRepository;
 
-	@Transactional(isolation = Isolation.READ_COMMITTED)
+	@Transactional
 	public List<ClaimedOutboxEvent> claimBatch(int batchSize) {
-		if (batchSize <= 0) {
-			throw new IllegalArgumentException("batchSize는 양수여야 합니다.");
-		}
 		UUID claimToken = UUID.randomUUID();
 		LocalDateTime claimedAt = LocalDateTime.now();
 		List<TicketingOutboxEvent> pending = outboxRepository.findClaimableHeadsForUpdate(
 			OutboxStatus.PENDING.name(), batchSize
 		);
 		pending.forEach(event -> event.claim(claimToken, claimedAt));
-		outboxRepository.flush();
 		List<TicketingOutboxEvent> failed = outboxRepository.findClaimableHeadsForUpdate(
 			OutboxStatus.FAILED.name(), batchSize
 		);
