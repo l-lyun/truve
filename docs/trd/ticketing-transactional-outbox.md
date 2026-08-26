@@ -22,7 +22,7 @@ Kafka payment.booking
   -> DB commit
 
 TicketingOutboxRelayScheduler (`ticketing.outbox.claim-enabled=true`, 기본 3초 간격)
-  -> [짧은 DB 트랜잭션, READ COMMITTED]
+  -> [짧은 DB 트랜잭션, MySQL 기본 REPEATABLE READ]
      -> 예약별 PENDING/FAILED 선두를 FOR UPDATE SKIP LOCKED로 조회
      -> PROCESSING + claimToken + claimedAt 기록
      -> commit과 함께 DB row lock 해제
@@ -91,7 +91,8 @@ FOR UPDATE SKIP LOCKED;
 - `SKIP LOCKED`는 다른 Relay가 잡은 행의 해제를 기다리지 않고 현재 조회에서 건너뛰게 한다.
 - `NOT EXISTS`는 같은 topic·messageKey의 오래된 PENDING·FAILED·PROCESSING이 있으면 후속 이벤트를 선택하지 않는다.
 - PENDING과 FAILED를 각각 최대 100건 조회한다. PENDING이 계속 유입돼도 FAILED 재시도 배치가 굶지 않으며, Kafka 전달 목록에서는 PENDING 배치를 먼저 둔다.
-- claim 트랜잭션은 `READ COMMITTED`를 사용해 MySQL 기본 `REPEATABLE READ`의 불필요한 gap/next-key lock 범위를 줄인다.
+- claim 트랜잭션은 별도 격리 수준 튜닝 없이 MySQL 기본 `REPEATABLE READ`를 사용한다. `READ COMMITTED` 전환은 실제 lock wait·deadlock·처리량을 비교한 뒤 적용할 성능 개선 후보로 남긴다.
+- claim 도중 엔티티 상태를 강제로 flush하지 않는다. PENDING과 PROCESSING이 모두 같은 예약의 후속 이벤트를 막으며, 변경사항은 트랜잭션 commit 시 JPA의 자동 flush로 저장된다.
 - 조회 직후 같은 트랜잭션에서 PROCESSING과 claim 정보를 기록하고 즉시 commit한다. Kafka 호출 동안 비관적 row lock이나 DB 트랜잭션을 유지하지 않는다.
 
 `SKIP LOCKED`는 한 번의 동시 실행에서 각 Relay가 정확히 같은 개수의 행을 받는 공정성을 보장하지 않는다. 어떤 Relay는 10건, 다른 Relay는 더 적게 받을 수 있지만, 잠긴 행을 기다리지 않고 서로 겹치지 않는 행을 가져가며 남은 행은 다음 poll에서 처리한다.
@@ -169,16 +170,19 @@ Relay는 at-least-once 성격을 가진다. claim은 정상적인 다중 인스�
 - Scheduler가 PENDING을 FAILED보다 먼저 Relay에 전달하고, PUBLISHED 행을 정리하는지 단위 검증한다.
 - 테스트 외부 트랜잭션을 끈 상태에서 실제 Repository와 mock KafkaTemplate을 연결해, Kafka 호출 시 DB 트랜잭션이 없고 실패가 FAILED와 retryCount로 저장된 뒤 다음 Relay 성공 시 PUBLISHED로 커밋되는지 H2 DB 통합 검증한다.
 - H2에서 잘못된 claimToken으로는 PROCESSING 상태를 변경할 수 없고, 올바른 token만 PUBLISHED/FAILED를 반영하는지 검증한다.
-- Spring이 `claimBatch`를 `READ_COMMITTED` 트랜잭션으로 해석하는지 검증해 격리 수준 설정의 회귀를 차단한다.
+- Spring이 `claimBatch`에 별도 격리 수준을 강제하지 않고 데이터소스 기본값을 사용하도록 해석하는지 검증한다.
 - H2에서 만료된 PROCESSING을 FAILED로 회수하고 새 token으로 다시 claim하는지 검증한다.
 - PENDING이 batch size보다 많아도 FAILED 배치를 별도로 claim해 재시도가 굶지 않는지 검증한다.
 - 실제 MySQL 8.4에서 두 트랜잭션이 commit 전까지 동시에 열린 상태로 `SKIP LOCKED` claim을 수행해 선택 행이 겹치지 않고, 남은 행이 다음 poll에서 모두 claim되는지 검증한다.
+- 실제 MySQL 8.4의 기본 트랜잭션 격리 수준이 `REPEATABLE READ`인지 확인하고 같은 조건에서 다중 Relay claim을 검증한다.
 - 실제 MySQL 8.4에서 한 Relay가 SOLD를 claim한 동안 다른 Relay가 같은 예약의 SALE_CANCELED를 추월하지 못하는지 검증한다.
 - 선행 SOLD가 PROCESSING으로 commit된 뒤 다음 poll에서도 후속 SALE_CANCELED가 선택되지 않고, SOLD가 PUBLISHED가 된 뒤에만 선택되는지 검증한다.
 - timeout으로 회수된 행을 새 token이 재claim한 뒤 오래된 token의 실패 결과가 도착해도 새 PROCESSING 상태를 덮어쓰지 못하는지 검증한다.
 - timeout이 지나지 않은 PROCESSING은 회수 대상에서 제외되는지 검증한다.
 - Relay 스레드가 중단되면 Kafka 결과를 확인하지 못한 행을 즉시 FAILED로 단정하지 않고 PROCESSING으로 남겨 timeout 회수에 맡기는지 검증한다.
 - `ticketing.outbox.claim-enabled=false`에서는 claim Relay Scheduler Bean이 생성되지 않는지 검증한다.
+- claim 배치에서 내부 상태 예외가 발생하면 Scheduler 경계에서 기록하고 Kafka 전송과 결과 반영을 진행하지 않는지 검증한다.
+- 예매 생성이 `save()`만 사용해도 DB 활성 예약 제약조건 예외가 호출자에게 전달되고, 같은 트랜잭션의 좌석 변경이 롤백되는지 JPA 통합 검증한다.
 
 ## 아직 검증하거나 주장하지 않는 내용
 
