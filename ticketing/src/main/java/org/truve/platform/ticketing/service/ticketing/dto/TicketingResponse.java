@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.truve.platform.ticketing.service.ticketing.constant.SeatStatus;
+import org.truve.platform.ticketing.service.booking.domain.constant.ReservationStatus;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,6 +19,14 @@ public class TicketingResponse {
 	public static class Enter {
 		String sessionToken;
 		long expireIn;
+	}
+
+	@Getter
+	@AllArgsConstructor
+	public static class HoldAccepted {
+		private final String reservationNumber;
+		private final ReservationStatus status;
+		private final LocalDateTime expiresAt;
 	}
 
 	@Getter

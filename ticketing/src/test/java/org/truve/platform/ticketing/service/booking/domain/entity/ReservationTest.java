@@ -50,6 +50,7 @@ public class ReservationTest {
 			"VIP석 2인",
 			showInfo,
 			"H-001",
+			"seat-fingerprint",
 			expiresAt
 		);
 
@@ -58,6 +59,7 @@ public class ReservationTest {
 			() -> assertThat(reservation.getNumber()).isEqualTo("R-HOLD-001"),
 			() -> assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.HOLD_PENDING),
 			() -> assertThat(reservation.getHoldId()).isEqualTo("H-001"),
+			() -> assertThat(reservation.getHoldRequestFingerprint()).isEqualTo("seat-fingerprint"),
 			() -> assertThat(reservation.getExpiresAt()).isEqualTo(expiresAt),
 			() -> assertThat(reservation.getShowInfo()).isEqualTo(showInfo)
 		);
@@ -67,7 +69,7 @@ public class ReservationTest {
 	@DisplayName("비동기 좌석 선점 예약은 holdId와 만료 시각이 반드시 필요하다.")
 	void 좌석_선점_대기_예약의_필수값_검증() {
 		assertThatThrownBy(() -> Reservation.createHoldPending(
-			UUID.randomUUID(), "R-HOLD-001", "VIP석 1인", createShowInfo(), " ", null))
+			UUID.randomUUID(), "R-HOLD-001", "VIP석 1인", createShowInfo(), " ", " ", null))
 			.isInstanceOf(CustomException.class)
 			.satisfies(exception -> assertThat(((CustomException)exception).getErrorCode())
 				.isEqualTo(ErrorCode.INVALID_BOOKING_SEAT_HOLD));
@@ -78,6 +80,7 @@ public class ReservationTest {
 	void 좌석_선점_반영_중에는_결제를_시작할_수_없다() {
 		Reservation reservation = Reservation.createHoldPending(
 			UUID.randomUUID(), "R-HOLD-001", "VIP석 1인", createShowInfo(), "H-001",
+			"seat-fingerprint",
 			LocalDateTime.now().plusMinutes(10));
 
 		assertThatThrownBy(() -> reservation.readyForPayment(null))
