@@ -24,6 +24,76 @@ class TicketingRedisRepositoryTest {
 	private TicketingRedisRepository ticketingRedisRepository;
 
 	@Test
+	void holdId_좌석_lease가_신규_선점_결과를_반환한다() {
+		List<String> keys = List.of(
+			"seat:holds:100:session-token",
+			"seat:hold:meta:hold-id",
+			"seat:hold:100:10",
+			"seat:hold:100:11"
+		);
+		given(redisSupport.holdSeatLeasesWithLimit(
+			keys,
+			List.of(10L, 11L),
+			"session-token",
+			"hold-id",
+			"seat:hold:100:",
+			"seat:hold:meta:",
+			Duration.ofMinutes(10),
+			Duration.ofMinutes(11),
+			4
+		)).willReturn(1L);
+
+		TicketingRedisRepository.SeatHoldResult result = ticketingRedisRepository.holdSeats(
+			100L, List.of(10L, 11L), "session-token", "hold-id", 4
+		);
+
+		assertThat(result).isEqualTo(TicketingRedisRepository.SeatHoldResult.NEWLY_ACQUIRED);
+	}
+
+	@Test
+	void holdId_좌석_lease가_멱등_재시도_결과를_반환한다() {
+		given(redisSupport.holdSeatLeasesWithLimit(
+			List.of("seat:holds:100:session-token", "seat:hold:meta:hold-id", "seat:hold:100:10"),
+			List.of(10L),
+			"session-token",
+			"hold-id",
+			"seat:hold:100:",
+			"seat:hold:meta:",
+			Duration.ofMinutes(10),
+			Duration.ofMinutes(11),
+			4
+		)).willReturn(2L);
+
+		TicketingRedisRepository.SeatHoldResult result = ticketingRedisRepository.holdSeats(
+			100L, List.of(10L), "session-token", "hold-id", 4
+		);
+
+		assertThat(result).isEqualTo(TicketingRedisRepository.SeatHoldResult.ALREADY_OWNED);
+	}
+
+	@Test
+	void 신규_선점_보상은_holdId와_meta를_함께_전달한다() {
+		List<String> keys = List.of(
+			"seat:holds:100:session-token",
+			"seat:hold:meta:hold-id",
+			"seat:hold:100:10",
+			"seat:hold:100:11"
+		);
+		given(redisSupport.compensateNewlyHeldSeatLeases(
+			keys, List.of(10L, 11L), "session-token", "hold-id"
+		)).willReturn(true);
+
+		boolean compensated = ticketingRedisRepository.compensateNewlyHeldSeats(
+			100L, List.of(10L, 11L), "session-token", "hold-id"
+		);
+
+		assertThat(compensated).isTrue();
+		verify(redisSupport).compensateNewlyHeldSeatLeases(
+			keys, List.of(10L, 11L), "session-token", "hold-id"
+		);
+	}
+
+	@Test
 	void 좌석_claim은_모든_키가_세션_소유일_때만_전환한다() {
 		List<String> keys = List.of(
 			"seat:holds:100:session-token",

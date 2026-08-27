@@ -20,6 +20,7 @@ public class TicketingRedisRepository {
 	private static final String SEAT_HOLD_KEY_PREFIX = "seat:hold:";
 	private static final String SEAT_HOLD_LOCK_KEY_PREFIX = "seat:hold:lock:";
 	private static final String SESSION_HELD_SEATS_KEY_PREFIX = "seat:holds:";
+	private static final String SEAT_HOLD_META_KEY_PREFIX = "seat:hold:meta:";
 	private static final String BLOCKED_TICKET_PREFIX = "blocked_ticket:";
 	private static final Duration SEAT_HOLD_TTL = Duration.ofMinutes(10);
 	private static final Duration SESSION_HELD_SEATS_TTL = Duration.ofMinutes(11);
@@ -83,6 +84,41 @@ public class TicketingRedisRepository {
 			maxSeatCount
 		);
 		return SeatHoldResult.from(result);
+	}
+
+	public SeatHoldResult holdSeats(
+		Long showScheduleId,
+		List<Long> scheduledSeatIds,
+		String sessionToken,
+		String holdId,
+		int maxSeatCount
+	) {
+		long result = redisSupport.holdSeatLeasesWithLimit(
+			seatHoldLeaseKeys(showScheduleId, scheduledSeatIds, sessionToken, holdId),
+			scheduledSeatIds,
+			sessionToken,
+			holdId,
+			seatHoldKeyPrefix(showScheduleId),
+			SEAT_HOLD_META_KEY_PREFIX,
+			SEAT_HOLD_TTL,
+			SESSION_HELD_SEATS_TTL,
+			maxSeatCount
+		);
+		return SeatHoldResult.fromLease(result);
+	}
+
+	public boolean compensateNewlyHeldSeats(
+		Long showScheduleId,
+		List<Long> scheduledSeatIds,
+		String sessionToken,
+		String holdId
+	) {
+		return redisSupport.compensateNewlyHeldSeatLeases(
+			seatHoldLeaseKeys(showScheduleId, scheduledSeatIds, sessionToken, holdId),
+			scheduledSeatIds,
+			sessionToken,
+			holdId
+		);
 	}
 
 	public boolean releaseHeldSeats(Long showScheduleId, List<Long> scheduledSeatIds, String sessionToken) {
@@ -192,12 +228,29 @@ public class TicketingRedisRepository {
 		return keys;
 	}
 
+	private List<String> seatHoldLeaseKeys(
+		Long showScheduleId,
+		List<Long> scheduledSeatIds,
+		String sessionToken,
+		String holdId
+	) {
+		List<String> keys = new java.util.ArrayList<>();
+		keys.add(sessionHeldSeatsKey(showScheduleId, sessionToken));
+		keys.add(holdMetaKey(holdId));
+		keys.addAll(seatHoldKeys(showScheduleId, scheduledSeatIds));
+		return keys;
+	}
+
 	private String seatHoldLockKey(Long showScheduleId, UUID userId) {
 		return SEAT_HOLD_LOCK_KEY_PREFIX + showScheduleId + ":" + userId;
 	}
 
 	private String sessionHeldSeatsKey(Long showScheduleId, String sessionToken) {
 		return SESSION_HELD_SEATS_KEY_PREFIX + showScheduleId + ":" + sessionToken;
+	}
+
+	private String holdMetaKey(String holdId) {
+		return SEAT_HOLD_META_KEY_PREFIX + holdId;
 	}
 
 	private String secureKey(String sessionTicket) {
@@ -218,12 +271,27 @@ public class TicketingRedisRepository {
 
 	public enum SeatHoldResult {
 		SUCCESS,
+		NEWLY_ACQUIRED,
+		ALREADY_OWNED,
 		CONFLICT,
 		LIMIT_EXCEEDED;
 
 		private static SeatHoldResult from(long result) {
 			if (result == 1L) {
 				return SUCCESS;
+			}
+			if (result == -1L) {
+				return LIMIT_EXCEEDED;
+			}
+			return CONFLICT;
+		}
+
+		private static SeatHoldResult fromLease(long result) {
+			if (result == 1L) {
+				return NEWLY_ACQUIRED;
+			}
+			if (result == 2L) {
+				return ALREADY_OWNED;
 			}
 			if (result == -1L) {
 				return LIMIT_EXCEEDED;
