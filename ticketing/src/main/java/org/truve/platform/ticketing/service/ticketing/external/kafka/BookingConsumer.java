@@ -5,6 +5,8 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Component;
 import org.truve.platform.ticketing.service.booking.external.kafka.TicketingEventCommand;
 import org.truve.platform.ticketing.service.ticketing.service.ScheduledSeatStatusService;
+import org.truve.platform.ticketing.service.ticketing.service.HoldRequestedEventHandler;
+import org.truve.platform.ticketing.service.ticketing.config.BookingConsumerKafkaConfig;
 
 import com.truve.platform.common.support.JsonConverter;
 
@@ -20,16 +22,25 @@ public class BookingConsumer {
 
 	private final JsonConverter jsonConverter;
 	private final ScheduledSeatStatusService scheduledSeatStatusService;
+	private final HoldRequestedEventHandler holdRequestedEventHandler;
 
-	@KafkaListener(topics = TOPIC, groupId = GROUP)
+	@KafkaListener(
+		topics = TOPIC,
+		groupId = GROUP,
+		clientIdPrefix = "booking-ticketing",
+		containerFactory = BookingConsumerKafkaConfig.CONTAINER_FACTORY
+	)
 	public void consume(String payload, @Header("event-type") String type) {
 		switch (type) {
+			case "HOLD_REQUESTED" ->
+				holdRequestedEventHandler.handle(jsonConverter.convert(payload, TicketingEventCommand.HoldRequested.class));
 			case "HOLD_RELEASED" ->
 				scheduledSeatStatusService.releaseSeats(jsonConverter.convert(payload, TicketingEventCommand.HoldReleased.class));
 			case "SOLD_CONFIRMED" ->
 				scheduledSeatStatusService.purchaseSeats(jsonConverter.convert(payload, TicketingEventCommand.SoldConfirmed.class));
 			case "SALE_CANCELED" ->
 				scheduledSeatStatusService.cancelSales(jsonConverter.convert(payload, TicketingEventCommand.SaleCanceled.class));
+			default -> throw new IllegalArgumentException("지원하지 않는 booking.ticketing 이벤트입니다. type=" + type);
 		}
 	}
 }

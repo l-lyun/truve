@@ -302,6 +302,42 @@ public class RedisSupport {
 		return result != null && result > 0;
 	}
 
+	public boolean ownsHeldSeatLeases(
+		List<String> keys,
+		List<Long> scheduledSeatIds,
+		String sessionToken,
+		String holdId,
+		String holdRequestFingerprint
+	) {
+		String script = """
+			if redis.call('HGET', KEYS[2], 'sessionToken') ~= ARGV[1]
+				or redis.call('HGET', KEYS[2], 'fingerprint') ~= ARGV[2] then
+				return 0
+			end
+
+			for i = 3, #KEYS do
+				if redis.call('GET', KEYS[i]) ~= ARGV[3]
+					or redis.call('SISMEMBER', KEYS[1], ARGV[i + 1]) ~= 1 then
+					return 0
+				end
+			end
+			return 1
+			""";
+
+		List<String> arguments = new ArrayList<>();
+		arguments.add(sessionToken);
+		arguments.add(holdRequestFingerprint);
+		arguments.add(holdId);
+		arguments.addAll(scheduledSeatIds.stream().map(String::valueOf).toList());
+
+		Long result = redisTemplate.execute(
+			new DefaultRedisScript<>(script, Long.class),
+			keys,
+			arguments.toArray()
+		);
+		return result != null && result == 1L;
+	}
+
 	public boolean releaseHeldSeats(
 		List<String> keys,
 		List<Long> scheduledSeatIds,
