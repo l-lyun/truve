@@ -27,6 +27,10 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
 	Optional<Reservation> findByHoldId(String holdId);
 
+	@EntityGraph(attributePaths = {"tickets"})
+	@Query("select r from Reservation r where r.holdId = :holdId")
+	Optional<Reservation> findByHoldIdWithTickets(@Param("holdId") String holdId);
+
 	@Query("""
 		select (count(r) > 0)
 		from Reservation r
