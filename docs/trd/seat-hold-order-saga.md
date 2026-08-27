@@ -84,7 +84,7 @@ seat:hold:meta:{holdId} -> userId, sessionToken, showScheduleId, expiresAt
 - 요청 락은 같은 사용자·회차의 동시에 실행되는 `hold()`를 빠르게 거절하는 완충 장치다.
 - 좌석 키의 값은 `sessionToken` 대신 Saga 전체의 소유권 식별자인 `holdId`를 사용한다.
 - 세션 Set은 여러 요청을 합산한 최대 4석 제한과 퇴장·만료 정리를 지원한다.
-- `holdId`는 Redis 선점, Reservation, Outbox messageKey, 로그·추적 식별자, 보상 조건에 동일하게 사용한다.
+- `holdId`는 Redis 선점, Reservation, 로그·추적 식별자와 보상 조건에 동일하게 사용한다.
 - 해제와 보상은 현재 값이 자신의 `requestToken` 또는 `holdId`와 일치할 때만 수행한다.
 
 최초 선점 Lua는 stale Set 멤버를 좌석 소유권 키와 대조해 제거하고, 기존 좌석과 신규 좌석의 합집합이 4개 이하인지 검사한다. 요청 좌석 중 하나라도 다른 `holdId` 소유라면 어떤 좌석도 새로 만들지 않는다.
@@ -133,16 +133,16 @@ Reservation
 
 Outbox
   eventId        UNIQUE
-  aggregateId    holdId
-  messageKey     holdId
+  aggregateId    reservationNumber
+  messageKey     reservationNumber
   eventType      HOLD_REQUESTED
-  payload        userId, sessionToken, showScheduleId, scheduledSeatIds, expiresAt
+  payload        holdId, reservationNumber, userId, sessionToken, showScheduleId, scheduledSeatIds, expiresAt
   status         PENDING
 ```
 
 성공 응답은 이 DB 트랜잭션이 커밋된 뒤에만 반환한다. 응답이 유실되어 같은 idempotency key로 재시도되면 기존 `holdId`, Reservation, Outbox를 조회해 같은 예약 번호를 반환한다.
 
-기존 Ticketing Outbox의 claim, retry, `PROCESSING`, `claimToken`, `claimedAt` 원칙을 재사용한다. Kafka messageKey는 `holdId` 또는 `reservationNumber`로 고정해 같은 주문의 이벤트 순서를 유지한다.
+기존 Ticketing Outbox의 claim, retry, `PROCESSING`, `claimToken`, `claimedAt` 원칙을 재사용한다. Kafka messageKey는 모든 예약 생명주기 이벤트에서 `reservationNumber`로 고정해 같은 주문의 순서를 유지한다. `holdId`는 payload에 포함해 Redis 보상과 멱등성 확인에 사용한다.
 
 ## 비동기 DB `HOLD`와 낙관적 락
 
@@ -184,7 +184,7 @@ CONFIRMED      결제 완료
 
 hold API 응답은 `reservationNumber`, `status=HOLD_PENDING`, `expiresAt`을 반환한다. 클라이언트는 응답 직후 결제수단 선택 화면에 진입할 수 있지만, 승인 API는 `PAYMENT_READY` 주문만 허용한다. 정상 상황에서는 사용자가 결제수단을 선택하는 동안 비동기 DB 처리가 끝나는 것을 기대하지만, UX와 정합성은 특정 처리 시간에 의존하지 않는다.
 
-`PAYMENT_READY`이고 DB 좌석이 해당 Reservation의 `HOLD`이며 현재 시각이 `expiresAt` 이전이면 사용자가 화면을 나갔다 돌아와도 같은 Reservation으로 다시 결제할 수 있다. Reservation 식별자는 유지하고 결제 시도마다 별도의 `paymentAttemptId`를 발급한다. 결제 실패는 주문을 즉시 만료시키지 않고 다시 `PAYMENT_READY`로 전이한다.
+`PAYMENT_READY`이고 DB 좌석이 해당 Reservation의 `HOLD`이며 현재 시각이 `expiresAt` 이전이면 사용자가 화면을 나갔다 돌아와도 같은 Reservation으로 다시 결제할 수 있다. Reservation 식별자는 유지하고 결제 시도마다 별도의 `paymentAttemptId`를 발급한다. 결제 실패는 주문을 즉시 만료시키지 않고 다시 `PAYMENT_READY`로 전이한다. 후속 결제 연동 PR에서는 `HOLD_PENDING -> PAYMENT_READY` 직전과 `PAYMENT_READY -> PENDING_PAYMENT` 결제 시작 직전에 만료 시각과 좌석 소유권을 트랜잭션 안에서 재검증한다.
 
 ## 만료 Saga
 
@@ -247,7 +247,7 @@ expiresAt 경과
 
 ## 관측성
 
-로그, trace, Kafka messageKey에 `holdId`와 `reservationNumber`를 공통으로 남긴다. 다음 지표와 알람이 필요하다.
+로그와 trace에는 `holdId`와 `reservationNumber`를 공통으로 남기고 Kafka messageKey는 `reservationNumber`를 사용한다. 다음 지표와 알람이 필요하다.
 
 - Redis 선점은 존재하지만 Reservation/Outbox가 없는 orphan hold 수와 최대 age
 - `HOLD_PENDING` 건수와 최대 체류 시간

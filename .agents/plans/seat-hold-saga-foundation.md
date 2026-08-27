@@ -46,5 +46,5 @@
 - 기존 생성 흐름은 계속 `CREATED`에서 시작한다.
 - Saga용 factory는 `holdId`, `expiresAt`, `HOLD_PENDING`을 보존한다.
 - nullable `holdId`는 기존 예약 여러 건을 허용하고 non-null 중복 값은 DB unique 제약으로 차단한다.
-- 기존 Outbox 이벤트의 message key 계약은 유지되고 `HOLD_REQUESTED`는 `holdId`를 사용할 수 있다.
+- 기존 Outbox 이벤트의 message key 계약을 유지하고 모든 예약 생명주기 이벤트는 `reservationNumber`를 사용한다.
 - Ticketing 전체 테스트가 성공한다.

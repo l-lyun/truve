@@ -175,7 +175,9 @@ public class Reservation extends BaseEntity {
 
 	public void readyForPayment(Applicant applicant) {
 		Preconditions.validate(
-			status == ReservationStatus.CREATED || status == ReservationStatus.PAYMENT_READY,
+			status == ReservationStatus.CREATED
+				|| status == ReservationStatus.PAYMENT_READY
+				|| status == ReservationStatus.PENDING_PAYMENT,
 			ErrorCode.INVALID_RESERVATION_STATUS
 		);
 		this.applicant = applicant;

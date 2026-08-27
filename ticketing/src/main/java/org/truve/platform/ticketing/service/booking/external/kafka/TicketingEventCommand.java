@@ -75,10 +75,6 @@ public class TicketingEventCommand {
 			return "HOLD_REQUESTED";
 		}
 
-		@Override
-		public String getMessageKey() {
-			return holdId;
-		}
 	}
 
 	@Getter
