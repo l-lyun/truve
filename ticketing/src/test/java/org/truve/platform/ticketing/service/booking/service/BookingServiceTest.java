@@ -351,6 +351,22 @@ class BookingServiceTest {
 	}
 
 	@Test
+	@DisplayName("결제 생성 이벤트 전송 실패에 대비해 PENDING_PAYMENT 주문은 결제 준비를 재시도할 수 있다.")
+	void 결제준비_이벤트를_재발행할_수_있다() {
+		Reservation reservation = createReservation();
+		BookingRequest.ApplicantInfo request = new BookingRequest.ApplicantInfo(
+			"홍길동", "19900101", "test@test.com", "01012341234");
+		given(reservationRepository.findByNumber("R-001")).willReturn(reservation);
+
+		bookingService.paymentReady("R-001", request);
+		bookingService.paymentReady("R-001", request);
+
+		verify(paymentPublisher, times(2)).publish(any(PaymentEventCommand.Create.class));
+		assertThat(reservation.getStatus())
+			.isEqualTo(org.truve.platform.ticketing.service.booking.domain.constant.ReservationStatus.PENDING_PAYMENT);
+	}
+
+	@Test
 	@DisplayName("ticketIds가 null이면 전체 티켓 목록을 반환한다.")
 	void 전체티켓목록_반환_성공() {
 		// given
