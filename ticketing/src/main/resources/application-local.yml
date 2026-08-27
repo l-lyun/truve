@@ -3,3 +3,8 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+
+# 구 Relay가 없는 신규 로컬/Compose 환경에서는 claim Relay를 바로 사용한다.
+ticketing:
+  outbox:
+    claim-enabled: true

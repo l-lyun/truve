@@ -19,11 +19,14 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.truve.platform.ticketing.service.booking.outbox.domain.entity.TicketingOutboxEvent;
 import org.truve.platform.ticketing.service.booking.outbox.repository.TicketingOutboxEventRepository;
 
-import com.truve.platform.common.outbox.OutboxRelayExecutor;
 import com.truve.platform.common.outbox.OutboxStatus;
 
-@DataJpaTest
-@Import({TicketingOutboxRelayScheduler.class, OutboxRelayExecutor.class})
+@DataJpaTest(properties = "ticketing.outbox.claim-enabled=true")
+@Import({
+	TicketingOutboxRelayScheduler.class,
+	TicketingOutboxClaimService.class,
+	TicketingOutboxMessageRelay.class
+})
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 class TicketingOutboxRelayIntegrationTest {
 
