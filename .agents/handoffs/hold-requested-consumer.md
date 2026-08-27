@@ -30,43 +30,21 @@ git pull --ff-only
 7. `booking.ticketing` Consumer에만 최대 3회 고정 간격 재시도와 `booking.ticketing.dlt` 전송을 적용했다.
 8. Consumer가 끝내 처리하지 못해 만료된 `HOLD_PENDING`은 주기적인 조건부 bulk update로 `EXPIRED` 처리한다.
 
-## 먼저 실행할 검증
+## 2026-08-27 재개 후 검증
 
-관련 테스트는 통과했지만 다른 PC로 이동하기 직전 전체 테스트가 중단됐다. 코드를 수정하기 전에 아래 전체 검증부터 다시 실행한다.
+다른 PC에서 중단됐던 전체 테스트와 당시 남겨둔 실제 인프라 검증을 완료했다.
 
-Windows:
+- `./gradlew :ticketing:test`: 224개 전체 통과
+- 실제 Kafka container:
+  - 일시 오류가 재시도 안에 성공하면 DLT가 생성되지 않음
+  - 계속 실패하면 재시도 소진 뒤 `booking.ticketing.dlt`에 한 번 전달됨
+  - 잘못된 JSON과 알 수 없는 event type은 재시도 없이 DLT로 전달됨
+  - DLT 발행 실패 시 원본 Consumer offset이 커밋되지 않음
+- 실제 MySQL:
+  - stale `ScheduledSeat @Version` 충돌 발생 확인
+  - 동일 JPA 트랜잭션에서 다중 좌석 중 한 좌석의 version이 충돌하면 나머지 좌석, Ticket, Reservation, Payment Outbox까지 전체 롤백되는 것을 확인
 
-```powershell
-.\gradlew.bat :ticketing:test
-```
-
-Unix 계열:
-
-```bash
-./gradlew :ticketing:test
-```
-
-실패하면 이번 브랜치에서 추가된 다음 영역부터 확인한다.
-
-- `BookingConsumerKafkaConfig`의 Spring context 생성
-- `BookingConsumerKafkaProperties` 설정 바인딩
-- `HoldPendingExpirationScheduler`의 예약 bulk update
-- 결제 이후 상태의 중복 `HOLD_REQUESTED` 처리
-
-## 리뷰 전에 추가할 검증
-
-이번 브랜치의 핵심 단위·JPA·Redis 테스트는 작성되어 있다. 다음 두 검증은 아직 남아 있다.
-
-1. 실제 Kafka container 검증
-   - 일시 오류가 정해진 횟수 안에 성공하면 DLT가 생기지 않는지
-   - 계속 실패하면 `booking.ticketing.dlt`에 한 번 전달되는지
-   - 잘못된 JSON과 알 수 없는 event type은 재시도 없이 DLT로 가는지
-   - DLT 발행 실패 시 원본 메시지가 정상 ACK되지 않는지
-2. 실제 MySQL 동시성 검증
-   - 서로 다른 두 트랜잭션이 같은 `ScheduledSeat` version을 수정하면 하나만 성공하는지
-   - 다중 좌석 중 한 좌석이 충돌할 때 나머지 좌석, Ticket, Reservation, Outbox가 모두 롤백되는지
-
-실제 Kafka 검증을 이번 PR에 넣는다면 `ticketing/build.gradle`에 `spring-kafka-test` 테스트 의존성을 추가하고 최소 test context로 작성한다. 전체 애플리케이션과 MySQL·Redis를 함께 띄우는 방식은 피한다.
+Kafka 검증은 DB·Redis·Feign을 띄우지 않는 최소 Spring Kafka context로 구성했고, MySQL 검증은 `mysql:8.4` Testcontainer를 사용한다.
 
 ## 현재 남겨둔 설계 한계
 
@@ -91,6 +69,6 @@ test(ticketing): 좌석 HOLD 낙관락 동시성 검증
 - head: `codex/hold-requested-consumer`
 - base: `codex/seat-hold-saga-orchestrator`
 - 권장 제목: `feat(ticketing): HOLD_REQUESTED Consumer 구현`
-- PR 본문에 선행 PR 의존 관계, 전체 테스트 결과, Kafka/MySQL 미검증 여부, Redis-DB TOCTOU 한계를 명시한다.
+- PR 본문에 선행 PR 의존 관계, 전체 테스트와 Kafka/MySQL 실제 검증 결과, Redis-DB TOCTOU 한계를 명시한다.
 
 선행 PR이 먼저 병합된 뒤에만 이 PR의 base를 기본 개발 브랜치로 변경한다.

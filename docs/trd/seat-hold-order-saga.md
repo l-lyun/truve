@@ -238,7 +238,7 @@ expiresAt 경과
 
 ## 후속 구현과 통합 조건
 
-- PR 3에서 `BookingConsumer`의 `HOLD_REQUESTED` 라우팅과 처리 경로를 추가해 이벤트 정상 ACK 유실 문제를 해소한다. 이 Consumer에만 최대 3회 고정 간격 재시도와 `booking.ticketing.dlt`를 적용하고, 최종 실패로 만료 시각을 넘긴 `HOLD_PENDING`은 정합성 작업이 `EXPIRED`로 수렴시킨다. 실제 Kafka 컨테이너 기반 retry·DLT 검증과 DLT redrive는 후속 운영 과제다.
+- PR 3에서 `BookingConsumer`의 `HOLD_REQUESTED` 라우팅과 처리 경로를 추가해 이벤트 정상 ACK 유실 문제를 해소한다. 이 Consumer에만 최대 3회 고정 간격 재시도와 `booking.ticketing.dlt`를 적용하고, 최종 실패로 만료 시각을 넘긴 `HOLD_PENDING`은 정합성 작업이 `EXPIRED`로 수렴시킨다. 실제 Kafka 컨테이너에서 retry·DLT와 DLT 발행 실패 시 offset 미커밋을 검증했으며, DLT redrive는 후속 운영 과제다.
 - 새 흐름은 hold 응답의 `reservationNumber` 자체를 주문으로 사용한다. 기존 `POST /api/bookings`를 이어서 호출하면 활성 `HOLD_PENDING` 주문 제약으로 실패하므로 클라이언트 전환은 PR 3 통합 완료와 함께 진행한다.
 - 기존 좌석 반납 API는 sessionToken 소유권 모델이어서 holdId lease를 해제하지 못한다. Reservation 상태와 Outbox, Redis compare-and-delete를 조율하는 취소 Saga가 완성되기 전에는 새 흐름의 취소 API로 사용하지 않는다.
 - `HOLD_PENDING` 생성 시 가격·등급·공연 스냅샷 중 공연·등급 요약은 동기 접수에서 저장하고, 좌석별 가격과 Ticket은 Consumer에서 확정한다.
@@ -268,7 +268,7 @@ expiresAt 경과
 - 동일 idempotency key 재요청이 기존 Reservation과 예약 번호를 반환하는지 검증한다.
 - Reservation과 `HOLD_REQUESTED` Outbox가 함께 커밋·롤백되는지 검증한다.
 - 같은 `HOLD_REQUESTED`를 중복 소비해도 Reservation, Ticket, 좌석 상태가 한 번만 변경되는지 검증한다.
-- 실제 MySQL에서 같은 ScheduledSeat version을 동시에 변경하면 하나만 커밋되고 다른 트랜잭션 전체가 롤백되는지 검증한다.
+- 실제 MySQL에서 같은 ScheduledSeat version이 stale 상태로 변경되면 낙관적 락 충돌이 발생하고, 동일 JPA 트랜잭션의 다른 좌석·Ticket·Reservation·Payment Outbox 변경까지 롤백되는 것을 검증했다. Production `HoldRequestedTransactionService`의 조합은 별도 H2 통합 테스트가 검증한다.
 - Kafka 처리가 10초를 넘겨도 유효한 좌석 lease와 `expiresAt` 안에서는 정상 처리되는지 검증한다.
 - Redis lease 만료 또는 소유권 변경 뒤 도착한 이벤트가 DB 좌석을 `HOLD`로 되살리지 않는지 검증한다.
 - `PAYMENT_READY` 주문이 첫 결제 실패 뒤 같은 Reservation으로 다시 결제 가능한지 검증한다.

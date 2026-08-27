@@ -42,10 +42,12 @@
 - 실제 Redis에서 meta·fingerprint·세션 Set·전체 좌석 소유권 원자 검증
 - 결제 이후 상태로 진행된 주문의 늦은 HOLD 성공·실패 이벤트 멱등 처리
 - 알 수 없는 이벤트의 DLT 분류와 만료된 HOLD_PENDING bulk 정리
+- 실제 Kafka에서 일시 실패 재시도 성공, 재시도 소진 DLT, 무재시도 오류 DLT 검증
+- 실제 Kafka에서 DLT 발행 실패 시 원본 Consumer offset 미커밋 검증
+- 실제 MySQL에서 `ScheduledSeat @Version` 충돌과 동일 JPA 트랜잭션의 다중 좌석 변경 전체 롤백 검증
+- `./gradlew :ticketing:test` 전체 224개 테스트 통과
 
 ## 남은 검증과 후속 작업
 
-- 관련 Consumer·DB 통합 테스트는 통과했다.
-- `:ticketing:test` 전체 검증은 다른 PC로 이동하기 직전 사용자 요청으로 중단됐다.
-- 실제 Kafka 컨테이너 기반 retry·DLT와 실제 MySQL 동시 낙관락 검증은 후속 작업이다.
 - Redis 검증과 DB 트랜잭션 사이 TOCTOU의 강한 해결은 fencing token 도입 시 함께 다룬다.
+- DLT 자동 redrive, 운영 알람과 수동 재처리 절차는 후속 운영 작업이다.
