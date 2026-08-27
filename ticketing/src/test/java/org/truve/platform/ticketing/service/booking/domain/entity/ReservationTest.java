@@ -25,6 +25,66 @@ import com.truve.platform.common.exception.CustomException;
 import com.truve.platform.common.exception.ErrorCode;
 
 public class ReservationTest {
+	@Test
+	@DisplayName("기존 예약 생성 팩토리는 CREATED 상태와 비어 있는 선점 정보를 유지한다.")
+	void 기존_예약_생성() {
+		Reservation reservation = createReservation();
+
+		assertAll(
+			() -> assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.CREATED),
+			() -> assertThat(reservation.getHoldId()).isNull(),
+			() -> assertThat(reservation.getExpiresAt()).isNull()
+		);
+	}
+
+	@Test
+	@DisplayName("비동기 좌석 선점 예약은 HOLD_PENDING 상태와 선점 정보를 저장한다.")
+	void 좌석_선점_대기_예약_생성() {
+		UUID userId = UUID.randomUUID();
+		LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(10);
+		ShowInfo showInfo = createShowInfo();
+
+		Reservation reservation = Reservation.createHoldPending(
+			userId,
+			"R-HOLD-001",
+			"VIP석 2인",
+			showInfo,
+			"H-001",
+			expiresAt
+		);
+
+		assertAll(
+			() -> assertThat(reservation.getUserId()).isEqualTo(userId),
+			() -> assertThat(reservation.getNumber()).isEqualTo("R-HOLD-001"),
+			() -> assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.HOLD_PENDING),
+			() -> assertThat(reservation.getHoldId()).isEqualTo("H-001"),
+			() -> assertThat(reservation.getExpiresAt()).isEqualTo(expiresAt),
+			() -> assertThat(reservation.getShowInfo()).isEqualTo(showInfo)
+		);
+	}
+
+	@Test
+	@DisplayName("비동기 좌석 선점 예약은 holdId와 만료 시각이 반드시 필요하다.")
+	void 좌석_선점_대기_예약의_필수값_검증() {
+		assertThatThrownBy(() -> Reservation.createHoldPending(
+			UUID.randomUUID(), "R-HOLD-001", "VIP석 1인", createShowInfo(), " ", null))
+			.isInstanceOf(CustomException.class)
+			.satisfies(exception -> assertThat(((CustomException)exception).getErrorCode())
+				.isEqualTo(ErrorCode.INVALID_BOOKING_SEAT_HOLD));
+	}
+
+	@Test
+	@DisplayName("DB 좌석 HOLD가 완료되기 전에는 결제 대기 상태로 전이할 수 없다.")
+	void 좌석_선점_반영_중에는_결제를_시작할_수_없다() {
+		Reservation reservation = Reservation.createHoldPending(
+			UUID.randomUUID(), "R-HOLD-001", "VIP석 1인", createShowInfo(), "H-001",
+			LocalDateTime.now().plusMinutes(10));
+
+		assertThatThrownBy(() -> reservation.readyForPayment(null))
+			.isInstanceOf(CustomException.class)
+			.satisfies(exception -> assertThat(((CustomException)exception).getErrorCode())
+				.isEqualTo(ErrorCode.INVALID_RESERVATION_STATUS));
+	}
 
 	@Test
 	@DisplayName("티켓 추가 시 총 금액은 서비스 수수료(2000*티켓 수) + 티켓 가격 총합으로 계산된다.")
@@ -331,13 +391,17 @@ public class ReservationTest {
 			UUID.randomUUID(),
 			"R-001",
 			"VIP석 2인",
-			ShowInfo.builder()
-				.showId(1L)
-				.showScheduleId(100L)
-				.title("킹키부츠")
-				.startAt(LocalDateTime.now().plusDays(30))
-				.build()
+			createShowInfo()
 		);
+	}
+
+	private ShowInfo createShowInfo() {
+		return ShowInfo.builder()
+			.showId(1L)
+			.showScheduleId(100L)
+			.title("킹키부츠")
+			.startAt(LocalDateTime.now().plusDays(30))
+			.build();
 	}
 
 	private List<Ticket> createTickets(Reservation reservation, int count) {
