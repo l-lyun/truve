@@ -1,5 +1,6 @@
 package org.truve.platform.ticketing.service.ticketing.external.kafka;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -98,9 +99,11 @@ class BookingConsumerTest {
 	}
 
 	@Test
-	@DisplayName("알 수 없는 이벤트 타입이면 아무 작업도 하지 않는다.")
-	void 알수없는이벤트_무시() {
-		bookingConsumer.consume("payload", "UNKNOWN");
+	@DisplayName("알 수 없는 이벤트 타입이면 DLT 처리를 위해 예외를 던진다.")
+	void 알수없는이벤트_DLT대상() {
+		assertThatThrownBy(() -> bookingConsumer.consume("payload", "UNKNOWN"))
+			.isInstanceOf(IllegalArgumentException.class)
+			.hasMessageContaining("UNKNOWN");
 
 		verifyNoInteractions(jsonConverter, scheduledSeatStatusService, holdRequestedEventHandler);
 	}

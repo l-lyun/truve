@@ -8,9 +8,11 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.truve.platform.ticketing.service.booking.domain.entity.Reservation;
+import org.truve.platform.ticketing.service.booking.domain.constant.ReservationStatus;
 
 import jakarta.persistence.LockModeType;
 
@@ -41,6 +43,21 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 	boolean existsBlockingBooking(
 		@Param("userId") UUID userId,
 		@Param("showScheduleId") Long showScheduleId
+	);
+
+	@Modifying(clearAutomatically = true, flushAutomatically = true)
+	@Query("""
+		update Reservation r
+		set r.status = :expiredStatus,
+		    r.blockBooking = null,
+		    r.version = r.version + 1
+		where r.status = :pendingStatus
+		  and r.expiresAt <= :cutoff
+		""")
+	int expirePendingHolds(
+		@Param("cutoff") LocalDateTime cutoff,
+		@Param("pendingStatus") ReservationStatus pendingStatus,
+		@Param("expiredStatus") ReservationStatus expiredStatus
 	);
 
 	@Query("""

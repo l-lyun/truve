@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.truve.platform.ticketing.service.booking.domain.constant.ReservationStatus;
@@ -152,6 +153,40 @@ class HoldRequestedTransactionServiceIntegrationTest {
 	}
 
 	@Test
+	void 결제_이후에_늦게_도착한_중복이벤트는_현재_좌석상태와_무관하게_멱등_성공한다() {
+		TicketingEventCommand.HoldRequested event = createEvent(List.of(firstSeat.getId()));
+		transactionService.apply(event);
+		var reservation = reservationRepository.findByHoldIdWithTickets(event.getHoldId()).orElseThrow();
+		ReflectionTestUtils.setField(reservation, "status", ReservationStatus.CANCELED);
+		reservationRepository.saveAndFlush(reservation);
+		firstSeat = scheduledSeatRepository.findById(firstSeat.getId()).orElseThrow();
+		firstSeat.releaseSeat(event.getReservationNumber());
+		scheduledSeatRepository.saveAndFlush(firstSeat);
+		long outboxCount = outboxRepository.count();
+
+		ApplyResult result = transactionService.apply(event);
+
+		assertThat(result).isEqualTo(ApplyResult.ALREADY_APPLIED);
+		assertThat(outboxRepository.count()).isEqualTo(outboxCount);
+	}
+
+	@Test
+	void 결제_이후_주문은_늦은_실패처리로_되돌리지_않는다() {
+		TicketingEventCommand.HoldRequested event = createEvent(List.of(firstSeat.getId()));
+		transactionService.apply(event);
+		var reservation = reservationRepository.findByHoldIdWithTickets(event.getHoldId()).orElseThrow();
+		ReflectionTestUtils.setField(reservation, "status", ReservationStatus.CONFIRMED);
+		reservationRepository.saveAndFlush(reservation);
+
+		FailureRecordResult result = failureService.record(
+			event, HoldRequestedApplyException.FailureReason.SEAT_CONFLICT);
+
+		assertThat(result).isEqualTo(FailureRecordResult.COMPLETED_IGNORED);
+		assertThat(reservationRepository.findByHoldId(event.getHoldId()).orElseThrow().getStatus())
+			.isEqualTo(ReservationStatus.CONFIRMED);
+	}
+
+	@Test
 	void 좌석_하나가_충돌하면_나머지_좌석_Ticket_Reservation_Outbox도_전부_롤백한다() {
 		TicketingEventCommand.HoldRequested event = createEvent(List.of(firstSeat.getId(), secondSeat.getId()));
 		secondSeat.reserve("R-OTHER", NOW.minusMinutes(1));
@@ -198,6 +233,20 @@ class HoldRequestedTransactionServiceIntegrationTest {
 
 		assertThat(reservationRepository.findByHoldId(original.getHoldId()).orElseThrow().getStatus())
 			.isEqualTo(ReservationStatus.HOLD_PENDING);
+	}
+
+	@Test
+	@Transactional
+	void Consumer가_끝내_처리하지_못한_만료_HOLD_PENDING을_정리한다() {
+		TicketingEventCommand.HoldRequested event = createEvent(List.of(firstSeat.getId()));
+
+		int expired = reservationRepository.expirePendingHolds(
+			EXPIRES_AT, ReservationStatus.HOLD_PENDING, ReservationStatus.EXPIRED);
+
+		var reservation = reservationRepository.findByHoldId(event.getHoldId()).orElseThrow();
+		assertThat(expired).isEqualTo(1);
+		assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.EXPIRED);
+		assertThat(reservation.getBlockBooking()).isNull();
 	}
 
 	private TicketingEventCommand.HoldRequested createEvent(List<Long> seatIds) {
