@@ -56,6 +56,12 @@ public class Reservation extends BaseEntity {
 	@Column(name = "reservation_number", unique = true, nullable = false)
 	private String number;
 
+	@Column(name = "hold_id", unique = true)
+	private String holdId;
+
+	@Column(name = "expires_at")
+	private LocalDateTime expiresAt;
+
 	@Column(nullable = false)
 	private Long totalAmount;
 
@@ -102,9 +108,9 @@ public class Reservation extends BaseEntity {
 	@OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL)
 	private List<Ticket> tickets = new ArrayList<>();
 
-	@Builder
+	@Builder(access = AccessLevel.PRIVATE)
 	private Reservation(UUID userId, String number, String gradeSummary,
-		ShowInfo showInfo) {
+		ShowInfo showInfo, String holdId, LocalDateTime expiresAt, ReservationStatus status) {
 
 		this.userId = userId;
 		this.number = number;
@@ -113,7 +119,9 @@ public class Reservation extends BaseEntity {
 		this.cancelFee = 0L;
 		this.gradeSummary = gradeSummary;
 		this.showInfo = showInfo;
-		this.status = ReservationStatus.CREATED;
+		this.holdId = holdId;
+		this.expiresAt = expiresAt;
+		this.status = status;
 		this.blockBooking = true;
 	}
 
@@ -128,6 +136,30 @@ public class Reservation extends BaseEntity {
 			.number(number)
 			.gradeSummary(gradeSummary)
 			.showInfo(showInfo)
+			.status(ReservationStatus.CREATED)
+			.build();
+	}
+
+	public static Reservation createHoldPending(
+		UUID userId,
+		String number,
+		String gradeSummary,
+		ShowInfo showInfo,
+		String holdId,
+		LocalDateTime expiresAt
+	) {
+		Preconditions.validate(
+			holdId != null && !holdId.isBlank() && expiresAt != null,
+			ErrorCode.INVALID_BOOKING_SEAT_HOLD
+		);
+		return Reservation.builder()
+			.userId(userId)
+			.number(number)
+			.gradeSummary(gradeSummary)
+			.showInfo(showInfo)
+			.holdId(holdId)
+			.expiresAt(expiresAt)
+			.status(ReservationStatus.HOLD_PENDING)
 			.build();
 	}
 
@@ -142,6 +174,10 @@ public class Reservation extends BaseEntity {
 	}
 
 	public void readyForPayment(Applicant applicant) {
+		Preconditions.validate(
+			status == ReservationStatus.CREATED || status == ReservationStatus.PAYMENT_READY,
+			ErrorCode.INVALID_RESERVATION_STATUS
+		);
 		this.applicant = applicant;
 		this.status = ReservationStatus.PENDING_PAYMENT;
 	}
