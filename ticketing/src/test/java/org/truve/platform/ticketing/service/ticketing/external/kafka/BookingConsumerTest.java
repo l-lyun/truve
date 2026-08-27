@@ -14,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.truve.platform.ticketing.service.booking.external.kafka.TicketingEventCommand;
+import org.truve.platform.ticketing.service.ticketing.service.HoldRequestedEventHandler;
 import org.truve.platform.ticketing.service.ticketing.service.ScheduledSeatStatusService;
 
 import com.truve.platform.common.support.JsonConverter;
@@ -26,9 +27,27 @@ class BookingConsumerTest {
 
 	@Mock
 	private ScheduledSeatStatusService scheduledSeatStatusService;
+	@Mock
+	private HoldRequestedEventHandler holdRequestedEventHandler;
 
 	@InjectMocks
 	private BookingConsumer bookingConsumer;
+
+	@Test
+	@DisplayName("HOLD_REQUESTED 이벤트면 비동기 좌석 HOLD handler에 위임한다.")
+	void holdRequested이벤트_소비성공() {
+		TicketingEventCommand.HoldRequested event = TicketingEventCommand.HoldRequested.of(
+			"H-001", "R-001",
+			UUID.fromString("11111111-1111-1111-1111-111111111111"),
+			"session-token", 1L, List.of(10L, 11L),
+			java.time.LocalDateTime.of(2026, 8, 27, 18, 0)
+		);
+		given(jsonConverter.convert("payload", TicketingEventCommand.HoldRequested.class)).willReturn(event);
+
+		bookingConsumer.consume("payload", "HOLD_REQUESTED");
+
+		verify(holdRequestedEventHandler).handle(event);
+	}
 
 	@Test
 	@DisplayName("HOLD_RELEASED 이벤트면 좌석 해제 서비스에 위임한다.")
@@ -83,6 +102,6 @@ class BookingConsumerTest {
 	void 알수없는이벤트_무시() {
 		bookingConsumer.consume("payload", "UNKNOWN");
 
-		verifyNoInteractions(jsonConverter, scheduledSeatStatusService);
+		verifyNoInteractions(jsonConverter, scheduledSeatStatusService, holdRequestedEventHandler);
 	}
 }
