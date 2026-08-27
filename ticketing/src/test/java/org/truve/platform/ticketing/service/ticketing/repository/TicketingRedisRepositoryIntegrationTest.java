@@ -82,7 +82,9 @@ class TicketingRedisRepositoryIntegrationTest {
 		assertThat(result).isEqualTo(SeatHoldResult.NEWLY_ACQUIRED);
 		assertThat(repository.getHoldSeatSessionToken(SHOW_SCHEDULE_ID, 101L)).isEqualTo(HOLD_A);
 		assertThat(repository.getHoldSeatSessionToken(SHOW_SCHEDULE_ID, 102L)).isEqualTo(HOLD_A);
-		assertThat(redisTemplate.opsForValue().get(holdMetaKey(HOLD_A))).isEqualTo(SESSION_A);
+		assertThat(redisTemplate.opsForHash().get(holdMetaKey(HOLD_A), "sessionToken")).isEqualTo(SESSION_A);
+		assertThat(redisTemplate.opsForHash().get(holdMetaKey(HOLD_A), "fingerprint"))
+			.isEqualTo("101,102");
 		assertThat(redisTemplate.opsForSet().members(sessionSetKey(SESSION_A)))
 			.containsExactlyInAnyOrder("101", "102");
 	}
@@ -104,6 +106,19 @@ class TicketingRedisRepositoryIntegrationTest {
 	}
 
 	@Test
+	void 같은_holdId와_같은_좌석_집합은_순서가_달라도_멱등_성공한다() {
+		assertThat(repository.holdSeats(
+			SHOW_SCHEDULE_ID, List.of(124L, 125L), SESSION_A, HOLD_A, 4
+		)).isEqualTo(SeatHoldResult.NEWLY_ACQUIRED);
+
+		SeatHoldResult result = repository.holdSeats(
+			SHOW_SCHEDULE_ID, List.of(125L, 124L), SESSION_A, HOLD_A, 4
+		);
+
+		assertThat(result).isEqualTo(SeatHoldResult.ALREADY_OWNED);
+	}
+
+	@Test
 	void 같은_holdId로_완전히_다른_좌석을_요청해도_거절한다() {
 		assertThat(repository.holdSeats(SHOW_SCHEDULE_ID, List.of(116L), SESSION_A, HOLD_A, 4))
 			.isEqualTo(SeatHoldResult.NEWLY_ACQUIRED);
@@ -115,6 +130,23 @@ class TicketingRedisRepositoryIntegrationTest {
 		assertThat(result).isEqualTo(SeatHoldResult.CONFLICT);
 		assertThat(repository.getHoldSeatSessionToken(SHOW_SCHEDULE_ID, 116L)).isEqualTo(HOLD_A);
 		assertThat(repository.getHoldSeatSessionToken(SHOW_SCHEDULE_ID, 117L)).isNull();
+	}
+
+	@Test
+	void 같은_holdId로_원래_좌석의_부분집합만_재시도해도_거절한다() {
+		assertThat(repository.holdSeats(
+			SHOW_SCHEDULE_ID, List.of(116L, 117L), SESSION_A, HOLD_A, 4
+		)).isEqualTo(SeatHoldResult.NEWLY_ACQUIRED);
+
+		SeatHoldResult result = repository.holdSeats(
+			SHOW_SCHEDULE_ID, List.of(116L), SESSION_A, HOLD_A, 4
+		);
+
+		assertThat(result).isEqualTo(SeatHoldResult.CONFLICT);
+		assertThat(repository.getHoldSeatSessionToken(SHOW_SCHEDULE_ID, 116L)).isEqualTo(HOLD_A);
+		assertThat(repository.getHoldSeatSessionToken(SHOW_SCHEDULE_ID, 117L)).isEqualTo(HOLD_A);
+		assertThat(redisTemplate.opsForHash().get(holdMetaKey(HOLD_A), "fingerprint"))
+			.isEqualTo("116,117");
 	}
 
 	@Test
@@ -132,7 +164,7 @@ class TicketingRedisRepositoryIntegrationTest {
 
 		assertThat(result).isEqualTo(SeatHoldResult.LIMIT_EXCEEDED);
 		assertThat(repository.getHoldSeatSessionToken(SHOW_SCHEDULE_ID, 122L)).isNull();
-		assertThat(redisTemplate.opsForValue().get(holdMetaKey("hold-c"))).isNull();
+		assertThat(redisTemplate.hasKey(holdMetaKey("hold-c"))).isFalse();
 	}
 
 	@Test
@@ -190,7 +222,8 @@ class TicketingRedisRepositoryIntegrationTest {
 	@Test
 	void meta가_다른_세션을_가리키는_stale_Set은_좌석_키가_있어도_한도에서_제외한다() {
 		redisTemplate.opsForValue().set(seatHoldKey(108L), HOLD_B);
-		redisTemplate.opsForValue().set(holdMetaKey(HOLD_B), SESSION_B);
+		redisTemplate.opsForHash().put(holdMetaKey(HOLD_B), "sessionToken", SESSION_B);
+		redisTemplate.opsForHash().put(holdMetaKey(HOLD_B), "fingerprint", "108");
 		redisTemplate.opsForSet().add(sessionSetKey(SESSION_A), "108");
 
 		SeatHoldResult result = repository.holdSeats(
@@ -216,7 +249,7 @@ class TicketingRedisRepositoryIntegrationTest {
 		assertThat(compensated).isTrue();
 		assertThat(repository.getHoldSeatSessionToken(SHOW_SCHEDULE_ID, 113L)).isNull();
 		assertThat(repository.getHoldSeatSessionToken(SHOW_SCHEDULE_ID, 114L)).isEqualTo(HOLD_B);
-		assertThat(redisTemplate.opsForValue().get(holdMetaKey(HOLD_A))).isNull();
+		assertThat(redisTemplate.hasKey(holdMetaKey(HOLD_A))).isFalse();
 		assertThat(redisTemplate.opsForSet().members(sessionSetKey(SESSION_A))).containsExactly("114");
 	}
 
@@ -224,7 +257,7 @@ class TicketingRedisRepositoryIntegrationTest {
 	void meta가_다른_세션이면_보상하지_않는다() {
 		assertThat(repository.holdSeats(SHOW_SCHEDULE_ID, List.of(115L), SESSION_A, HOLD_A, 4))
 			.isEqualTo(SeatHoldResult.NEWLY_ACQUIRED);
-		redisTemplate.opsForValue().set(holdMetaKey(HOLD_A), SESSION_B);
+		redisTemplate.opsForHash().put(holdMetaKey(HOLD_A), "sessionToken", SESSION_B);
 
 		boolean compensated = repository.compensateNewlyHeldSeats(
 			SHOW_SCHEDULE_ID, List.of(115L), SESSION_A, HOLD_A

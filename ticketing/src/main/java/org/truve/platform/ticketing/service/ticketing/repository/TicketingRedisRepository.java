@@ -3,6 +3,7 @@ package org.truve.platform.ticketing.service.ticketing.repository;
 import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Repository;
 import org.truve.platform.ticketing.service.ticketing.dto.SessionTicketValueDTO;
@@ -98,6 +99,7 @@ public class TicketingRedisRepository {
 			scheduledSeatIds,
 			sessionToken,
 			holdId,
+			seatFingerprint(scheduledSeatIds),
 			seatHoldKeyPrefix(showScheduleId),
 			SEAT_HOLD_META_KEY_PREFIX,
 			SEAT_HOLD_TTL,
@@ -117,7 +119,8 @@ public class TicketingRedisRepository {
 			seatHoldLeaseKeys(showScheduleId, scheduledSeatIds, sessionToken, holdId),
 			scheduledSeatIds,
 			sessionToken,
-			holdId
+			holdId,
+			seatFingerprint(scheduledSeatIds)
 		);
 	}
 
@@ -255,6 +258,13 @@ public class TicketingRedisRepository {
 
 	private String holdMetaKey(String holdId) {
 		return SEAT_HOLD_META_KEY_PREFIX + holdId;
+	}
+
+	private String seatFingerprint(List<Long> scheduledSeatIds) {
+		return scheduledSeatIds.stream()
+			.sorted()
+			.map(String::valueOf)
+			.collect(Collectors.joining(","));
 	}
 
 	private String secureKey(String sessionTicket) {

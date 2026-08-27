@@ -78,7 +78,7 @@ Payment
 seat:hold:lock:{showScheduleId}:{userId} -> requestToken
 seat:hold:{showScheduleId}:{scheduledSeatId} -> holdId
 seat:holds:{showScheduleId}:{sessionToken} -> Set<scheduledSeatId>
-seat:hold:meta:{holdId} -> sessionToken
+seat:hold:meta:{holdId} -> Hash(sessionToken, seatFingerprint)
 ```
 
 - 요청 락은 같은 사용자·회차의 동시에 실행되는 `hold()`를 빠르게 거절하는 완충 장치다.

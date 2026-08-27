@@ -36,6 +36,7 @@ class TicketingRedisRepositoryTest {
 			List.of(10L, 11L),
 			"session-token",
 			"hold-id",
+			"10,11",
 			"seat:hold:100:",
 			"seat:hold:meta:",
 			Duration.ofMinutes(10),
@@ -57,6 +58,7 @@ class TicketingRedisRepositoryTest {
 			List.of(10L),
 			"session-token",
 			"hold-id",
+			"10",
 			"seat:hold:100:",
 			"seat:hold:meta:",
 			Duration.ofMinutes(10),
@@ -80,7 +82,7 @@ class TicketingRedisRepositoryTest {
 			"seat:hold:100:11"
 		);
 		given(redisSupport.compensateNewlyHeldSeatLeases(
-			keys, List.of(10L, 11L), "session-token", "hold-id"
+			keys, List.of(10L, 11L), "session-token", "hold-id", "10,11"
 		)).willReturn(true);
 
 		boolean compensated = ticketingRedisRepository.compensateNewlyHeldSeats(
@@ -89,7 +91,7 @@ class TicketingRedisRepositoryTest {
 
 		assertThat(compensated).isTrue();
 		verify(redisSupport).compensateNewlyHeldSeatLeases(
-			keys, List.of(10L, 11L), "session-token", "hold-id"
+			keys, List.of(10L, 11L), "session-token", "hold-id", "10,11"
 		);
 	}
 

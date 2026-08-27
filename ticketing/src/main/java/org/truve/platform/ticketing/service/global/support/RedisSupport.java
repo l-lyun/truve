@@ -168,6 +168,7 @@ public class RedisSupport {
 		List<Long> scheduledSeatIds,
 		String sessionToken,
 		String holdId,
+		String holdRequestFingerprint,
 		String seatKeyPrefix,
 		String holdMetaKeyPrefix,
 		Duration seatTtl,
@@ -179,18 +180,19 @@ public class RedisSupport {
 			local holdMetaKey = KEYS[2]
 			local sessionToken = ARGV[1]
 			local holdId = ARGV[2]
-			local seatTtlMillis = ARGV[3]
-			local sessionSetTtlMillis = ARGV[4]
-			local maxSeatCount = tonumber(ARGV[5])
-			local seatKeyPrefix = ARGV[6]
-			local holdMetaKeyPrefix = ARGV[7]
+			local holdRequestFingerprint = ARGV[3]
+			local seatTtlMillis = ARGV[4]
+			local sessionSetTtlMillis = ARGV[5]
+			local maxSeatCount = tonumber(ARGV[6])
+			local seatKeyPrefix = ARGV[7]
+			local holdMetaKeyPrefix = ARGV[8]
 
 			local members = redis.call('SMEMBERS', sessionSetKey)
 			for _, scheduledSeatId in ipairs(members) do
 				local ownerHoldId = redis.call('GET', seatKeyPrefix .. scheduledSeatId)
 				local ownerSessionToken = false
 				if ownerHoldId then
-					ownerSessionToken = redis.call('GET', holdMetaKeyPrefix .. ownerHoldId)
+					ownerSessionToken = redis.call('HGET', holdMetaKeyPrefix .. ownerHoldId, 'sessionToken')
 				end
 				if not ownerHoldId or ownerSessionToken ~= sessionToken then
 					redis.call('SREM', sessionSetKey, scheduledSeatId)
@@ -210,17 +212,18 @@ public class RedisSupport {
 				end
 			end
 
-			local holdSessionToken = redis.call('GET', holdMetaKey)
+			local holdSessionToken = redis.call('HGET', holdMetaKey, 'sessionToken')
+			local storedFingerprint = redis.call('HGET', holdMetaKey, 'fingerprint')
 			if sameOwnerCount > 0 and missingCount > 0 then
 				return 0
 			end
 			if sameOwnerCount > 0 then
-				if holdSessionToken == sessionToken then
+				if holdSessionToken == sessionToken and storedFingerprint == holdRequestFingerprint then
 					return 2
 				end
 				return 0
 			end
-			if holdSessionToken then
+			if redis.call('EXISTS', holdMetaKey) == 1 then
 				return 0
 			end
 
@@ -230,9 +233,10 @@ public class RedisSupport {
 
 			for i = 3, #KEYS do
 				redis.call('SET', KEYS[i], holdId, 'PX', seatTtlMillis, 'NX')
-				redis.call('SADD', sessionSetKey, ARGV[i + 5])
+				redis.call('SADD', sessionSetKey, ARGV[i + 6])
 			end
-			redis.call('SET', holdMetaKey, sessionToken, 'PX', seatTtlMillis, 'NX')
+			redis.call('HSET', holdMetaKey, 'sessionToken', sessionToken, 'fingerprint', holdRequestFingerprint)
+			redis.call('PEXPIRE', holdMetaKey, seatTtlMillis)
 			redis.call('PEXPIRE', sessionSetKey, sessionSetTtlMillis)
 			return 1
 			""";
@@ -240,6 +244,7 @@ public class RedisSupport {
 		List<String> arguments = new ArrayList<>();
 		arguments.add(sessionToken);
 		arguments.add(holdId);
+		arguments.add(holdRequestFingerprint);
 		arguments.add(String.valueOf(seatTtl.toMillis()));
 		arguments.add(String.valueOf(sessionSetTtl.toMillis()));
 		arguments.add(String.valueOf(maxSeatCount));
@@ -259,18 +264,20 @@ public class RedisSupport {
 		List<String> keys,
 		List<Long> scheduledSeatIds,
 		String sessionToken,
-		String holdId
+		String holdId,
+		String holdRequestFingerprint
 	) {
 		String script = """
-			if redis.call('GET', KEYS[2]) ~= ARGV[1] then
+			if redis.call('HGET', KEYS[2], 'sessionToken') ~= ARGV[1]
+				or redis.call('HGET', KEYS[2], 'fingerprint') ~= ARGV[2] then
 				return 0
 			end
 
 			local deleted = 0
 			for i = 3, #KEYS do
-				if redis.call('GET', KEYS[i]) == ARGV[2] then
+				if redis.call('GET', KEYS[i]) == ARGV[3] then
 					redis.call('DEL', KEYS[i])
-					redis.call('SREM', KEYS[1], ARGV[i])
+					redis.call('SREM', KEYS[1], ARGV[i + 1])
 					deleted = deleted + 1
 				end
 			end
@@ -283,6 +290,7 @@ public class RedisSupport {
 
 		List<String> arguments = new ArrayList<>();
 		arguments.add(sessionToken);
+		arguments.add(holdRequestFingerprint);
 		arguments.add(holdId);
 		arguments.addAll(scheduledSeatIds.stream().map(String::valueOf).toList());
 
