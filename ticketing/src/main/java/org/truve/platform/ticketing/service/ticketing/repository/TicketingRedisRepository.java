@@ -124,6 +124,21 @@ public class TicketingRedisRepository {
 		);
 	}
 
+	public boolean ownsHeldSeats(
+		Long showScheduleId,
+		List<Long> scheduledSeatIds,
+		String sessionToken,
+		String holdId
+	) {
+		return redisSupport.ownsHeldSeatLeases(
+			seatHoldLeaseKeys(showScheduleId, scheduledSeatIds, sessionToken, holdId),
+			scheduledSeatIds,
+			sessionToken,
+			holdId,
+			seatFingerprint(scheduledSeatIds)
+		);
+	}
+
 	public long getHoldTtlMillis(String holdId) {
 		return redisSupport.getTtlMillis(holdMetaKey(holdId));
 	}
