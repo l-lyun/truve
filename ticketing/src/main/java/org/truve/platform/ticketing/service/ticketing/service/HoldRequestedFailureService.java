@@ -2,6 +2,7 @@ package org.truve.platform.ticketing.service.ticketing.service;
 
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
+import java.util.Set;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -20,6 +21,16 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class HoldRequestedFailureService {
+	private static final Set<ReservationStatus> APPLIED_STATUSES = Set.of(
+		ReservationStatus.PAYMENT_READY,
+		ReservationStatus.PENDING_PAYMENT,
+		ReservationStatus.PENDING_DEPOSIT,
+		ReservationStatus.CONFIRMED,
+		ReservationStatus.COMPLETED,
+		ReservationStatus.PARTIAL_CANCELED,
+		ReservationStatus.CANCELED
+	);
+
 	private final ReservationRepository reservationRepository;
 
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -31,7 +42,7 @@ public class HoldRequestedFailureService {
 			.orElseThrow(() -> new IllegalStateException("HOLD 주문을 찾을 수 없습니다. holdId=" + event.getHoldId()));
 		validateReservationIdentity(reservation, event);
 
-		if (reservation.getStatus() == ReservationStatus.PAYMENT_READY) {
+		if (APPLIED_STATUSES.contains(reservation.getStatus())) {
 			return FailureRecordResult.COMPLETED_IGNORED;
 		}
 		if (reservation.getStatus() == ReservationStatus.HOLD_FAILED
