@@ -87,6 +87,17 @@ public class ReservationTest {
 	}
 
 	@Test
+	@DisplayName("결제 생성 이벤트 재발행을 위해 PENDING_PAYMENT 상태에서 재시도할 수 있다.")
+	void 결제_대기_상태에서_결제_준비를_재시도할_수_있다() {
+		Reservation reservation = createReservation();
+
+		reservation.readyForPayment(null);
+		reservation.readyForPayment(null);
+
+		assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.PENDING_PAYMENT);
+	}
+
+	@Test
 	@DisplayName("티켓 추가 시 총 금액은 서비스 수수료(2000*티켓 수) + 티켓 가격 총합으로 계산된다.")
 	void 티켓추가_총금액_계산() {
 		// given

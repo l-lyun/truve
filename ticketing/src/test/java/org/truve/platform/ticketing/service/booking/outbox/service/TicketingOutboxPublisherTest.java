@@ -54,7 +54,7 @@ class TicketingOutboxPublisherTest {
 	}
 
 	@Test
-	void HOLD_REQUESTED는_holdId를_Outbox_메시지_키로_저장한다() {
+	void HOLD_REQUESTED는_예약번호를_Outbox_메시지_키로_저장한다() {
 		LocalDateTime expiresAt = LocalDateTime.of(2026, 8, 27, 12, 0);
 		TicketingEventCommand.HoldRequested command = TicketingEventCommand.HoldRequested.of(
 			"H-001",
@@ -73,7 +73,7 @@ class TicketingOutboxPublisherTest {
 		verify(outboxRepository).save(captor.capture());
 		TicketingOutboxEvent saved = captor.getValue();
 		assertThat(saved.getTopic()).isEqualTo("booking.ticketing");
-		assertThat(saved.getMessageKey()).isEqualTo("H-001");
+		assertThat(saved.getMessageKey()).isEqualTo("R-001");
 		assertThat(saved.getEventType()).isEqualTo("HOLD_REQUESTED");
 		assertThat(saved.getPayload()).isEqualTo("{\"holdId\":\"H-001\"}");
 		assertThat(saved.getStatus()).isEqualTo(OutboxStatus.PENDING);

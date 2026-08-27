@@ -45,13 +45,13 @@ public class PaymentService {
 	public void create(PaymentEventCommand.Create request) {
 		paymentRepository.findByOrderId(request.getOrderId())
 			.ifPresentOrElse(
-				this::handleExistingPayment,
+				existingPayment -> handleExistingPayment(existingPayment, request),
 				() -> saveNewPayment(request)
 			);
 	}
 
-	private void handleExistingPayment(Payment p) {
-		Preconditions.validate(p.getStatus() == PaymentStatus.READY, ErrorCode.ALREADY_EXIST_PAYMENT);
+	private void handleExistingPayment(Payment payment, PaymentEventCommand.Create request) {
+		payment.validateAmount(request.getAmount());
 	}
 
 	private void saveNewPayment(PaymentEventCommand.Create request) {

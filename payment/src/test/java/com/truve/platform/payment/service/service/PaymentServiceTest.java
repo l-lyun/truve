@@ -11,12 +11,16 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.truve.platform.common.exception.CustomException;
+import com.truve.platform.common.exception.ErrorCode;
 import com.truve.platform.payment.service.domain.constant.PaymentStatus;
 import com.truve.platform.payment.service.domain.entity.EasyPay;
 import com.truve.platform.payment.service.domain.entity.Payment;
@@ -80,21 +84,50 @@ class PaymentServiceTest {
 			verify(paymentRepository, times(1)).save(any(Payment.class));
 		}
 
-		@Test
-		@DisplayName("기존 결제가 READY 상태로 존재하면 생성하지 않는다.")
-		void 결제생성_READY상태_존재() {
+		@ParameterizedTest
+		@EnumSource(PaymentStatus.class)
+		@DisplayName("같은 주문과 금액의 결제가 존재하면 현재 상태와 무관하게 멱등 성공한다.")
+		void 결제생성_동일이벤트_중복(PaymentStatus status) {
 			// given
 			Long id = 1L;
 
 			Payment existingPayment = new Payment(orderId, amount);
 			ReflectionTestUtils.setField(existingPayment, "id", id);
+			ReflectionTestUtils.setField(existingPayment, "status", status);
 			given(paymentRepository.findByOrderId(orderId)).willReturn(Optional.of(existingPayment));
 
 			// when
 			paymentService.create(request);
 
 			// then
-			verify(paymentRepository, never()).save(any(Payment.class));
+			assertAll(
+				() -> assertThat(existingPayment.getStatus()).isEqualTo(status),
+				() -> assertThat(existingPayment.getAmount()).isEqualTo(amount),
+				() -> verify(paymentRepository, never()).save(any(Payment.class)),
+				() -> verifyNoInteractions(tossClient, applicationEventPublisher)
+			);
+		}
+
+		@ParameterizedTest
+		@EnumSource(PaymentStatus.class)
+		@DisplayName("같은 주문 번호로 다른 금액의 생성 이벤트가 오면 거절한다.")
+		void 결제생성_중복주문_금액불일치(PaymentStatus status) {
+			Payment existingPayment = new Payment(orderId, amount);
+			ReflectionTestUtils.setField(existingPayment, "status", status);
+			given(paymentRepository.findByOrderId(orderId)).willReturn(Optional.of(existingPayment));
+
+			CustomException exception = assertThrows(
+				CustomException.class,
+				() -> paymentService.create(new PaymentEventCommand.Create(orderId, amount + 1L))
+			);
+
+			assertAll(
+				() -> assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_PAYMENT_AMOUNT),
+				() -> assertThat(existingPayment.getStatus()).isEqualTo(status),
+				() -> assertThat(existingPayment.getAmount()).isEqualTo(amount),
+				() -> verify(paymentRepository, never()).save(any(Payment.class)),
+				() -> verifyNoInteractions(tossClient, applicationEventPublisher)
+			);
 		}
 	}
 
