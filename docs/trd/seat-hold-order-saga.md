@@ -1,7 +1,7 @@
 # Redis 좌석 선점과 비동기 주문 생성 Saga
 
 - 상태: In Progress
-- 구현 여부: PR 1 기반 모델·이벤트 계약, PR 2 Redis lease·주문 접수 Saga 구현. Consumer와 결제 전환은 후속 PR 예정
+- 구현 여부: PR 1 기반 모델·이벤트 계약, PR 2 Redis lease·주문 접수 Saga, PR 3 비동기 DB HOLD·Ticket·Payment Outbox 구현. 취소·만료 스케줄러와 결제 UX 전환은 후속 PR 예정
 - 선행 문서: `seat-hold-concurrency.md`
 - 영향 범위: `ticketing`, Redis, Kafka, Ticketing DB, 결제 진입 UX
 
@@ -152,7 +152,7 @@ Outbox
 
 ## 비동기 DB `HOLD`와 낙관적 락
 
-`HOLD_REQUESTED` Consumer는 요청 좌석 전체를 하나의 DB 트랜잭션에서 처리한다. PR 1에서 `ScheduledSeat`에 `@Version` 기반 컬럼을 추가한다. 최초 예매 생성 경로의 `PESSIMISTIC_WRITE` 조회를 실제 낙관적 갱신 경로로 바꾸는 작업은 후속 Consumer 구현 PR에서 수행한다.
+`HOLD_REQUESTED` Consumer는 요청 좌석 전체를 하나의 DB 트랜잭션에서 처리한다. 신규 Consumer 경로는 비관적 락 없는 조회와 `ScheduledSeat @Version`을 사용한다. 기존 동기 예매 생성 경로의 `PESSIMISTIC_WRITE`는 클라이언트 전환 전까지 유지한다.
 
 ```sql
 UPDATE scheduled_seats
@@ -172,9 +172,9 @@ WHERE id = :scheduledSeatId
 - 처리 eventId 이력이 필요해지면 별도 Inbox를 추가한다.
 - 현재 시각이 `expiresAt`을 지났거나 Redis 좌석 소유권이 event의 `holdId`와 다르면 늦은 이벤트를 적용하지 않는다.
 
-성공 Consumer 트랜잭션에는 `ScheduledSeat HOLD`, Ticket 생성, `Reservation PAYMENT_READY`, Payment 생성 요청 Outbox를 함께 기록한다. DB `HOLD`가 완료된 뒤에는 DB가 최종 좌석 소유권의 기준이지만 Redis 좌석 lease도 `expiresAt`, 명시적 해제 또는 판매 완료까지 유지한다. DB 커밋 뒤 즉시 정리하는 것은 10초 요청 락뿐이다.
+성공 Consumer 트랜잭션에는 `ScheduledSeat HOLD`, Ticket 생성, `Reservation PAYMENT_READY`, `booking.payment / CREATE` Outbox를 함께 기록한다. 동일 이벤트 재처리는 `PAYMENT_READY`와 좌석·Ticket 집합을 확인해 멱등 성공하며 Payment Outbox를 중복 생성하지 않는다. DB `HOLD`가 완료된 뒤에는 DB가 최종 좌석 소유권의 기준이지만 Redis 좌석 lease도 `expiresAt`, 명시적 해제 또는 판매 완료까지 유지한다. DB 커밋 뒤 즉시 정리하는 것은 10초 요청 락뿐이다.
 
-실패 상태 저장과 보상 이벤트는 원래 실패해 롤백된 Consumer 트랜잭션과 분리된 새 로컬 트랜잭션에서 처리한다. `HOLD_FAILED` 또는 `EXPIRED`로 전이할 때는 같은 DB 트랜잭션에서 `blockBooking`을 `null`로 바꿔 동일 사용자·회차의 재선점을 허용한다.
+실패 상태 저장은 원래 실패해 롤백된 Consumer 트랜잭션과 분리된 `REQUIRES_NEW` 로컬 트랜잭션에서 처리한다. `HOLD_FAILED` 또는 `EXPIRED`와 `blockBooking=null`이 커밋된 뒤에만 Redis lease를 compare-and-delete로 보상한다. DB·Redis 일시 오류나 커밋 여부 불확실 상태는 실패로 확정하거나 보상하지 않고 Kafka 예외 전파로 재처리한다.
 
 ## 결제 UX와 재결제
 
@@ -238,13 +238,13 @@ expiresAt 경과
 
 ## 후속 구현과 통합 조건
 
-- PR 2는 `HOLD_REQUESTED` Producer까지만 포함한다. 현재 `BookingConsumer`가 이 이벤트를 정상 ack하고 버리므로 PR 3 Consumer가 완성될 때까지 해당 실행 경로를 배포하거나 실제로 실행하지 않는다. 배포가 필요해지면 Consumer를 먼저 배포하거나 feature flag로 Producer를 차단한다.
+- PR 3에서 `BookingConsumer`의 `HOLD_REQUESTED` 라우팅과 처리 경로를 추가해 이벤트 정상 ACK 유실 문제를 해소한다. 이 Consumer에만 최대 3회 고정 간격 재시도와 `booking.ticketing.dlt`를 적용하고, 최종 실패로 만료 시각을 넘긴 `HOLD_PENDING`은 정합성 작업이 `EXPIRED`로 수렴시킨다. 실제 Kafka 컨테이너 기반 retry·DLT 검증과 DLT redrive는 후속 운영 과제다.
 - 새 흐름은 hold 응답의 `reservationNumber` 자체를 주문으로 사용한다. 기존 `POST /api/bookings`를 이어서 호출하면 활성 `HOLD_PENDING` 주문 제약으로 실패하므로 클라이언트 전환은 PR 3 통합 완료와 함께 진행한다.
 - 기존 좌석 반납 API는 sessionToken 소유권 모델이어서 holdId lease를 해제하지 못한다. Reservation 상태와 Outbox, Redis compare-and-delete를 조율하는 취소 Saga가 완성되기 전에는 새 흐름의 취소 API로 사용하지 않는다.
 - `HOLD_PENDING` 생성 시 가격·등급·공연 스냅샷 중 공연·등급 요약은 동기 접수에서 저장하고, 좌석별 가격과 Ticket은 Consumer에서 확정한다.
 - 주문 상태 조회를 polling, SSE 또는 WebSocket 중 어떤 방식으로 제공할지 결정한다.
 - 결제 시도 엔티티와 실패 후 `PAYMENT_READY` 복귀 규칙을 설계한다.
-- 만료 Scheduler의 다중 인스턴스 claim과 결제 승인 경쟁 정책을 설계한다.
+- `PAYMENT_READY` 만료 시 좌석 해제와 결제 승인 경쟁 정책을 설계한다. 이번 `HOLD_PENDING` 만료 정리는 조건부 bulk update라 여러 인스턴스에서도 중복 상태 전이가 발생하지 않는다.
 - 현재 개발 단계에서는 별도 migration script 없이 JPA 엔티티 컬럼만 변경한다. 실제 배포 전에는 `ScheduledSeat.version`, Reservation 신규 컬럼과 상태 값의 migration 전략을 별도로 확정한다.
 
 ## 관측성
