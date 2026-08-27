@@ -39,16 +39,23 @@ public class HoldReservationCreationService {
 	private final TicketingOutboxPublisher outboxPublisher;
 
 	@Transactional(readOnly = true)
-	public Optional<HoldReservationResult> findExisting(String holdId, UUID userId, Long showScheduleId) {
+	public Optional<HoldReservationResult> findExisting(
+		String holdId,
+		String holdRequestFingerprint,
+		UUID userId,
+		Long showScheduleId
+	) {
 		return reservationRepository.findByHoldId(holdId)
-			.map(reservation -> toValidatedResult(reservation, userId, showScheduleId));
+			.map(reservation -> toValidatedResult(
+				reservation, holdRequestFingerprint, userId, showScheduleId));
 	}
 
 	@Transactional
 	public HoldReservationResult create(HoldReservationCommand command) {
 		Optional<Reservation> existing = reservationRepository.findByHoldId(command.holdId());
 		if (existing.isPresent()) {
-			return toValidatedResult(existing.get(), command.userId(), command.showScheduleId());
+			return toValidatedResult(
+				existing.get(), command.holdRequestFingerprint(), command.userId(), command.showScheduleId());
 		}
 
 		List<Long> sortedSeatIds = command.scheduledSeatIds().stream().sorted().toList();
@@ -72,6 +79,7 @@ public class HoldReservationCreationService {
 			createGradeSummary(scheduledSeats),
 			createShowInfo(showScheduled),
 			command.holdId(),
+			command.holdRequestFingerprint(),
 			command.expiresAt()
 		);
 		reservationRepository.save(reservation);
@@ -89,12 +97,17 @@ public class HoldReservationCreationService {
 
 	private HoldReservationResult toValidatedResult(
 		Reservation reservation,
+		String holdRequestFingerprint,
 		UUID userId,
 		Long showScheduleId
 	) {
 		Preconditions.validate(reservation.getUserId().equals(userId), ErrorCode.INVALID_BOOKING_SEAT_HOLD);
 		Preconditions.validate(
 			reservation.getShowInfo().getShowScheduleId().equals(showScheduleId),
+			ErrorCode.INVALID_BOOKING_SEAT_HOLD
+		);
+		Preconditions.validate(
+			reservation.getHoldRequestFingerprint().equals(holdRequestFingerprint),
 			ErrorCode.INVALID_BOOKING_SEAT_HOLD
 		);
 		return HoldReservationResult.from(reservation);
@@ -125,6 +138,7 @@ public class HoldReservationCreationService {
 
 	public record HoldReservationCommand(
 		String holdId,
+		String holdRequestFingerprint,
 		UUID userId,
 		String sessionToken,
 		Long showScheduleId,

@@ -24,6 +24,8 @@ import org.truve.platform.ticketing.service.ticketing.constant.SeatStatus;
 import org.truve.platform.ticketing.service.ticketing.dto.TicketingRequest;
 import org.truve.platform.ticketing.service.ticketing.dto.TicketingResponse;
 import org.truve.platform.ticketing.service.ticketing.service.TicketingService;
+import org.truve.platform.ticketing.service.ticketing.service.SeatHoldSagaService;
+import org.truve.platform.ticketing.service.booking.domain.constant.ReservationStatus;
 
 import com.truve.platform.common.exception.ApiAdvice;
 import com.truve.platform.common.exception.CustomException;
@@ -39,12 +41,15 @@ class TicketingControllerTest {
 	private static final String USER_ID_HEADER = "X-User-Id";
 	private static final String ADMISSION_HEADER = "X-Admission-Token";
 	private static final String SESSION_HEADER = "X-Session-Ticket";
+	private static final String IDEMPOTENCY_HEADER = "Idempotency-Key";
 
 	@Autowired
 	private MockMvc mockMvc;
 
 	@MockitoBean
 	private TicketingService ticketingService;
+	@MockitoBean
+	private SeatHoldSagaService seatHoldSagaService;
 	@MockitoBean
 	private JpaMetamodelMappingContext jpaMetamodelMappingContext;
 	@MockitoBean
@@ -134,18 +139,27 @@ class TicketingControllerTest {
 	void 좌석_선점() throws Exception {
 		// given
 		TicketingRequest.HoldSeat request = new TicketingRequest.HoldSeat(List.of(10L, 11L));
+		UUID userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+		LocalDateTime expiresAt = LocalDateTime.of(2026, 8, 27, 17, 0);
+		given(seatHoldSagaService.hold(1L, userId, "session-token", "request-001", List.of(10L, 11L)))
+			.willReturn(new TicketingResponse.HoldAccepted("R-001", ReservationStatus.HOLD_PENDING, expiresAt));
 
 		// when
 		ResultActions resultActions = mockMvc.perform(post("/api/ticketing/{showScheduleId}/hold/seat", 1L)
 			.contentType(MediaType.APPLICATION_JSON)
-			.header(USER_ID_HEADER, "11111111-1111-1111-1111-111111111111")
+			.header(USER_ID_HEADER, userId)
 			.header(SESSION_HEADER, "session-token")
+			.header(IDEMPOTENCY_HEADER, "request-001")
 			.content(objectMapper.writeValueAsString(request)));
 
 		// then
 		resultActions.andExpect(status().isOk())
-			.andExpect(jsonPath("$.code").value("ok"));
-		verify(ticketingService).holdSeat(1L, UUID.fromString("11111111-1111-1111-1111-111111111111"), "session-token", List.of(10L, 11L));
+			.andExpect(jsonPath("$.code").value("ok"))
+			.andExpect(jsonPath("$.data.reservationNumber").value("R-001"))
+			.andExpect(jsonPath("$.data.status").value("HOLD_PENDING"))
+			.andExpect(jsonPath("$.data.expiresAt").value("2026-08-27T17:00:00"));
+		verify(seatHoldSagaService).hold(
+			1L, userId, "session-token", "request-001", List.of(10L, 11L));
 	}
 
 	@Test
@@ -159,6 +173,7 @@ class TicketingControllerTest {
 			.contentType(MediaType.APPLICATION_JSON)
 			.header(USER_ID_HEADER, "11111111-1111-1111-1111-111111111111")
 			.header(SESSION_HEADER, "session-token")
+			.header(IDEMPOTENCY_HEADER, "request-001")
 			.content(objectMapper.writeValueAsString(request)));
 
 		// then
@@ -224,8 +239,8 @@ class TicketingControllerTest {
 		// then
 		resultActions.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.code").value("C02"));
-		verify(ticketingService, never())
-			.holdSeat(anyLong(), any(UUID.class), anyString(), anyList());
+		verify(seatHoldSagaService, never())
+			.hold(anyLong(), any(UUID.class), anyString(), anyString(), anyList());
 	}
 
 	@Test
@@ -235,19 +250,20 @@ class TicketingControllerTest {
 		List<Long> seatIds = List.of(1L, 2L, 3L, 4L, 5L);
 		TicketingRequest.HoldSeat request = new TicketingRequest.HoldSeat(seatIds);
 		willThrow(new CustomException(ErrorCode.EXCEEDED_MAX_TICKET_COUNT))
-			.given(ticketingService)
-			.holdSeat(1L, userId, "session-token", seatIds);
+			.given(seatHoldSagaService)
+			.hold(1L, userId, "session-token", "request-001", seatIds);
 
 		ResultActions resultActions = mockMvc.perform(post("/api/ticketing/{showScheduleId}/hold/seat", 1L)
 			.contentType(MediaType.APPLICATION_JSON)
 			.header(USER_ID_HEADER, userId)
 			.header(SESSION_HEADER, "session-token")
+			.header(IDEMPOTENCY_HEADER, "request-001")
 			.content(objectMapper.writeValueAsString(request)));
 
 		resultActions.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.message").value(ErrorCode.EXCEEDED_MAX_TICKET_COUNT.getMessage()))
 			.andExpect(jsonPath("$.code").value("T10"));
-		verify(ticketingService).holdSeat(1L, userId, "session-token", seatIds);
+		verify(seatHoldSagaService).hold(1L, userId, "session-token", "request-001", seatIds);
 	}
 
 	@Test

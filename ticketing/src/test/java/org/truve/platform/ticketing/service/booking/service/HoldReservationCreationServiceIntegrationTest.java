@@ -120,6 +120,20 @@ class HoldReservationCreationServiceIntegrationTest {
 		assertThat(outboxRepository.count()).isEqualTo(1);
 	}
 
+	@Test
+	void 같은_holdId를_다른_좌석_fingerprint로_재사용하면_거절한다() {
+		LocalDateTime expiresAt = LocalDateTime.of(2026, 8, 27, 16, 30);
+		service.create(command("H-001", firstSeat.getId(), expiresAt));
+		HoldReservationCommand changed = new HoldReservationCommand(
+			"H-001", "different-fingerprint", USER_ID, "session-token",
+			show.getId(), List.of(secondSeat.getId()), expiresAt);
+
+		assertThatThrownBy(() -> service.create(changed))
+			.isInstanceOf(com.truve.platform.common.exception.CustomException.class);
+		assertThat(reservationRepository.count()).isEqualTo(1);
+		assertThat(outboxRepository.count()).isEqualTo(1);
+	}
+
 	private ScheduledSeat createScheduledSeat(SeatSection section, Long seatNumber) {
 		Seat seat = seatRepository.save(Seat.builder()
 			.seatSection(section).seatRow("A").seatNumber(seatNumber).build());
@@ -129,7 +143,8 @@ class HoldReservationCreationServiceIntegrationTest {
 
 	private HoldReservationCommand command(String holdId, Long seatId, LocalDateTime expiresAt) {
 		return new HoldReservationCommand(
-			holdId, USER_ID, "session-token", show.getId(), List.of(seatId), expiresAt);
+			holdId, "seat-fingerprint-" + seatId, USER_ID, "session-token",
+			show.getId(), List.of(seatId), expiresAt);
 	}
 
 	static class TestConfig {

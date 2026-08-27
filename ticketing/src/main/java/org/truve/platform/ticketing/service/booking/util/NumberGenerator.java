@@ -2,6 +2,7 @@ package org.truve.platform.ticketing.service.booking.util;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -27,5 +28,22 @@ public class NumberGenerator {
 			.map(String::valueOf)
 			.collect(Collectors.joining(","));
 		return UUID.nameUUIDFromBytes((reservationNumber + ":" + sorted).getBytes()).toString();
+	}
+
+	public static String generateHoldId(
+		UUID userId,
+		Long showScheduleId,
+		String idempotencyKey
+	) {
+		String source = userId + ":" + showScheduleId + ":" + idempotencyKey;
+		return UUID.nameUUIDFromBytes(source.getBytes(StandardCharsets.UTF_8)).toString();
+	}
+
+	public static String generateHoldRequestFingerprint(List<Long> scheduledSeatIds) {
+		String sortedSeatIds = scheduledSeatIds.stream()
+			.sorted()
+			.map(String::valueOf)
+			.collect(Collectors.joining(","));
+		return UUID.nameUUIDFromBytes(sortedSeatIds.getBytes(StandardCharsets.UTF_8)).toString();
 	}
 }

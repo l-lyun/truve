@@ -121,6 +121,10 @@ public class TicketingRedisRepository {
 		);
 	}
 
+	public long getHoldTtlMillis(String holdId) {
+		return redisSupport.getTtlMillis(holdMetaKey(holdId));
+	}
+
 	public boolean releaseHeldSeats(Long showScheduleId, List<Long> scheduledSeatIds, String sessionToken) {
 		return redisSupport.releaseHeldSeats(
 			seatHoldKeysWithSessionSet(showScheduleId, scheduledSeatIds, sessionToken),
