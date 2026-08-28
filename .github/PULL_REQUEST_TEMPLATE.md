@@ -30,6 +30,7 @@ AGENTS.md의 PR 학습 리뷰 지침에 따라 변경 복잡도에 맞는 문제
 
 ### 학습 상태
 
+- [ ] `learning-required` 또는 `learning-not-required` 중 하나를 지정
 - [ ] 필수 문제 답변 완료
 - [ ] Codex 피드백 확인
 - [ ] 다음 관련 작업의 선행 개념 확인
