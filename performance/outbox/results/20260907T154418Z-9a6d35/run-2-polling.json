@@ -1,0 +1,217 @@
+[
+  {
+    "elapsed_seconds": 0.17377920799935964,
+    "states": {
+      "PENDING": 1000
+    }
+  },
+  {
+    "elapsed_seconds": 1.266858790999322,
+    "states": {
+      "PENDING": 1000
+    }
+  },
+  {
+    "elapsed_seconds": 2.3499736249996204,
+    "states": {
+      "PROCESSING": 100,
+      "PENDING": 900
+    }
+  },
+  {
+    "elapsed_seconds": 3.4296656659998916,
+    "states": {
+      "PUBLISHED": 100,
+      "PENDING": 900
+    }
+  },
+  {
+    "elapsed_seconds": 4.5108510410000235,
+    "states": {
+      "PUBLISHED": 100,
+      "PENDING": 900
+    }
+  },
+  {
+    "elapsed_seconds": 5.594610082999679,
+    "states": {
+      "PUBLISHED": 100,
+      "PENDING": 900
+    }
+  },
+  {
+    "elapsed_seconds": 6.694634332999158,
+    "states": {
+      "PUBLISHED": 200,
+      "PENDING": 800
+    }
+  },
+  {
+    "elapsed_seconds": 7.781932999999299,
+    "states": {
+      "PUBLISHED": 200,
+      "PENDING": 800
+    }
+  },
+  {
+    "elapsed_seconds": 8.901004040999396,
+    "states": {
+      "PUBLISHED": 200,
+      "PENDING": 800
+    }
+  },
+  {
+    "elapsed_seconds": 9.984679207999761,
+    "states": {
+      "PUBLISHED": 300,
+      "PENDING": 700
+    }
+  },
+  {
+    "elapsed_seconds": 11.069285957999455,
+    "states": {
+      "PUBLISHED": 300,
+      "PENDING": 700
+    }
+  },
+  {
+    "elapsed_seconds": 12.162479332999283,
+    "states": {
+      "PUBLISHED": 300,
+      "PENDING": 700
+    }
+  },
+  {
+    "elapsed_seconds": 13.241585707999548,
+    "states": {
+      "PUBLISHED": 400,
+      "PENDING": 600
+    }
+  },
+  {
+    "elapsed_seconds": 14.334152582999195,
+    "states": {
+      "PUBLISHED": 400,
+      "PENDING": 600
+    }
+  },
+  {
+    "elapsed_seconds": 15.41733020799984,
+    "states": {
+      "PUBLISHED": 400,
+      "PENDING": 600
+    }
+  },
+  {
+    "elapsed_seconds": 16.502917290999903,
+    "states": {
+      "PUBLISHED": 500,
+      "PENDING": 500
+    }
+  },
+  {
+    "elapsed_seconds": 17.589367749999838,
+    "states": {
+      "PUBLISHED": 500,
+      "PENDING": 500
+    }
+  },
+  {
+    "elapsed_seconds": 18.720547207999516,
+    "states": {
+      "PUBLISHED": 500,
+      "PENDING": 400,
+      "PROCESSING": 100
+    }
+  },
+  {
+    "elapsed_seconds": 19.821794749999754,
+    "states": {
+      "PUBLISHED": 600,
+      "PENDING": 400
+    }
+  },
+  {
+    "elapsed_seconds": 20.889302707999377,
+    "states": {
+      "PUBLISHED": 600,
+      "PENDING": 400
+    }
+  },
+  {
+    "elapsed_seconds": 21.98614883299979,
+    "states": {
+      "PUBLISHED": 600,
+      "PENDING": 400
+    }
+  },
+  {
+    "elapsed_seconds": 23.08969466599956,
+    "states": {
+      "PUBLISHED": 700,
+      "PENDING": 300
+    }
+  },
+  {
+    "elapsed_seconds": 24.170886457999586,
+    "states": {
+      "PUBLISHED": 700,
+      "PENDING": 300
+    }
+  },
+  {
+    "elapsed_seconds": 25.252548374999606,
+    "states": {
+      "PUBLISHED": 700,
+      "PENDING": 300
+    }
+  },
+  {
+    "elapsed_seconds": 26.346521124999526,
+    "states": {
+      "PUBLISHED": 800,
+      "PENDING": 200
+    }
+  },
+  {
+    "elapsed_seconds": 27.43210524999995,
+    "states": {
+      "PUBLISHED": 800,
+      "PENDING": 200
+    }
+  },
+  {
+    "elapsed_seconds": 28.535588665999967,
+    "states": {
+      "PUBLISHED": 800,
+      "PENDING": 200
+    }
+  },
+  {
+    "elapsed_seconds": 29.638608165999358,
+    "states": {
+      "PUBLISHED": 900,
+      "PENDING": 100
+    }
+  },
+  {
+    "elapsed_seconds": 30.716698082999756,
+    "states": {
+      "PUBLISHED": 900,
+      "PENDING": 100
+    }
+  },
+  {
+    "elapsed_seconds": 31.80546129100003,
+    "states": {
+      "PUBLISHED": 900,
+      "PENDING": 100
+    }
+  },
+  {
+    "elapsed_seconds": 32.895207957999446,
+    "states": {
+      "PUBLISHED": 1000
+    }
+  }
+]

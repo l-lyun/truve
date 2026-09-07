@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -12,6 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.truve.platform.ticketing.service.booking.outbox.repository.TicketingOutboxEventRepository;
 
 import com.truve.platform.common.outbox.OutboxStatus;
+
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,12 +30,21 @@ public class TicketingOutboxRelayScheduler {
 	private final TicketingOutboxEventRepository outboxRepository;
 	private final TicketingOutboxClaimService claimService;
 	private final TicketingOutboxMessageRelay messageRelay;
+	private Timer batchTimer;
+
+	@Autowired(required = false)
+	void configureMetrics(MeterRegistry registry) {
+		batchTimer = Timer.builder("ticketing.outbox.relay.batch")
+			.description("Relay cycle including claim, Kafka acknowledgement and completion; includes empty/failed cycles")
+			.register(registry);
+	}
 
 	@Value("${ticketing.outbox.claim-timeout-ms:300000}")
 	private long claimTimeoutMs;
 
 	@Scheduled(fixedDelayString = "${ticketing.outbox.relay.fixed-delay-ms:3000}")
 	public void relay() {
+		long started = System.nanoTime();
 		try {
 			List<ClaimedOutboxEvent> claimedEvents = claimService.claimBatch(RELAY_BATCH_SIZE);
 			if (!claimedEvents.isEmpty()) {
@@ -40,6 +53,10 @@ public class TicketingOutboxRelayScheduler {
 			}
 		} catch (RuntimeException exception) {
 			log.error("[Ticketing Outbox Relay] 배치 처리 중 예외가 발생했습니다.", exception);
+		} finally {
+			if (batchTimer != null) {
+				batchTimer.record(System.nanoTime() - started, java.util.concurrent.TimeUnit.NANOSECONDS);
+			}
 		}
 	}
 

@@ -1,0 +1,44 @@
+[
+  {
+    "run": 1,
+    "topic": "truve.outbox.baseline.b3a5ea36017f473b9d6cc9c7dbf137dc",
+    "published": 1000,
+    "committed_published_metric_delta": 1000.0,
+    "remaining": 0,
+    "retries": 0,
+    "observed_drain_seconds": 33.02,
+    "observed_events_per_second": 30.28,
+    "publication_record_lag_p50_ms": 15495.669,
+    "publication_record_lag_p95_ms": 32122.281,
+    "publication_record_lag_p99_ms": 32197.824,
+    "publication_record_lag_max_ms": 32208.621
+  },
+  {
+    "run": 2,
+    "topic": "truve.outbox.baseline.82d2340929be4e5181ec88cc02e21631",
+    "published": 1000,
+    "committed_published_metric_delta": 1000.0,
+    "remaining": 0,
+    "retries": 0,
+    "observed_drain_seconds": 32.895,
+    "observed_events_per_second": 30.4,
+    "publication_record_lag_p50_ms": 15459.827,
+    "publication_record_lag_p95_ms": 31825.952,
+    "publication_record_lag_p99_ms": 31858.158,
+    "publication_record_lag_max_ms": 31865.769
+  },
+  {
+    "run": 3,
+    "topic": "truve.outbox.baseline.50002ca6a8894d3491baee6d03066aa0",
+    "published": 1000,
+    "committed_published_metric_delta": 1000.0,
+    "remaining": 0,
+    "retries": 0,
+    "observed_drain_seconds": 33.056,
+    "observed_events_per_second": 30.25,
+    "publication_record_lag_p50_ms": 15299.77,
+    "publication_record_lag_p95_ms": 31882.061,
+    "publication_record_lag_p99_ms": 31929.163,
+    "publication_record_lag_max_ms": 31935.648
+  }
+]

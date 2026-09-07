@@ -20,6 +20,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.truve.platform.ticketing.service.booking.outbox.repository.TicketingOutboxEventRepository;
 
 import com.truve.platform.common.outbox.OutboxStatus;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 @ExtendWith(MockitoExtension.class)
 class TicketingOutboxRelaySchedulerTest {
@@ -58,9 +59,12 @@ class TicketingOutboxRelaySchedulerTest {
 
 	@Test
 	void claim_중_예외가_발생하면_해당_배치를_종료하고_다음_스케줄에_맡긴다() {
+		SimpleMeterRegistry registry = new SimpleMeterRegistry();
+		scheduler.configureMetrics(registry);
 		given(claimService.claimBatch(100)).willThrow(new IllegalStateException("invalid outbox state"));
 
 		assertThatCode(scheduler::relay).doesNotThrowAnyException();
+		assertThat(registry.get("ticketing.outbox.relay.batch").timer().count()).isEqualTo(1);
 
 		verify(messageRelay, never()).relay(org.mockito.ArgumentMatchers.anyList());
 		verify(claimService, never()).complete(org.mockito.ArgumentMatchers.anyList());

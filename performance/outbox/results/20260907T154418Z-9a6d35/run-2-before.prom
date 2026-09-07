@@ -1,0 +1,1197 @@
+# HELP application_ready_time_seconds Time taken for the application to be ready to service requests
+# TYPE application_ready_time_seconds gauge
+application_ready_time_seconds{application="ticketing",main_application_class="org.truve.platform.ticketing.service.TicketingApplication"} 7.571
+# HELP application_started_time_seconds Time taken to start the application
+# TYPE application_started_time_seconds gauge
+application_started_time_seconds{application="ticketing",main_application_class="org.truve.platform.ticketing.service.TicketingApplication"} 7.566
+# HELP disk_free_bytes Usable space for path
+# TYPE disk_free_bytes gauge
+disk_free_bytes{application="ticketing",path="/Users/macbook/Desktop/Projects/truve_me/truve/ticketing/."} 3.4058289152E10
+# HELP disk_total_bytes Total space for path
+# TYPE disk_total_bytes gauge
+disk_total_bytes{application="ticketing",path="/Users/macbook/Desktop/Projects/truve_me/truve/ticketing/."} 4.94384795648E11
+# HELP executor_active_threads The approximate number of threads that are actively executing tasks
+# TYPE executor_active_threads gauge
+executor_active_threads{application="ticketing",name="applicationTaskExecutor"} 0.0
+executor_active_threads{application="ticketing",name="taskScheduler"} 0.0
+# HELP executor_completed_tasks_total The approximate total number of tasks that have completed execution
+# TYPE executor_completed_tasks_total counter
+executor_completed_tasks_total{application="ticketing",name="applicationTaskExecutor"} 0.0
+executor_completed_tasks_total{application="ticketing",name="taskScheduler"} 26.0
+# HELP executor_pool_core_threads The core number of threads for the pool
+# TYPE executor_pool_core_threads gauge
+executor_pool_core_threads{application="ticketing",name="applicationTaskExecutor"} 8.0
+executor_pool_core_threads{application="ticketing",name="taskScheduler"} 1.0
+# HELP executor_pool_max_threads The maximum allowed number of threads in the pool
+# TYPE executor_pool_max_threads gauge
+executor_pool_max_threads{application="ticketing",name="applicationTaskExecutor"} 2.147483647E9
+executor_pool_max_threads{application="ticketing",name="taskScheduler"} 2.147483647E9
+# HELP executor_pool_size_threads The current number of threads in the pool
+# TYPE executor_pool_size_threads gauge
+executor_pool_size_threads{application="ticketing",name="applicationTaskExecutor"} 0.0
+executor_pool_size_threads{application="ticketing",name="taskScheduler"} 1.0
+# HELP executor_queue_remaining_tasks The number of additional elements that this queue can ideally accept without blocking
+# TYPE executor_queue_remaining_tasks gauge
+executor_queue_remaining_tasks{application="ticketing",name="applicationTaskExecutor"} 2.147483647E9
+executor_queue_remaining_tasks{application="ticketing",name="taskScheduler"} 2.147483647E9
+# HELP executor_queued_tasks The approximate number of tasks that are queued for execution
+# TYPE executor_queued_tasks gauge
+executor_queued_tasks{application="ticketing",name="applicationTaskExecutor"} 0.0
+executor_queued_tasks{application="ticketing",name="taskScheduler"} 4.0
+# HELP hikaricp_connections Total connections
+# TYPE hikaricp_connections gauge
+hikaricp_connections{application="ticketing",pool="HikariPool-1"} 10.0
+# HELP hikaricp_connections_acquire_seconds Connection acquire time
+# TYPE hikaricp_connections_acquire_seconds summary
+hikaricp_connections_acquire_seconds_count{application="ticketing",pool="HikariPool-1"} 36
+hikaricp_connections_acquire_seconds_sum{application="ticketing",pool="HikariPool-1"} 0.048
+# HELP hikaricp_connections_acquire_seconds_max Connection acquire time
+# TYPE hikaricp_connections_acquire_seconds_max gauge
+hikaricp_connections_acquire_seconds_max{application="ticketing",pool="HikariPool-1"} 0.005
+# HELP hikaricp_connections_active Active connections
+# TYPE hikaricp_connections_active gauge
+hikaricp_connections_active{application="ticketing",pool="HikariPool-1"} 0.0
+# HELP hikaricp_connections_creation_seconds Connection creation time
+# TYPE hikaricp_connections_creation_seconds summary
+hikaricp_connections_creation_seconds_count{application="ticketing",pool="HikariPool-1"} 0
+hikaricp_connections_creation_seconds_sum{application="ticketing",pool="HikariPool-1"} 0.0
+# HELP hikaricp_connections_creation_seconds_max Connection creation time
+# TYPE hikaricp_connections_creation_seconds_max gauge
+hikaricp_connections_creation_seconds_max{application="ticketing",pool="HikariPool-1"} 0.0
+# HELP hikaricp_connections_idle Idle connections
+# TYPE hikaricp_connections_idle gauge
+hikaricp_connections_idle{application="ticketing",pool="HikariPool-1"} 10.0
+# HELP hikaricp_connections_max Max connections
+# TYPE hikaricp_connections_max gauge
+hikaricp_connections_max{application="ticketing",pool="HikariPool-1"} 10.0
+# HELP hikaricp_connections_min Min connections
+# TYPE hikaricp_connections_min gauge
+hikaricp_connections_min{application="ticketing",pool="HikariPool-1"} 10.0
+# HELP hikaricp_connections_pending Pending threads
+# TYPE hikaricp_connections_pending gauge
+hikaricp_connections_pending{application="ticketing",pool="HikariPool-1"} 0.0
+# HELP hikaricp_connections_timeout_total Connection timeout total count
+# TYPE hikaricp_connections_timeout_total counter
+hikaricp_connections_timeout_total{application="ticketing",pool="HikariPool-1"} 0.0
+# HELP hikaricp_connections_usage_seconds Connection usage time
+# TYPE hikaricp_connections_usage_seconds summary
+hikaricp_connections_usage_seconds_count{application="ticketing",pool="HikariPool-1"} 36
+hikaricp_connections_usage_seconds_sum{application="ticketing",pool="HikariPool-1"} 3.931
+# HELP hikaricp_connections_usage_seconds_max Connection usage time
+# TYPE hikaricp_connections_usage_seconds_max gauge
+hikaricp_connections_usage_seconds_max{application="ticketing",pool="HikariPool-1"} 0.386
+# HELP http_server_requests_active_seconds  
+# TYPE http_server_requests_active_seconds histogram
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="120.0"} 1
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="137.438953471"} 1
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="160.345445716"} 1
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="183.251937961"} 1
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="206.158430206"} 1
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="229.064922451"} 1
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="251.971414696"} 1
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="274.877906944"} 1
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="366.503875925"} 1
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="458.129844906"} 1
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="549.755813887"} 1
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="641.381782868"} 1
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="733.007751849"} 1
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="824.63372083"} 1
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="916.259689811"} 1
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="1007.885658792"} 1
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="1099.511627776"} 1
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="1466.015503701"} 1
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="1832.519379626"} 1
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="2199.023255551"} 1
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="2565.527131476"} 1
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="2932.031007401"} 1
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="3298.534883326"} 1
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="3665.038759251"} 1
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="4031.542635176"} 1
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="4398.046511104"} 1
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="5864.062014805"} 1
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="7200.0"} 1
+http_server_requests_active_seconds_bucket{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN",le="+Inf"} 1
+# HELP http_server_requests_active_seconds_gcount  
+# TYPE http_server_requests_active_seconds_gcount gauge
+http_server_requests_active_seconds_gcount{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN"} 1
+# HELP http_server_requests_active_seconds_gsum  
+# TYPE http_server_requests_active_seconds_gsum gauge
+http_server_requests_active_seconds_gsum{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN"} 0.014345459
+# HELP http_server_requests_active_seconds_max  
+# TYPE http_server_requests_active_seconds_max gauge
+http_server_requests_active_seconds_max{application="ticketing",exception="none",method="GET",outcome="SUCCESS",status="200",uri="UNKNOWN"} 0.014348167
+# HELP http_server_requests_seconds  
+# TYPE http_server_requests_seconds histogram
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.001"} 0
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.001048576"} 0
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.001398101"} 0
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.001747626"} 0
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.002097151"} 0
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.002446676"} 0
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.002796201"} 0
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.003145726"} 0
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.003495251"} 0
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.003844776"} 0
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.004194304"} 0
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.005592405"} 0
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.006990506"} 0
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.008388607"} 0
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.009786708"} 0
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.011184809"} 1
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.01258291"} 1
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.013981011"} 1
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.015379112"} 1
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.016777216"} 1
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.022369621"} 2
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.027962026"} 2
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.033554431"} 2
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.039146836"} 2
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.044739241"} 2
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.050331646"} 2
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.055924051"} 2
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.061516456"} 2
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.067108864"} 2
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.089478485"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.111848106"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.134217727"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.156587348"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.178956969"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.20132659"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.223696211"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.246065832"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.268435456"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.357913941"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.447392426"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.536870911"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.626349396"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.715827881"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.805306366"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.894784851"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="0.984263336"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="1.073741824"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="1.431655765"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="1.789569706"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="2.147483647"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="2.505397588"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="2.863311529"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="3.22122547"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="3.579139411"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="3.937053352"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="4.294967296"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="5.726623061"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="7.158278826"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="8.589934591"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="10.021590356"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="11.453246121"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="12.884901886"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="14.316557651"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="15.748213416"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="17.179869184"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="22.906492245"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="28.633115306"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="30.0"} 3
+http_server_requests_seconds_bucket{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus",le="+Inf"} 3
+http_server_requests_seconds_count{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus"} 3
+http_server_requests_seconds_sum{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus"} 0.112201167
+# HELP http_server_requests_seconds_max  
+# TYPE http_server_requests_seconds_max gauge
+http_server_requests_seconds_max{application="ticketing",error="none",exception="none",method="GET",outcome="SUCCESS",status="200",uri="/actuator/prometheus"} 0.084669083
+# HELP jdbc_connections_active Current number of active connections that have been allocated from the data source.
+# TYPE jdbc_connections_active gauge
+jdbc_connections_active{application="ticketing",name="dataSource"} 0.0
+# HELP jdbc_connections_idle Number of established but idle connections.
+# TYPE jdbc_connections_idle gauge
+jdbc_connections_idle{application="ticketing",name="dataSource"} 10.0
+# HELP jdbc_connections_max Maximum number of active connections that can be allocated at the same time.
+# TYPE jdbc_connections_max gauge
+jdbc_connections_max{application="ticketing",name="dataSource"} 10.0
+# HELP jdbc_connections_min Minimum number of idle connections in the pool.
+# TYPE jdbc_connections_min gauge
+jdbc_connections_min{application="ticketing",name="dataSource"} 10.0
+# HELP jvm_info JVM version info
+# TYPE jvm_info gauge
+jvm_info{application="ticketing",runtime="OpenJDK Runtime Environment",vendor="Amazon.com Inc.",version="21.0.8+9-LTS"} 1
+# HELP jvm_buffer_count_buffers An estimate of the number of buffers in the pool
+# TYPE jvm_buffer_count_buffers gauge
+jvm_buffer_count_buffers{application="ticketing",id="direct"} 12.0
+jvm_buffer_count_buffers{application="ticketing",id="mapped"} 0.0
+jvm_buffer_count_buffers{application="ticketing",id="mapped - 'non-volatile memory'"} 0.0
+# HELP jvm_buffer_memory_used_bytes An estimate of the memory that the Java virtual machine is using for this buffer pool
+# TYPE jvm_buffer_memory_used_bytes gauge
+jvm_buffer_memory_used_bytes{application="ticketing",id="direct"} 55417.0
+jvm_buffer_memory_used_bytes{application="ticketing",id="mapped"} 0.0
+jvm_buffer_memory_used_bytes{application="ticketing",id="mapped - 'non-volatile memory'"} 0.0
+# HELP jvm_buffer_total_capacity_bytes An estimate of the total capacity of the buffers in this pool
+# TYPE jvm_buffer_total_capacity_bytes gauge
+jvm_buffer_total_capacity_bytes{application="ticketing",id="direct"} 55417.0
+jvm_buffer_total_capacity_bytes{application="ticketing",id="mapped"} 0.0
+jvm_buffer_total_capacity_bytes{application="ticketing",id="mapped - 'non-volatile memory'"} 0.0
+# HELP jvm_classes_loaded_classes The number of classes that are currently loaded in the Java virtual machine
+# TYPE jvm_classes_loaded_classes gauge
+jvm_classes_loaded_classes{application="ticketing"} 25663.0
+# HELP jvm_classes_loaded_count_classes_total The number of classes loaded in the Java virtual machine
+# TYPE jvm_classes_loaded_count_classes_total counter
+jvm_classes_loaded_count_classes_total{application="ticketing"} 25663.0
+# HELP jvm_classes_unloaded_classes_total The number of classes unloaded in the Java virtual machine
+# TYPE jvm_classes_unloaded_classes_total counter
+jvm_classes_unloaded_classes_total{application="ticketing"} 0.0
+# HELP jvm_compilation_time_ms_total The approximate accumulated elapsed time spent in compilation
+# TYPE jvm_compilation_time_ms_total counter
+jvm_compilation_time_ms_total{application="ticketing",compiler="HotSpot 64-Bit Tiered Compilers"} 2083.0
+# HELP jvm_gc_concurrent_phase_time_seconds Time spent in concurrent phase
+# TYPE jvm_gc_concurrent_phase_time_seconds summary
+jvm_gc_concurrent_phase_time_seconds_count{action="end of concurrent GC pause",application="ticketing",cause="No GC",gc="G1 Concurrent GC"} 2
+jvm_gc_concurrent_phase_time_seconds_sum{action="end of concurrent GC pause",application="ticketing",cause="No GC",gc="G1 Concurrent GC"} 0.007
+# HELP jvm_gc_concurrent_phase_time_seconds_max Time spent in concurrent phase
+# TYPE jvm_gc_concurrent_phase_time_seconds_max gauge
+jvm_gc_concurrent_phase_time_seconds_max{action="end of concurrent GC pause",application="ticketing",cause="No GC",gc="G1 Concurrent GC"} 0.007
+# HELP jvm_gc_live_data_size_bytes Size of long-lived heap memory pool after reclamation
+# TYPE jvm_gc_live_data_size_bytes gauge
+jvm_gc_live_data_size_bytes{application="ticketing"} 7.2869464E7
+# HELP jvm_gc_max_data_size_bytes Max size of long-lived heap memory pool
+# TYPE jvm_gc_max_data_size_bytes gauge
+jvm_gc_max_data_size_bytes{application="ticketing"} 4.294967296E9
+# HELP jvm_gc_memory_allocated_bytes_total Incremented for an increase in the size of the (young) heap memory pool after one GC to before the next
+# TYPE jvm_gc_memory_allocated_bytes_total counter
+jvm_gc_memory_allocated_bytes_total{application="ticketing"} 2.097152E8
+# HELP jvm_gc_memory_promoted_bytes_total Count of positive increases in the size of the old generation memory pool before GC to after GC
+# TYPE jvm_gc_memory_promoted_bytes_total counter
+jvm_gc_memory_promoted_bytes_total{application="ticketing"} 6154832.0
+# HELP jvm_gc_overhead An approximation of the percent of CPU time used by GC activities over the last lookback period or since monitoring began, whichever is shorter, in the range [0..1]
+# TYPE jvm_gc_overhead gauge
+jvm_gc_overhead{application="ticketing"} 6.219296947290755E-4
+# HELP jvm_gc_pause_seconds Time spent in GC pause
+# TYPE jvm_gc_pause_seconds summary
+jvm_gc_pause_seconds_count{action="end of minor GC",application="ticketing",cause="CodeCache GC Threshold",gc="G1 Young Generation"} 2
+jvm_gc_pause_seconds_sum{action="end of minor GC",application="ticketing",cause="CodeCache GC Threshold",gc="G1 Young Generation"} 0.022
+jvm_gc_pause_seconds_count{action="end of minor GC",application="ticketing",cause="G1 Evacuation Pause",gc="G1 Young Generation"} 3
+jvm_gc_pause_seconds_sum{action="end of minor GC",application="ticketing",cause="G1 Evacuation Pause",gc="G1 Young Generation"} 0.017
+# HELP jvm_gc_pause_seconds_max Time spent in GC pause
+# TYPE jvm_gc_pause_seconds_max gauge
+jvm_gc_pause_seconds_max{action="end of minor GC",application="ticketing",cause="CodeCache GC Threshold",gc="G1 Young Generation"} 0.018
+jvm_gc_pause_seconds_max{action="end of minor GC",application="ticketing",cause="G1 Evacuation Pause",gc="G1 Young Generation"} 0.01
+# HELP jvm_memory_committed_bytes The amount of memory in bytes that is committed for the Java virtual machine to use
+# TYPE jvm_memory_committed_bytes gauge
+jvm_memory_committed_bytes{application="ticketing",area="heap",id="G1 Eden Space"} 6.5011712E7
+jvm_memory_committed_bytes{application="ticketing",area="heap",id="G1 Old Gen"} 9.2274688E7
+jvm_memory_committed_bytes{application="ticketing",area="heap",id="G1 Survivor Space"} 4194304.0
+jvm_memory_committed_bytes{application="ticketing",area="nonheap",id="CodeCache"} 2.1561344E7
+jvm_memory_committed_bytes{application="ticketing",area="nonheap",id="Compressed Class Space"} 1.8808832E7
+jvm_memory_committed_bytes{application="ticketing",area="nonheap",id="Metaspace"} 1.29564672E8
+# HELP jvm_memory_max_bytes The maximum amount of memory in bytes that can be used for memory management
+# TYPE jvm_memory_max_bytes gauge
+jvm_memory_max_bytes{application="ticketing",area="heap",id="G1 Eden Space"} -1.0
+jvm_memory_max_bytes{application="ticketing",area="heap",id="G1 Old Gen"} 4.294967296E9
+jvm_memory_max_bytes{application="ticketing",area="heap",id="G1 Survivor Space"} -1.0
+jvm_memory_max_bytes{application="ticketing",area="nonheap",id="CodeCache"} 5.0331648E7
+jvm_memory_max_bytes{application="ticketing",area="nonheap",id="Compressed Class Space"} 1.073741824E9
+jvm_memory_max_bytes{application="ticketing",area="nonheap",id="Metaspace"} -1.0
+# HELP jvm_memory_usage_after_gc The percentage of long-lived heap pool used after the last GC event, in the range [0..1]
+# TYPE jvm_memory_usage_after_gc gauge
+jvm_memory_usage_after_gc{application="ticketing",area="heap",pool="long-lived"} 0.018399277701973915
+# HELP jvm_memory_used_bytes The amount of used memory
+# TYPE jvm_memory_used_bytes gauge
+jvm_memory_used_bytes{application="ticketing",area="heap",id="G1 Eden Space"} 0.0
+jvm_memory_used_bytes{application="ticketing",area="heap",id="G1 Old Gen"} 7.9024296E7
+jvm_memory_used_bytes{application="ticketing",area="heap",id="G1 Survivor Space"} 2608936.0
+jvm_memory_used_bytes{application="ticketing",area="nonheap",id="CodeCache"} 2.1517184E7
+jvm_memory_used_bytes{application="ticketing",area="nonheap",id="Compressed Class Space"} 1.8233744E7
+jvm_memory_used_bytes{application="ticketing",area="nonheap",id="Metaspace"} 1.28272696E8
+# HELP jvm_threads_daemon_threads The current number of live daemon threads
+# TYPE jvm_threads_daemon_threads gauge
+jvm_threads_daemon_threads{application="ticketing"} 28.0
+# HELP jvm_threads_live_threads The current number of live threads including both daemon and non-daemon threads
+# TYPE jvm_threads_live_threads gauge
+jvm_threads_live_threads{application="ticketing"} 37.0
+# HELP jvm_threads_peak_threads The peak live thread count since the Java virtual machine started or peak was reset
+# TYPE jvm_threads_peak_threads gauge
+jvm_threads_peak_threads{application="ticketing"} 38.0
+# HELP jvm_threads_started_threads_total The total number of application threads started in the JVM
+# TYPE jvm_threads_started_threads_total counter
+jvm_threads_started_threads_total{application="ticketing"} 43.0
+# HELP jvm_threads_states_threads The current number of threads
+# TYPE jvm_threads_states_threads gauge
+jvm_threads_states_threads{application="ticketing",state="blocked"} 0.0
+jvm_threads_states_threads{application="ticketing",state="new"} 0.0
+jvm_threads_states_threads{application="ticketing",state="runnable"} 11.0
+jvm_threads_states_threads{application="ticketing",state="terminated"} 0.0
+jvm_threads_states_threads{application="ticketing",state="timed-waiting"} 15.0
+jvm_threads_states_threads{application="ticketing",state="waiting"} 11.0
+# HELP kafka_app_info_start_time_ms Metric indicating start-time-ms
+# TYPE kafka_app_info_start_time_ms gauge
+kafka_app_info_start_time_ms{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 1.788795829376E12
+kafka_app_info_start_time_ms{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 1.788795829359E12
+kafka_app_info_start_time_ms{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 1.788795860087E12
+# HELP kafka_consumer_commit_sync_time_ns_total The total time the consumer has spent in commitSync in nanoseconds
+# TYPE kafka_consumer_commit_sync_time_ns_total counter
+kafka_consumer_commit_sync_time_ns_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.0
+kafka_consumer_commit_sync_time_ns_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.0
+# HELP kafka_consumer_committed_time_ns_total The total time the consumer has spent in committed in nanoseconds
+# TYPE kafka_consumer_committed_time_ns_total counter
+kafka_consumer_committed_time_ns_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.0
+kafka_consumer_committed_time_ns_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.0
+# HELP kafka_consumer_connection_close_total The total number of connections closed
+# TYPE kafka_consumer_connection_close_total counter
+kafka_consumer_connection_close_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.0
+kafka_consumer_connection_close_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.0
+# HELP kafka_consumer_connection_close_rate The number of connections closed per second
+# TYPE kafka_consumer_connection_close_rate gauge
+kafka_consumer_connection_close_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.0
+kafka_consumer_connection_close_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.0
+# HELP kafka_consumer_connection_count The current number of active connections.
+# TYPE kafka_consumer_connection_count gauge
+kafka_consumer_connection_count{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 3.0
+kafka_consumer_connection_count{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 3.0
+# HELP kafka_consumer_connection_creation_total The total number of new connections established
+# TYPE kafka_consumer_connection_creation_total counter
+kafka_consumer_connection_creation_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 3.0
+kafka_consumer_connection_creation_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 3.0
+# HELP kafka_consumer_connection_creation_rate The number of new connections established per second
+# TYPE kafka_consumer_connection_creation_rate gauge
+kafka_consumer_connection_creation_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.04812473932432866
+kafka_consumer_connection_creation_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.048115477145148355
+# HELP kafka_consumer_coordinator_assigned_partitions The number of partitions currently assigned to this consumer
+# TYPE kafka_consumer_coordinator_assigned_partitions gauge
+kafka_consumer_coordinator_assigned_partitions{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 1.0
+kafka_consumer_coordinator_assigned_partitions{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 1.0
+# HELP kafka_consumer_coordinator_commit_total The total number of commit calls
+# TYPE kafka_consumer_coordinator_commit_total counter
+kafka_consumer_coordinator_commit_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.0
+kafka_consumer_coordinator_commit_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.0
+# HELP kafka_consumer_coordinator_commit_latency_avg The average time taken for a commit request
+# TYPE kafka_consumer_coordinator_commit_latency_avg gauge
+kafka_consumer_coordinator_commit_latency_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} NaN
+kafka_consumer_coordinator_commit_latency_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} NaN
+# HELP kafka_consumer_coordinator_commit_latency_max The max time taken for a commit request
+# TYPE kafka_consumer_coordinator_commit_latency_max gauge
+kafka_consumer_coordinator_commit_latency_max{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} NaN
+kafka_consumer_coordinator_commit_latency_max{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} NaN
+# HELP kafka_consumer_coordinator_commit_rate The number of commit calls per second
+# TYPE kafka_consumer_coordinator_commit_rate gauge
+kafka_consumer_coordinator_commit_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.0
+kafka_consumer_coordinator_commit_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.0
+# HELP kafka_consumer_coordinator_failed_rebalance_total The total number of failed rebalance events
+# TYPE kafka_consumer_coordinator_failed_rebalance_total counter
+kafka_consumer_coordinator_failed_rebalance_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 1.0
+kafka_consumer_coordinator_failed_rebalance_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 1.0
+# HELP kafka_consumer_coordinator_failed_rebalance_rate_per_hour The number of failed rebalance events per hour
+# TYPE kafka_consumer_coordinator_failed_rebalance_rate_per_hour gauge
+kafka_consumer_coordinator_failed_rebalance_rate_per_hour{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.0
+kafka_consumer_coordinator_failed_rebalance_rate_per_hour{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.0
+# HELP kafka_consumer_coordinator_heartbeat_total The total number of heartbeats
+# TYPE kafka_consumer_coordinator_heartbeat_total counter
+kafka_consumer_coordinator_heartbeat_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 19.0
+kafka_consumer_coordinator_heartbeat_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 19.0
+# HELP kafka_consumer_coordinator_heartbeat_rate The number of heartbeats per second
+# TYPE kafka_consumer_coordinator_heartbeat_rate gauge
+kafka_consumer_coordinator_heartbeat_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.3047851264858275
+kafka_consumer_coordinator_heartbeat_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.30473135525260625
+# HELP kafka_consumer_coordinator_heartbeat_response_time_max The max time taken to receive a response to a heartbeat request
+# TYPE kafka_consumer_coordinator_heartbeat_response_time_max gauge
+kafka_consumer_coordinator_heartbeat_response_time_max{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 24.0
+kafka_consumer_coordinator_heartbeat_response_time_max{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 24.0
+# HELP kafka_consumer_coordinator_join_total The total number of group joins
+# TYPE kafka_consumer_coordinator_join_total counter
+kafka_consumer_coordinator_join_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 1.0
+kafka_consumer_coordinator_join_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 1.0
+# HELP kafka_consumer_coordinator_join_rate The number of group joins per second
+# TYPE kafka_consumer_coordinator_join_rate gauge
+kafka_consumer_coordinator_join_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.016042094455852158
+kafka_consumer_coordinator_join_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.0160387496190797
+# HELP kafka_consumer_coordinator_join_time_avg The average time taken for a group rejoin
+# TYPE kafka_consumer_coordinator_join_time_avg gauge
+kafka_consumer_coordinator_join_time_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 3011.0
+kafka_consumer_coordinator_join_time_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 3011.0
+# HELP kafka_consumer_coordinator_join_time_max The max time taken for a group rejoin
+# TYPE kafka_consumer_coordinator_join_time_max gauge
+kafka_consumer_coordinator_join_time_max{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 3011.0
+kafka_consumer_coordinator_join_time_max{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 3011.0
+# HELP kafka_consumer_coordinator_last_heartbeat_seconds_ago The number of seconds since the last coordinator heartbeat was sent
+# TYPE kafka_consumer_coordinator_last_heartbeat_seconds_ago gauge
+kafka_consumer_coordinator_last_heartbeat_seconds_ago{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 1.0
+kafka_consumer_coordinator_last_heartbeat_seconds_ago{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 1.0
+# HELP kafka_consumer_coordinator_last_rebalance_seconds_ago The number of seconds since the last successful rebalance event
+# TYPE kafka_consumer_coordinator_last_rebalance_seconds_ago gauge
+kafka_consumer_coordinator_last_rebalance_seconds_ago{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 58.0
+kafka_consumer_coordinator_last_rebalance_seconds_ago{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 58.0
+# HELP kafka_consumer_coordinator_partition_assigned_latency_avg The average time taken for a partition-assigned rebalance listener callback
+# TYPE kafka_consumer_coordinator_partition_assigned_latency_avg gauge
+kafka_consumer_coordinator_partition_assigned_latency_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 24.0
+kafka_consumer_coordinator_partition_assigned_latency_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 23.0
+# HELP kafka_consumer_coordinator_partition_assigned_latency_max The max time taken for a partition-assigned rebalance listener callback
+# TYPE kafka_consumer_coordinator_partition_assigned_latency_max gauge
+kafka_consumer_coordinator_partition_assigned_latency_max{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 24.0
+kafka_consumer_coordinator_partition_assigned_latency_max{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 23.0
+# HELP kafka_consumer_coordinator_partition_lost_latency_avg The average time taken for a partition-lost rebalance listener callback
+# TYPE kafka_consumer_coordinator_partition_lost_latency_avg gauge
+kafka_consumer_coordinator_partition_lost_latency_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} NaN
+kafka_consumer_coordinator_partition_lost_latency_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} NaN
+# HELP kafka_consumer_coordinator_partition_lost_latency_max The max time taken for a partition-lost rebalance listener callback
+# TYPE kafka_consumer_coordinator_partition_lost_latency_max gauge
+kafka_consumer_coordinator_partition_lost_latency_max{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} NaN
+kafka_consumer_coordinator_partition_lost_latency_max{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} NaN
+# HELP kafka_consumer_coordinator_partition_revoked_latency_avg The average time taken for a partition-revoked rebalance listener callback
+# TYPE kafka_consumer_coordinator_partition_revoked_latency_avg gauge
+kafka_consumer_coordinator_partition_revoked_latency_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} NaN
+kafka_consumer_coordinator_partition_revoked_latency_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} NaN
+# HELP kafka_consumer_coordinator_partition_revoked_latency_max The max time taken for a partition-revoked rebalance listener callback
+# TYPE kafka_consumer_coordinator_partition_revoked_latency_max gauge
+kafka_consumer_coordinator_partition_revoked_latency_max{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} NaN
+kafka_consumer_coordinator_partition_revoked_latency_max{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} NaN
+# HELP kafka_consumer_coordinator_rebalance_total The total number of successful rebalance events, each event is composed of several failed re-trials until it succeeded
+# TYPE kafka_consumer_coordinator_rebalance_total counter
+kafka_consumer_coordinator_rebalance_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 1.0
+kafka_consumer_coordinator_rebalance_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 1.0
+# HELP kafka_consumer_coordinator_rebalance_latency_total The total number of milliseconds this consumer has spent in successful rebalances since creation
+# TYPE kafka_consumer_coordinator_rebalance_latency_total counter
+kafka_consumer_coordinator_rebalance_latency_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 3069.0
+kafka_consumer_coordinator_rebalance_latency_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 3069.0
+# HELP kafka_consumer_coordinator_rebalance_latency_avg The average time taken for a group to complete a successful rebalance, which may be composed of several failed re-trials until it succeeded
+# TYPE kafka_consumer_coordinator_rebalance_latency_avg gauge
+kafka_consumer_coordinator_rebalance_latency_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 3069.0
+kafka_consumer_coordinator_rebalance_latency_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 3069.0
+# HELP kafka_consumer_coordinator_rebalance_latency_max The max time taken for a group to complete a successful rebalance, which may be composed of several failed re-trials until it succeeded
+# TYPE kafka_consumer_coordinator_rebalance_latency_max gauge
+kafka_consumer_coordinator_rebalance_latency_max{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 3069.0
+kafka_consumer_coordinator_rebalance_latency_max{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 3069.0
+# HELP kafka_consumer_coordinator_rebalance_rate_per_hour The number of successful rebalance events per hour, each event is composed of several failed re-trials until it succeeded
+# TYPE kafka_consumer_coordinator_rebalance_rate_per_hour gauge
+kafka_consumer_coordinator_rebalance_rate_per_hour{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 57.75339301183944
+kafka_consumer_coordinator_rebalance_rate_per_hour{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 57.74135082682407
+# HELP kafka_consumer_coordinator_sync_total The total number of group syncs
+# TYPE kafka_consumer_coordinator_sync_total counter
+kafka_consumer_coordinator_sync_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 1.0
+kafka_consumer_coordinator_sync_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 1.0
+# HELP kafka_consumer_coordinator_sync_rate The number of group syncs per second
+# TYPE kafka_consumer_coordinator_sync_rate gauge
+kafka_consumer_coordinator_sync_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.0160426091699554
+kafka_consumer_coordinator_sync_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.016039521380682
+# HELP kafka_consumer_coordinator_sync_time_avg The average time taken for a group sync
+# TYPE kafka_consumer_coordinator_sync_time_avg gauge
+kafka_consumer_coordinator_sync_time_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 16.0
+kafka_consumer_coordinator_sync_time_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 16.0
+# HELP kafka_consumer_coordinator_sync_time_max The max time taken for a group sync
+# TYPE kafka_consumer_coordinator_sync_time_max gauge
+kafka_consumer_coordinator_sync_time_max{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 16.0
+kafka_consumer_coordinator_sync_time_max{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 16.0
+# HELP kafka_consumer_failed_authentication_total The total number of connections with failed authentication
+# TYPE kafka_consumer_failed_authentication_total counter
+kafka_consumer_failed_authentication_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.0
+kafka_consumer_failed_authentication_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.0
+# HELP kafka_consumer_failed_authentication_rate The number of connections with failed authentication per second
+# TYPE kafka_consumer_failed_authentication_rate gauge
+kafka_consumer_failed_authentication_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.0
+kafka_consumer_failed_authentication_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.0
+# HELP kafka_consumer_failed_reauthentication_total The total number of failed re-authentication of connections
+# TYPE kafka_consumer_failed_reauthentication_total counter
+kafka_consumer_failed_reauthentication_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.0
+kafka_consumer_failed_reauthentication_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.0
+# HELP kafka_consumer_failed_reauthentication_rate The number of failed re-authentication of connections per second
+# TYPE kafka_consumer_failed_reauthentication_rate gauge
+kafka_consumer_failed_reauthentication_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.0
+kafka_consumer_failed_reauthentication_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.0
+# HELP kafka_consumer_fetch_manager_bytes_consumed_total The total number of bytes consumed for a topic. Note: For topic names with periods (.), an additional metric with underscores is emitted. However, the periods replaced metric is deprecated. Please use the metric with actual topic name instead.
+# TYPE kafka_consumer_fetch_manager_bytes_consumed_total counter
+kafka_consumer_fetch_manager_bytes_consumed_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0",topic="booking.ticketing"} 0.0
+kafka_consumer_fetch_manager_bytes_consumed_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0",topic="booking_ticketing"} 0.0
+kafka_consumer_fetch_manager_bytes_consumed_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1",topic="payment.booking"} 0.0
+kafka_consumer_fetch_manager_bytes_consumed_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1",topic="payment_booking"} 0.0
+# HELP kafka_consumer_fetch_manager_bytes_consumed_rate The average number of bytes consumed per second for a topic. Note: For topic names with periods (.), an additional metric with underscores is emitted. However, the periods replaced metric is deprecated. Please use the metric with actual topic name instead.
+# TYPE kafka_consumer_fetch_manager_bytes_consumed_rate gauge
+kafka_consumer_fetch_manager_bytes_consumed_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0",topic="booking.ticketing"} 0.0
+kafka_consumer_fetch_manager_bytes_consumed_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0",topic="booking_ticketing"} 0.0
+kafka_consumer_fetch_manager_bytes_consumed_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1",topic="payment.booking"} 0.0
+kafka_consumer_fetch_manager_bytes_consumed_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1",topic="payment_booking"} 0.0
+# HELP kafka_consumer_fetch_manager_fetch_total The total number of fetch requests.
+# TYPE kafka_consumer_fetch_manager_fetch_total counter
+kafka_consumer_fetch_manager_fetch_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 116.0
+kafka_consumer_fetch_manager_fetch_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 116.0
+# HELP kafka_consumer_fetch_manager_fetch_latency_avg The average time taken for a fetch request.
+# TYPE kafka_consumer_fetch_manager_fetch_latency_avg gauge
+kafka_consumer_fetch_manager_fetch_latency_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 506.61206896551727
+kafka_consumer_fetch_manager_fetch_latency_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 506.5948275862069
+# HELP kafka_consumer_fetch_manager_fetch_latency_max The max time taken for any fetch request.
+# TYPE kafka_consumer_fetch_manager_fetch_latency_max gauge
+kafka_consumer_fetch_manager_fetch_latency_max{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 518.0
+kafka_consumer_fetch_manager_fetch_latency_max{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 517.0
+# HELP kafka_consumer_fetch_manager_fetch_rate The number of fetch requests per second.
+# TYPE kafka_consumer_fetch_manager_fetch_rate gauge
+kafka_consumer_fetch_manager_fetch_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 1.8609128098179193
+kafka_consumer_fetch_manager_fetch_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 1.8605844801591123
+# HELP kafka_consumer_fetch_manager_fetch_size_avg The average number of bytes fetched per request for a topic. Note: For topic names with periods (.), an additional metric with underscores is emitted. However, the periods replaced metric is deprecated. Please use the metric with actual topic name instead.
+# TYPE kafka_consumer_fetch_manager_fetch_size_avg gauge
+kafka_consumer_fetch_manager_fetch_size_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0",topic="booking.ticketing"} 0.0
+kafka_consumer_fetch_manager_fetch_size_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0",topic="booking_ticketing"} 0.0
+kafka_consumer_fetch_manager_fetch_size_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1",topic="payment.booking"} 0.0
+kafka_consumer_fetch_manager_fetch_size_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1",topic="payment_booking"} 0.0
+# HELP kafka_consumer_fetch_manager_fetch_size_max The maximum number of bytes fetched per request for a topic. Note: For topic names with periods (.), an additional metric with underscores is emitted. However, the periods replaced metric is deprecated. Please use the metric with actual topic name instead.
+# TYPE kafka_consumer_fetch_manager_fetch_size_max gauge
+kafka_consumer_fetch_manager_fetch_size_max{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0",topic="booking.ticketing"} 0.0
+kafka_consumer_fetch_manager_fetch_size_max{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0",topic="booking_ticketing"} 0.0
+kafka_consumer_fetch_manager_fetch_size_max{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1",topic="payment.booking"} 0.0
+kafka_consumer_fetch_manager_fetch_size_max{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1",topic="payment_booking"} 0.0
+# HELP kafka_consumer_fetch_manager_fetch_throttle_time_avg The average throttle time in ms
+# TYPE kafka_consumer_fetch_manager_fetch_throttle_time_avg gauge
+kafka_consumer_fetch_manager_fetch_throttle_time_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.0
+kafka_consumer_fetch_manager_fetch_throttle_time_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.0
+# HELP kafka_consumer_fetch_manager_fetch_throttle_time_max The maximum throttle time in ms
+# TYPE kafka_consumer_fetch_manager_fetch_throttle_time_max gauge
+kafka_consumer_fetch_manager_fetch_throttle_time_max{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.0
+kafka_consumer_fetch_manager_fetch_throttle_time_max{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.0
+# HELP kafka_consumer_fetch_manager_preferred_read_replica The current read replica for the partition, or -1 if reading from leader. Note: For topic names with periods (.), an additional metric with underscores is emitted. However, the periods replaced metric is deprecated. Please use the metric with actual topic name instead.
+# TYPE kafka_consumer_fetch_manager_preferred_read_replica gauge
+kafka_consumer_fetch_manager_preferred_read_replica{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",partition="0",spring_id="kafkaConsumerFactory.booking-ticketing-0",topic="booking.ticketing"} -1.0
+kafka_consumer_fetch_manager_preferred_read_replica{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",partition="0",spring_id="kafkaConsumerFactory.booking-ticketing-0",topic="booking_ticketing"} -1.0
+kafka_consumer_fetch_manager_preferred_read_replica{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",partition="0",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1",topic="payment.booking"} -1.0
+kafka_consumer_fetch_manager_preferred_read_replica{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",partition="0",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1",topic="payment_booking"} -1.0
+# HELP kafka_consumer_fetch_manager_records_consumed_total The total number of records consumed for a topic. Note: For topic names with periods (.), an additional metric with underscores is emitted. However, the periods replaced metric is deprecated. Please use the metric with actual topic name instead.
+# TYPE kafka_consumer_fetch_manager_records_consumed_total counter
+kafka_consumer_fetch_manager_records_consumed_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0",topic="booking.ticketing"} 0.0
+kafka_consumer_fetch_manager_records_consumed_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0",topic="booking_ticketing"} 0.0
+kafka_consumer_fetch_manager_records_consumed_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1",topic="payment.booking"} 0.0
+kafka_consumer_fetch_manager_records_consumed_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1",topic="payment_booking"} 0.0
+# HELP kafka_consumer_fetch_manager_records_consumed_rate The average number of records consumed per second for a topic. Note: For topic names with periods (.), an additional metric with underscores is emitted. However, the periods replaced metric is deprecated. Please use the metric with actual topic name instead.
+# TYPE kafka_consumer_fetch_manager_records_consumed_rate gauge
+kafka_consumer_fetch_manager_records_consumed_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0",topic="booking.ticketing"} 0.0
+kafka_consumer_fetch_manager_records_consumed_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0",topic="booking_ticketing"} 0.0
+kafka_consumer_fetch_manager_records_consumed_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1",topic="payment.booking"} 0.0
+kafka_consumer_fetch_manager_records_consumed_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1",topic="payment_booking"} 0.0
+# HELP kafka_consumer_fetch_manager_records_lag The latest lag of the partition. Note: For topic names with periods (.), an additional metric with underscores is emitted. However, the periods replaced metric is deprecated. Please use the metric with actual topic name instead.
+# TYPE kafka_consumer_fetch_manager_records_lag gauge
+kafka_consumer_fetch_manager_records_lag{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",partition="0",spring_id="kafkaConsumerFactory.booking-ticketing-0",topic="booking.ticketing"} 0.0
+kafka_consumer_fetch_manager_records_lag{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",partition="0",spring_id="kafkaConsumerFactory.booking-ticketing-0",topic="booking_ticketing"} 0.0
+kafka_consumer_fetch_manager_records_lag{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",partition="0",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1",topic="payment.booking"} 0.0
+kafka_consumer_fetch_manager_records_lag{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",partition="0",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1",topic="payment_booking"} 0.0
+# HELP kafka_consumer_fetch_manager_records_lag_avg The average lag of the partition. Note: For topic names with periods (.), an additional metric with underscores is emitted. However, the periods replaced metric is deprecated. Please use the metric with actual topic name instead.
+# TYPE kafka_consumer_fetch_manager_records_lag_avg gauge
+kafka_consumer_fetch_manager_records_lag_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",partition="0",spring_id="kafkaConsumerFactory.booking-ticketing-0",topic="booking.ticketing"} 0.0
+kafka_consumer_fetch_manager_records_lag_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",partition="0",spring_id="kafkaConsumerFactory.booking-ticketing-0",topic="booking_ticketing"} 0.0
+kafka_consumer_fetch_manager_records_lag_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",partition="0",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1",topic="payment.booking"} 0.0
+kafka_consumer_fetch_manager_records_lag_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",partition="0",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1",topic="payment_booking"} 0.0
+# HELP kafka_consumer_fetch_manager_records_lag_max The max lag of the partition. Note: For topic names with periods (.), an additional metric with underscores is emitted. However, the periods replaced metric is deprecated. Please use the metric with actual topic name instead.
+# TYPE kafka_consumer_fetch_manager_records_lag_max gauge
+kafka_consumer_fetch_manager_records_lag_max{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",partition="0",spring_id="kafkaConsumerFactory.booking-ticketing-0",topic="booking.ticketing"} 0.0
+kafka_consumer_fetch_manager_records_lag_max{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",partition="0",spring_id="kafkaConsumerFactory.booking-ticketing-0",topic="booking_ticketing"} 0.0
+kafka_consumer_fetch_manager_records_lag_max{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",partition="0",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1",topic="payment.booking"} 0.0
+kafka_consumer_fetch_manager_records_lag_max{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",partition="0",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1",topic="payment_booking"} 0.0
+# HELP kafka_consumer_fetch_manager_records_lead The latest lead of the partition. Note: For topic names with periods (.), an additional metric with underscores is emitted. However, the periods replaced metric is deprecated. Please use the metric with actual topic name instead.
+# TYPE kafka_consumer_fetch_manager_records_lead gauge
+kafka_consumer_fetch_manager_records_lead{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",partition="0",spring_id="kafkaConsumerFactory.booking-ticketing-0",topic="booking.ticketing"} 0.0
+kafka_consumer_fetch_manager_records_lead{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",partition="0",spring_id="kafkaConsumerFactory.booking-ticketing-0",topic="booking_ticketing"} 0.0
+kafka_consumer_fetch_manager_records_lead{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",partition="0",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1",topic="payment.booking"} 0.0
+kafka_consumer_fetch_manager_records_lead{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",partition="0",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1",topic="payment_booking"} 0.0
+# HELP kafka_consumer_fetch_manager_records_lead_avg The average lead of the partition. Note: For topic names with periods (.), an additional metric with underscores is emitted. However, the periods replaced metric is deprecated. Please use the metric with actual topic name instead.
+# TYPE kafka_consumer_fetch_manager_records_lead_avg gauge
+kafka_consumer_fetch_manager_records_lead_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",partition="0",spring_id="kafkaConsumerFactory.booking-ticketing-0",topic="booking.ticketing"} 0.0
+kafka_consumer_fetch_manager_records_lead_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",partition="0",spring_id="kafkaConsumerFactory.booking-ticketing-0",topic="booking_ticketing"} 0.0
+kafka_consumer_fetch_manager_records_lead_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",partition="0",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1",topic="payment.booking"} 0.0
+kafka_consumer_fetch_manager_records_lead_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",partition="0",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1",topic="payment_booking"} 0.0
+# HELP kafka_consumer_fetch_manager_records_lead_min The min lead of the partition. Note: For topic names with periods (.), an additional metric with underscores is emitted. However, the periods replaced metric is deprecated. Please use the metric with actual topic name instead.
+# TYPE kafka_consumer_fetch_manager_records_lead_min gauge
+kafka_consumer_fetch_manager_records_lead_min{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",partition="0",spring_id="kafkaConsumerFactory.booking-ticketing-0",topic="booking.ticketing"} 0.0
+kafka_consumer_fetch_manager_records_lead_min{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",partition="0",spring_id="kafkaConsumerFactory.booking-ticketing-0",topic="booking_ticketing"} 0.0
+kafka_consumer_fetch_manager_records_lead_min{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",partition="0",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1",topic="payment.booking"} 0.0
+kafka_consumer_fetch_manager_records_lead_min{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",partition="0",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1",topic="payment_booking"} 0.0
+# HELP kafka_consumer_fetch_manager_records_per_request_avg The average number of records in each request for a topic. Note: For topic names with periods (.), an additional metric with underscores is emitted. However, the periods replaced metric is deprecated. Please use the metric with actual topic name instead.
+# TYPE kafka_consumer_fetch_manager_records_per_request_avg gauge
+kafka_consumer_fetch_manager_records_per_request_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0",topic="booking.ticketing"} 0.0
+kafka_consumer_fetch_manager_records_per_request_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0",topic="booking_ticketing"} 0.0
+kafka_consumer_fetch_manager_records_per_request_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1",topic="payment.booking"} 0.0
+kafka_consumer_fetch_manager_records_per_request_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1",topic="payment_booking"} 0.0
+# HELP kafka_consumer_incoming_byte_total The total number of bytes read off all sockets
+# TYPE kafka_consumer_incoming_byte_total counter
+kafka_consumer_incoming_byte_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 5480.0
+kafka_consumer_incoming_byte_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 5518.0
+# HELP kafka_consumer_incoming_byte_rate The number of bytes read off all sockets per second
+# TYPE kafka_consumer_incoming_byte_rate gauge
+kafka_consumer_incoming_byte_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 87.90785716577368
+kafka_consumer_incoming_byte_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 88.50040096230954
+# HELP kafka_consumer_io_ratio The fraction of time the I/O thread spent doing I/O
+# TYPE kafka_consumer_io_ratio gauge
+kafka_consumer_io_ratio{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 9.187681794119063E-4
+kafka_consumer_io_ratio{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 7.889862547915765E-4
+# HELP kafka_consumer_io_time_ns_total The total time the I/O thread spent doing I/O
+# TYPE kafka_consumer_io_time_ns_total counter
+kafka_consumer_io_time_ns_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 5.7273252E7
+kafka_consumer_io_time_ns_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 4.9192504E7
+# HELP kafka_consumer_io_time_ns_avg The average length of time for I/O per select call in nanoseconds.
+# TYPE kafka_consumer_io_time_ns_avg gauge
+kafka_consumer_io_time_ns_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 104322.86338797814
+kafka_consumer_io_time_ns_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 89767.34306569344
+# HELP kafka_consumer_io_wait_ratio The fraction of time the I/O thread spent waiting
+# TYPE kafka_consumer_io_wait_ratio gauge
+kafka_consumer_io_wait_ratio{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.9901929454702967
+kafka_consumer_io_wait_ratio{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.9901494159301971
+# HELP kafka_consumer_io_wait_time_ns_total The total time the I/O thread spent waiting
+# TYPE kafka_consumer_io_wait_time_ns_total counter
+kafka_consumer_io_wait_time_ns_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 6.172169687E10
+kafka_consumer_io_wait_time_ns_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 6.1732845635E10
+# HELP kafka_consumer_io_wait_time_ns_avg The average length of time the I/O thread spent waiting for a socket ready for reads or writes in nanoseconds.
+# TYPE kafka_consumer_io_wait_time_ns_avg gauge
+kafka_consumer_io_wait_time_ns_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 1.1242567735883424E8
+kafka_consumer_io_wait_time_ns_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 1.1265117816605839E8
+# HELP kafka_consumer_last_poll_seconds_ago The number of seconds since the last poll() invocation.
+# TYPE kafka_consumer_last_poll_seconds_ago gauge
+kafka_consumer_last_poll_seconds_ago{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 2.0
+kafka_consumer_last_poll_seconds_ago{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 2.0
+# HELP kafka_consumer_network_io_total The total number of network operations (reads or writes) on all connections
+# TYPE kafka_consumer_network_io_total counter
+kafka_consumer_network_io_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 291.0
+kafka_consumer_network_io_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 291.0
+# HELP kafka_consumer_network_io_rate The number of network operations (reads or writes) on all connections per second
+# TYPE kafka_consumer_network_io_rate gauge
+kafka_consumer_network_io_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 4.668399268457022
+kafka_consumer_network_io_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 4.667350997626227
+# HELP kafka_consumer_node_incoming_byte_total The total number of incoming bytes
+# TYPE kafka_consumer_node_incoming_byte_total counter
+kafka_consumer_node_incoming_byte_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 843.0
+kafka_consumer_node_incoming_byte_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node-1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 3201.0
+kafka_consumer_node_incoming_byte_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node-2147483646",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 1436.0
+kafka_consumer_node_incoming_byte_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 839.0
+kafka_consumer_node_incoming_byte_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node-1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 3199.0
+kafka_consumer_node_incoming_byte_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node-2147483646",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 1480.0
+# HELP kafka_consumer_node_incoming_byte_rate The number of incoming bytes per second
+# TYPE kafka_consumer_node_incoming_byte_rate gauge
+kafka_consumer_node_incoming_byte_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.0
+kafka_consumer_node_incoming_byte_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node-1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 54.32790224032586
+kafka_consumer_node_incoming_byte_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node-2147483646",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 23.163158319219292
+kafka_consumer_node_incoming_byte_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.0
+kafka_consumer_node_incoming_byte_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node-1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 54.29395790902919
+kafka_consumer_node_incoming_byte_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node-2147483646",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 23.872507903735723
+# HELP kafka_consumer_node_outgoing_byte_total The total number of outgoing bytes
+# TYPE kafka_consumer_node_outgoing_byte_total counter
+kafka_consumer_node_outgoing_byte_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 193.0
+kafka_consumer_node_outgoing_byte_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node-1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 7095.0
+kafka_consumer_node_outgoing_byte_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node-2147483646",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 3219.0
+kafka_consumer_node_outgoing_byte_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 228.0
+kafka_consumer_node_outgoing_byte_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node-1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 8640.0
+kafka_consumer_node_outgoing_byte_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node-2147483646",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 3772.0
+# HELP kafka_consumer_node_outgoing_byte_rate The number of outgoing bytes per second
+# TYPE kafka_consumer_node_outgoing_byte_rate gauge
+kafka_consumer_node_outgoing_byte_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.0
+kafka_consumer_node_outgoing_byte_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node-1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 120.41138434906573
+kafka_consumer_node_outgoing_byte_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node-2147483646",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 51.91768007483629
+kafka_consumer_node_outgoing_byte_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.0
+kafka_consumer_node_outgoing_byte_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node-1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 146.63204521154728
+kafka_consumer_node_outgoing_byte_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node-2147483646",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 60.83674720170317
+# HELP kafka_consumer_node_request_total The total number of requests sent
+# TYPE kafka_consumer_node_request_total counter
+kafka_consumer_node_request_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 3.0
+kafka_consumer_node_request_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node-1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 119.0
+kafka_consumer_node_request_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node-2147483646",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 24.0
+kafka_consumer_node_request_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 3.0
+kafka_consumer_node_request_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node-1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 119.0
+kafka_consumer_node_request_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node-2147483646",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 24.0
+# TYPE kafka_consumer_node_request_latency_avg gauge
+kafka_consumer_node_request_latency_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} NaN
+kafka_consumer_node_request_latency_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node-1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 506.61206896551727
+kafka_consumer_node_request_latency_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node-2147483646",spring_id="kafkaConsumerFactory.booking-ticketing-0"} NaN
+kafka_consumer_node_request_latency_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} NaN
+kafka_consumer_node_request_latency_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node-1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 506.5948275862069
+kafka_consumer_node_request_latency_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node-2147483646",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} NaN
+# TYPE kafka_consumer_node_request_latency_max gauge
+kafka_consumer_node_request_latency_max{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} NaN
+kafka_consumer_node_request_latency_max{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node-1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 518.0
+kafka_consumer_node_request_latency_max{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node-2147483646",spring_id="kafkaConsumerFactory.booking-ticketing-0"} NaN
+kafka_consumer_node_request_latency_max{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} NaN
+kafka_consumer_node_request_latency_max{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node-1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 517.0
+kafka_consumer_node_request_latency_max{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node-2147483646",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} NaN
+# HELP kafka_consumer_node_request_rate The number of requests sent per second
+# TYPE kafka_consumer_node_request_rate gauge
+kafka_consumer_node_request_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.0
+kafka_consumer_node_request_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node-1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 2.019584881964598
+kafka_consumer_node_request_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node-2147483646",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.3870842876036257
+kafka_consumer_node_request_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.0
+kafka_consumer_node_request_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node-1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 2.019584881964598
+kafka_consumer_node_request_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node-2147483646",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.3870842876036257
+# HELP kafka_consumer_node_request_size_avg The average size of requests sent.
+# TYPE kafka_consumer_node_request_size_avg gauge
+kafka_consumer_node_request_size_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} NaN
+kafka_consumer_node_request_size_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node-1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 59.621848739495796
+kafka_consumer_node_request_size_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node-2147483646",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 134.125
+kafka_consumer_node_request_size_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} NaN
+kafka_consumer_node_request_size_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node-1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 72.60504201680672
+kafka_consumer_node_request_size_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node-2147483646",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 157.16666666666666
+# HELP kafka_consumer_node_request_size_max The maximum size of any request sent.
+# TYPE kafka_consumer_node_request_size_max gauge
+kafka_consumer_node_request_size_max{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} NaN
+kafka_consumer_node_request_size_max{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node-1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 110.0
+kafka_consumer_node_request_size_max{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node-2147483646",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 345.0
+kafka_consumer_node_request_size_max{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} NaN
+kafka_consumer_node_request_size_max{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node-1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 123.0
+kafka_consumer_node_request_size_max{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node-2147483646",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 378.0
+# HELP kafka_consumer_node_response_total The total number of responses received
+# TYPE kafka_consumer_node_response_total counter
+kafka_consumer_node_response_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 3.0
+kafka_consumer_node_response_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node-1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 118.0
+kafka_consumer_node_response_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node-2147483646",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 24.0
+kafka_consumer_node_response_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 3.0
+kafka_consumer_node_response_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node-1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 118.0
+kafka_consumer_node_response_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node-2147483646",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 24.0
+# HELP kafka_consumer_node_response_rate The number of responses received per second
+# TYPE kafka_consumer_node_response_rate gauge
+kafka_consumer_node_response_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.0
+kafka_consumer_node_response_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node-1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 2.0026815566606135
+kafka_consumer_node_response_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",node_id="node-2147483646",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.38712174979030906
+kafka_consumer_node_response_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.0
+kafka_consumer_node_response_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node-1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 2.0026815566606135
+kafka_consumer_node_response_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",node_id="node-2147483646",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.3871155055889801
+# HELP kafka_consumer_outgoing_byte_total The total number of outgoing bytes sent to all servers
+# TYPE kafka_consumer_outgoing_byte_total counter
+kafka_consumer_outgoing_byte_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 10507.0
+kafka_consumer_outgoing_byte_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 12640.0
+# HELP kafka_consumer_outgoing_byte_rate The number of outgoing bytes sent to all servers per second
+# TYPE kafka_consumer_outgoing_byte_rate gauge
+kafka_consumer_outgoing_byte_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 168.56239872940498
+kafka_consumer_outgoing_byte_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 202.73629845862672
+# HELP kafka_consumer_poll_idle_ratio_avg The average fraction of time the consumer's poll() is idle as opposed to waiting for the user code to process records.
+# TYPE kafka_consumer_poll_idle_ratio_avg gauge
+kafka_consumer_poll_idle_ratio_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.541662502914876
+kafka_consumer_poll_idle_ratio_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.5416625012497084
+# HELP kafka_consumer_reauthentication_latency_avg The average latency observed due to re-authentication
+# TYPE kafka_consumer_reauthentication_latency_avg gauge
+kafka_consumer_reauthentication_latency_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} NaN
+kafka_consumer_reauthentication_latency_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} NaN
+# HELP kafka_consumer_reauthentication_latency_max The max latency observed due to re-authentication
+# TYPE kafka_consumer_reauthentication_latency_max gauge
+kafka_consumer_reauthentication_latency_max{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} NaN
+kafka_consumer_reauthentication_latency_max{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} NaN
+# HELP kafka_consumer_request_total The total number of requests sent
+# TYPE kafka_consumer_request_total counter
+kafka_consumer_request_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 146.0
+kafka_consumer_request_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 146.0
+# HELP kafka_consumer_request_rate The number of requests sent per second
+# TYPE kafka_consumer_request_rate gauge
+kafka_consumer_request_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 2.3420706471173283
+kafka_consumer_request_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 2.341619887730553
+# HELP kafka_consumer_request_size_avg The average size of requests sent.
+# TYPE kafka_consumer_request_size_avg gauge
+kafka_consumer_request_size_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 71.96575342465754
+kafka_consumer_request_size_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 86.57534246575342
+# HELP kafka_consumer_request_size_max The maximum size of any request sent.
+# TYPE kafka_consumer_request_size_max gauge
+kafka_consumer_request_size_max{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 345.0
+kafka_consumer_request_size_max{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 378.0
+# HELP kafka_consumer_response_total The total number of responses received
+# TYPE kafka_consumer_response_total counter
+kafka_consumer_response_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 145.0
+kafka_consumer_response_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 145.0
+# HELP kafka_consumer_response_rate The number of responses received per second
+# TYPE kafka_consumer_response_rate gauge
+kafka_consumer_response_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 2.3262156482120226
+kafka_consumer_response_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 2.325693297191525
+# HELP kafka_consumer_select_total The total number of times the I/O layer checked for new I/O to perform
+# TYPE kafka_consumer_select_total counter
+kafka_consumer_select_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 549.0
+kafka_consumer_select_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 548.0
+# HELP kafka_consumer_select_rate The number of times the I/O layer checked for new I/O to perform per second
+# TYPE kafka_consumer_select_rate gauge
+kafka_consumer_select_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 8.807251143017567
+kafka_consumer_select_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 8.789516736972107
+# HELP kafka_consumer_successful_authentication_total The total number of connections with successful authentication
+# TYPE kafka_consumer_successful_authentication_total counter
+kafka_consumer_successful_authentication_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.0
+kafka_consumer_successful_authentication_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.0
+# HELP kafka_consumer_successful_authentication_no_reauth_total The total number of connections with successful authentication where the client does not support re-authentication
+# TYPE kafka_consumer_successful_authentication_no_reauth_total counter
+kafka_consumer_successful_authentication_no_reauth_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.0
+kafka_consumer_successful_authentication_no_reauth_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.0
+# HELP kafka_consumer_successful_authentication_rate The number of connections with successful authentication per second
+# TYPE kafka_consumer_successful_authentication_rate gauge
+kafka_consumer_successful_authentication_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.0
+kafka_consumer_successful_authentication_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.0
+# HELP kafka_consumer_successful_reauthentication_total The total number of successful re-authentication of connections
+# TYPE kafka_consumer_successful_reauthentication_total counter
+kafka_consumer_successful_reauthentication_total{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.0
+kafka_consumer_successful_reauthentication_total{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.0
+# HELP kafka_consumer_successful_reauthentication_rate The number of successful re-authentication of connections per second
+# TYPE kafka_consumer_successful_reauthentication_rate gauge
+kafka_consumer_successful_reauthentication_rate{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 0.0
+kafka_consumer_successful_reauthentication_rate{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 0.0
+# HELP kafka_consumer_time_between_poll_avg The average delay between invocations of poll() in milliseconds.
+# TYPE kafka_consumer_time_between_poll_avg gauge
+kafka_consumer_time_between_poll_avg{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 4616.538461538462
+kafka_consumer_time_between_poll_avg{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 4616.384615384615
+# HELP kafka_consumer_time_between_poll_max The max delay between invocations of poll() in milliseconds.
+# TYPE kafka_consumer_time_between_poll_max gauge
+kafka_consumer_time_between_poll_max{application="ticketing",client_id="booking-ticketing-0",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.booking-ticketing-0"} 5004.0
+kafka_consumer_time_between_poll_max{application="ticketing",client_id="consumer-payment-booking-group-1",kafka_version="4.1.1",spring_id="kafkaConsumerFactory.consumer-payment-booking-group-1"} 5002.0
+# HELP kafka_producer_batch_size_avg The average number of bytes sent per partition per-request.
+# TYPE kafka_producer_batch_size_avg gauge
+kafka_producer_batch_size_avg{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 3535.2727272727275
+# HELP kafka_producer_batch_size_max The max number of bytes sent per partition per-request.
+# TYPE kafka_producer_batch_size_max gauge
+kafka_producer_batch_size_max{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 3898.0
+# HELP kafka_producer_batch_split_total The total number of batch splits
+# TYPE kafka_producer_batch_split_total counter
+kafka_producer_batch_split_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_batch_split_rate The average number of batch splits per second
+# TYPE kafka_producer_batch_split_rate gauge
+kafka_producer_batch_split_rate{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_buffer_available_bytes The total amount of buffer memory that is not being used (either unallocated or in the free list).
+# TYPE kafka_producer_buffer_available_bytes gauge
+kafka_producer_buffer_available_bytes{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 3.3554432E7
+# HELP kafka_producer_buffer_exhausted_total The total number of record sends that are dropped due to buffer exhaustion
+# TYPE kafka_producer_buffer_exhausted_total counter
+kafka_producer_buffer_exhausted_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_buffer_exhausted_rate The average per-second number of record sends that are dropped due to buffer exhaustion
+# TYPE kafka_producer_buffer_exhausted_rate gauge
+kafka_producer_buffer_exhausted_rate{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_buffer_total_bytes The maximum amount of buffer memory the client can use (whether or not it is currently used).
+# TYPE kafka_producer_buffer_total_bytes gauge
+kafka_producer_buffer_total_bytes{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 3.3554432E7
+# HELP kafka_producer_bufferpool_wait_ratio The fraction of time an appender waits for space allocation.
+# TYPE kafka_producer_bufferpool_wait_ratio gauge
+kafka_producer_bufferpool_wait_ratio{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_bufferpool_wait_time_ns_total The total time in nanoseconds an appender waits for space allocation.
+# TYPE kafka_producer_bufferpool_wait_time_ns_total counter
+kafka_producer_bufferpool_wait_time_ns_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_compression_rate_avg The average compression rate of record batches, defined as the average ratio of the compressed batch size over the uncompressed size.
+# TYPE kafka_producer_compression_rate_avg gauge
+kafka_producer_compression_rate_avg{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 1.0
+# HELP kafka_producer_connection_close_total The total number of connections closed
+# TYPE kafka_producer_connection_close_total counter
+kafka_producer_connection_close_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_connection_close_rate The number of connections closed per second
+# TYPE kafka_producer_connection_close_rate gauge
+kafka_producer_connection_close_rate{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_connection_count The current number of active connections.
+# TYPE kafka_producer_connection_count gauge
+kafka_producer_connection_count{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 2.0
+# HELP kafka_producer_connection_creation_total The total number of new connections established
+# TYPE kafka_producer_connection_creation_total counter
+kafka_producer_connection_creation_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 2.0
+# HELP kafka_producer_connection_creation_rate The number of new connections established per second
+# TYPE kafka_producer_connection_creation_rate gauge
+kafka_producer_connection_creation_rate{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.06324110671936758
+# HELP kafka_producer_failed_authentication_total The total number of connections with failed authentication
+# TYPE kafka_producer_failed_authentication_total counter
+kafka_producer_failed_authentication_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_failed_authentication_rate The number of connections with failed authentication per second
+# TYPE kafka_producer_failed_authentication_rate gauge
+kafka_producer_failed_authentication_rate{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_failed_reauthentication_total The total number of failed re-authentication of connections
+# TYPE kafka_producer_failed_reauthentication_total counter
+kafka_producer_failed_reauthentication_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_failed_reauthentication_rate The number of failed re-authentication of connections per second
+# TYPE kafka_producer_failed_reauthentication_rate gauge
+kafka_producer_failed_reauthentication_rate{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_flush_time_ns_total Total time producer has spent in flush in nanoseconds.
+# TYPE kafka_producer_flush_time_ns_total counter
+kafka_producer_flush_time_ns_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_incoming_byte_total The total number of bytes read off all sockets
+# TYPE kafka_producer_incoming_byte_total counter
+kafka_producer_incoming_byte_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 2793.0
+# HELP kafka_producer_incoming_byte_rate The number of bytes read off all sockets per second
+# TYPE kafka_producer_incoming_byte_rate gauge
+kafka_producer_incoming_byte_rate{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 88.31899822919303
+# HELP kafka_producer_io_ratio The fraction of time the I/O thread spent doing I/O
+# TYPE kafka_producer_io_ratio gauge
+kafka_producer_io_ratio{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 1.576997628458498E-4
+# HELP kafka_producer_io_time_ns_total The total time the I/O thread spent doing I/O
+# TYPE kafka_producer_io_time_ns_total counter
+kafka_producer_io_time_ns_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 4987255.0
+# HELP kafka_producer_io_time_ns_avg The average length of time for I/O per select call in nanoseconds.
+# TYPE kafka_producer_io_time_ns_avg gauge
+kafka_producer_io_time_ns_avg{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 85987.1551724138
+# HELP kafka_producer_io_wait_ratio The fraction of time the I/O thread spent waiting
+# TYPE kafka_producer_io_wait_ratio gauge
+kafka_producer_io_wait_ratio{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.9651645876177828
+# HELP kafka_producer_io_wait_time_ns_total The total time the I/O thread spent waiting
+# TYPE kafka_producer_io_wait_time_ns_total counter
+kafka_producer_io_wait_time_ns_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 3.0524295248E10
+# HELP kafka_producer_io_wait_time_ns_avg The average length of time the I/O thread spent waiting for a socket ready for reads or writes in nanoseconds.
+# TYPE kafka_producer_io_wait_time_ns_avg gauge
+kafka_producer_io_wait_time_ns_avg{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 5.2628095255172414E8
+# HELP kafka_producer_metadata_age The age in seconds of the current producer metadata being used.
+# TYPE kafka_producer_metadata_age gauge
+kafka_producer_metadata_age{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 31.442
+# HELP kafka_producer_metadata_wait_time_ns_total Total time producer has spent waiting on topic metadata in nanoseconds.
+# TYPE kafka_producer_metadata_wait_time_ns_total counter
+kafka_producer_metadata_wait_time_ns_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 1.78541292E8
+# HELP kafka_producer_network_io_total The total number of network operations (reads or writes) on all connections
+# TYPE kafka_producer_network_io_total counter
+kafka_producer_network_io_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 32.0
+# HELP kafka_producer_network_io_rate The number of network operations (reads or writes) on all connections per second
+# TYPE kafka_producer_network_io_rate gauge
+kafka_producer_network_io_rate{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 1.0118897040222616
+# HELP kafka_producer_node_incoming_byte_total The total number of incoming bytes
+# TYPE kafka_producer_node_incoming_byte_total counter
+kafka_producer_node_incoming_byte_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 819.0
+# HELP kafka_producer_node_incoming_byte_rate The number of incoming bytes per second
+# TYPE kafka_producer_node_incoming_byte_rate gauge
+kafka_producer_node_incoming_byte_rate{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 25.898871074850582
+# HELP kafka_producer_node_outgoing_byte_total The total number of outgoing bytes
+# TYPE kafka_producer_node_outgoing_byte_total counter
+kafka_producer_node_outgoing_byte_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 222.0
+# HELP kafka_producer_node_outgoing_byte_rate The number of outgoing bytes per second
+# TYPE kafka_producer_node_outgoing_byte_rate gauge
+kafka_producer_node_outgoing_byte_rate{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 7.019762845849803
+# HELP kafka_producer_node_request_total The total number of requests sent
+# TYPE kafka_producer_node_request_total counter
+kafka_producer_node_request_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 3.0
+# TYPE kafka_producer_node_request_latency_avg gauge
+kafka_producer_node_request_latency_avg{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaProducerFactory.ticketing-producer-1"} NaN
+# TYPE kafka_producer_node_request_latency_max gauge
+kafka_producer_node_request_latency_max{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaProducerFactory.ticketing-producer-1"} NaN
+# HELP kafka_producer_node_request_rate The number of requests sent per second
+# TYPE kafka_producer_node_request_rate gauge
+kafka_producer_node_request_rate{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.09486465975208702
+# HELP kafka_producer_node_request_size_avg The average size of requests sent.
+# TYPE kafka_producer_node_request_size_avg gauge
+kafka_producer_node_request_size_avg{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 74.0
+# HELP kafka_producer_node_request_size_max The maximum size of any request sent.
+# TYPE kafka_producer_node_request_size_max gauge
+kafka_producer_node_request_size_max{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 111.0
+# HELP kafka_producer_node_response_total The total number of responses received
+# TYPE kafka_producer_node_response_total counter
+kafka_producer_node_response_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 3.0
+# HELP kafka_producer_node_response_rate The number of responses received per second
+# TYPE kafka_producer_node_response_rate gauge
+kafka_producer_node_response_rate{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",node_id="node--1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.09486166007905138
+# HELP kafka_producer_outgoing_byte_total The total number of outgoing bytes sent to all servers
+# TYPE kafka_producer_outgoing_byte_total counter
+kafka_producer_outgoing_byte_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 40469.0
+# HELP kafka_producer_outgoing_byte_rate The number of outgoing bytes sent to all servers per second
+# TYPE kafka_producer_outgoing_byte_rate gauge
+kafka_producer_outgoing_byte_rate{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 1279.6926385024033
+# HELP kafka_producer_produce_throttle_time_avg The average time in ms a request was throttled by a broker
+# TYPE kafka_producer_produce_throttle_time_avg gauge
+kafka_producer_produce_throttle_time_avg{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_produce_throttle_time_max The maximum time in ms a request was throttled by a broker
+# TYPE kafka_producer_produce_throttle_time_max gauge
+kafka_producer_produce_throttle_time_max{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_reauthentication_latency_avg The average latency observed due to re-authentication
+# TYPE kafka_producer_reauthentication_latency_avg gauge
+kafka_producer_reauthentication_latency_avg{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} NaN
+# HELP kafka_producer_reauthentication_latency_max The max latency observed due to re-authentication
+# TYPE kafka_producer_reauthentication_latency_max gauge
+kafka_producer_reauthentication_latency_max{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} NaN
+# HELP kafka_producer_record_error_total The total number of record sends that resulted in errors
+# TYPE kafka_producer_record_error_total counter
+kafka_producer_record_error_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_record_error_rate The average per-second number of record sends that resulted in errors
+# TYPE kafka_producer_record_error_rate gauge
+kafka_producer_record_error_rate{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_record_queue_time_avg The average time in ms record batches spent in the send buffer.
+# TYPE kafka_producer_record_queue_time_avg gauge
+kafka_producer_record_queue_time_avg{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 5.818181818181818
+# HELP kafka_producer_record_queue_time_max The maximum time in ms record batches spent in the send buffer.
+# TYPE kafka_producer_record_queue_time_max gauge
+kafka_producer_record_queue_time_max{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 6.0
+# HELP kafka_producer_record_retry_total The total number of retried record sends
+# TYPE kafka_producer_record_retry_total counter
+kafka_producer_record_retry_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_record_retry_rate The average per-second number of retried record sends
+# TYPE kafka_producer_record_retry_rate gauge
+kafka_producer_record_retry_rate{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_record_send_total The total number of records sent.
+# TYPE kafka_producer_record_send_total counter
+kafka_producer_record_send_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 1000.0
+# HELP kafka_producer_record_send_rate The average number of records sent per second.
+# TYPE kafka_producer_record_send_rate gauge
+kafka_producer_record_send_rate{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 31.622553204945767
+# HELP kafka_producer_record_size_avg The average record size
+# TYPE kafka_producer_record_size_avg gauge
+kafka_producer_record_size_avg{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 116.0
+# HELP kafka_producer_record_size_max The maximum record size
+# TYPE kafka_producer_record_size_max gauge
+kafka_producer_record_size_max{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 117.0
+# HELP kafka_producer_records_per_request_avg The average number of records per request.
+# TYPE kafka_producer_records_per_request_avg gauge
+kafka_producer_records_per_request_avg{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 90.9090909090909
+# HELP kafka_producer_request_total The total number of requests sent
+# TYPE kafka_producer_request_total counter
+kafka_producer_request_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 16.0
+# HELP kafka_producer_request_latency_avg The average request latency in ms
+# TYPE kafka_producer_request_latency_avg gauge
+kafka_producer_request_latency_avg{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 7.363636363636363
+# HELP kafka_producer_request_latency_max The maximum request latency in ms
+# TYPE kafka_producer_request_latency_max gauge
+kafka_producer_request_latency_max{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 17.0
+# HELP kafka_producer_request_rate The number of requests sent per second
+# TYPE kafka_producer_request_rate gauge
+kafka_producer_request_rate{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.5059448520111308
+# HELP kafka_producer_request_size_avg The average size of requests sent.
+# TYPE kafka_producer_request_size_avg gauge
+kafka_producer_request_size_avg{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 2529.3125
+# HELP kafka_producer_request_size_max The maximum size of any request sent.
+# TYPE kafka_producer_request_size_max gauge
+kafka_producer_request_size_max{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 4006.0
+# HELP kafka_producer_requests_in_flight The current number of in-flight requests awaiting a response.
+# TYPE kafka_producer_requests_in_flight gauge
+kafka_producer_requests_in_flight{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_response_total The total number of responses received
+# TYPE kafka_producer_response_total counter
+kafka_producer_response_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 16.0
+# HELP kafka_producer_response_rate The number of responses received per second
+# TYPE kafka_producer_response_rate gauge
+kafka_producer_response_rate{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.5059448520111308
+# HELP kafka_producer_select_total The total number of times the I/O layer checked for new I/O to perform
+# TYPE kafka_producer_select_total counter
+kafka_producer_select_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 58.0
+# HELP kafka_producer_select_rate The number of times the I/O layer checked for new I/O to perform per second
+# TYPE kafka_producer_select_rate gauge
+kafka_producer_select_rate{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 1.8339341048504394
+# HELP kafka_producer_successful_authentication_total The total number of connections with successful authentication
+# TYPE kafka_producer_successful_authentication_total counter
+kafka_producer_successful_authentication_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_successful_authentication_no_reauth_total The total number of connections with successful authentication where the client does not support re-authentication
+# TYPE kafka_producer_successful_authentication_no_reauth_total counter
+kafka_producer_successful_authentication_no_reauth_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_successful_authentication_rate The number of connections with successful authentication per second
+# TYPE kafka_producer_successful_authentication_rate gauge
+kafka_producer_successful_authentication_rate{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_successful_reauthentication_total The total number of successful re-authentication of connections
+# TYPE kafka_producer_successful_reauthentication_total counter
+kafka_producer_successful_reauthentication_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_successful_reauthentication_rate The number of successful re-authentication of connections per second
+# TYPE kafka_producer_successful_reauthentication_rate gauge
+kafka_producer_successful_reauthentication_rate{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_txn_abort_time_ns_total Total time producer has spent in abortTransaction in nanoseconds.
+# TYPE kafka_producer_txn_abort_time_ns_total counter
+kafka_producer_txn_abort_time_ns_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_txn_begin_time_ns_total Total time producer has spent in beginTransaction in nanoseconds.
+# TYPE kafka_producer_txn_begin_time_ns_total counter
+kafka_producer_txn_begin_time_ns_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_txn_commit_time_ns_total Total time producer has spent in commitTransaction in nanoseconds.
+# TYPE kafka_producer_txn_commit_time_ns_total counter
+kafka_producer_txn_commit_time_ns_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_txn_init_time_ns_total Total time producer has spent in initTransactions in nanoseconds.
+# TYPE kafka_producer_txn_init_time_ns_total counter
+kafka_producer_txn_init_time_ns_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_txn_prepare_time_ns_total Total time producer has spent in prepareTransaction in nanoseconds.
+# TYPE kafka_producer_txn_prepare_time_ns_total counter
+kafka_producer_txn_prepare_time_ns_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_txn_send_offsets_time_ns_total Total time producer has spent in sendOffsetsToTransaction in nanoseconds.
+# TYPE kafka_producer_txn_send_offsets_time_ns_total counter
+kafka_producer_txn_send_offsets_time_ns_total{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP kafka_producer_waiting_threads The number of user threads blocked waiting for buffer memory to enqueue their records
+# TYPE kafka_producer_waiting_threads gauge
+kafka_producer_waiting_threads{application="ticketing",client_id="ticketing-producer-1",kafka_version="4.1.1",spring_id="kafkaProducerFactory.ticketing-producer-1"} 0.0
+# HELP logback_events_total Number of log events that were enabled by the effective log level
+# TYPE logback_events_total counter
+logback_events_total{application="ticketing",level="debug"} 0.0
+logback_events_total{application="ticketing",level="error"} 0.0
+logback_events_total{application="ticketing",level="info"} 1052.0
+logback_events_total{application="ticketing",level="trace"} 0.0
+logback_events_total{application="ticketing",level="warn"} 3.0
+# HELP process_cpu_time_ns_total The "cpu time" used by the Java Virtual Machine process
+# TYPE process_cpu_time_ns_total counter
+process_cpu_time_ns_total{application="ticketing"} 1.2549551E10
+# HELP process_cpu_usage The "recent cpu usage" for the Java Virtual Machine process
+# TYPE process_cpu_usage gauge
+process_cpu_usage{application="ticketing"} 0.20731498726671482
+# HELP process_files_max_files The maximum file descriptor count
+# TYPE process_files_max_files gauge
+process_files_max_files{application="ticketing"} 1048576.0
+# HELP process_files_open_files The open file descriptor count
+# TYPE process_files_open_files gauge
+process_files_open_files{application="ticketing"} 187.0
+# HELP process_start_time_seconds Start time of the process since unix epoch.
+# TYPE process_start_time_seconds gauge
+process_start_time_seconds{application="ticketing"} 1.788795821231E9
+# HELP process_uptime_seconds The uptime of the Java virtual machine
+# TYPE process_uptime_seconds gauge
+process_uptime_seconds{application="ticketing"} 70.505
+# HELP spring_data_repository_invocations_seconds Duration of repository invocations
+# TYPE spring_data_repository_invocations_seconds summary
+spring_data_repository_invocations_seconds_count{application="ticketing",exception="None",method="expirePendingHolds",repository="ReservationRepository",state="SUCCESS"} 3
+spring_data_repository_invocations_seconds_sum{application="ticketing",exception="None",method="expirePendingHolds",repository="ReservationRepository",state="SUCCESS"} 0.010217292
+spring_data_repository_invocations_seconds_count{application="ticketing",exception="None",method="findClaimableHeadsForUpdate",repository="TicketingOutboxEventRepository",state="SUCCESS"} 40
+spring_data_repository_invocations_seconds_sum{application="ticketing",exception="None",method="findClaimableHeadsForUpdate",repository="TicketingOutboxEventRepository",state="SUCCESS"} 1.846252626
+spring_data_repository_invocations_seconds_count{application="ticketing",exception="None",method="markPublishedAtIfOwned",repository="TicketingOutboxEventRepository",state="SUCCESS"} 1000
+spring_data_repository_invocations_seconds_sum{application="ticketing",exception="None",method="markPublishedAtIfOwned",repository="TicketingOutboxEventRepository",state="SUCCESS"} 1.696658674
+spring_data_repository_invocations_seconds_count{application="ticketing",exception="None",method="recoverExpiredClaims",repository="TicketingOutboxEventRepository",state="SUCCESS"} 3
+spring_data_repository_invocations_seconds_sum{application="ticketing",exception="None",method="recoverExpiredClaims",repository="TicketingOutboxEventRepository",state="SUCCESS"} 0.059345042
+# HELP spring_data_repository_invocations_seconds_max Duration of repository invocations
+# TYPE spring_data_repository_invocations_seconds_max gauge
+spring_data_repository_invocations_seconds_max{application="ticketing",exception="None",method="expirePendingHolds",repository="ReservationRepository",state="SUCCESS"} 0.004351792
+spring_data_repository_invocations_seconds_max{application="ticketing",exception="None",method="findClaimableHeadsForUpdate",repository="TicketingOutboxEventRepository",state="SUCCESS"} 0.321641625
+spring_data_repository_invocations_seconds_max{application="ticketing",exception="None",method="markPublishedAtIfOwned",repository="TicketingOutboxEventRepository",state="SUCCESS"} 0.038095042
+spring_data_repository_invocations_seconds_max{application="ticketing",exception="None",method="recoverExpiredClaims",repository="TicketingOutboxEventRepository",state="SUCCESS"} 0.052629167
+# HELP spring_kafka_listener_seconds Kafka Listener Timer
+# TYPE spring_kafka_listener_seconds summary
+spring_kafka_listener_seconds_count{application="ticketing",exception="none",name="org.springframework.kafka.KafkaListenerEndpointContainer#0-0",result="success"} 0
+spring_kafka_listener_seconds_sum{application="ticketing",exception="none",name="org.springframework.kafka.KafkaListenerEndpointContainer#0-0",result="success"} 0.0
+spring_kafka_listener_seconds_count{application="ticketing",exception="none",name="org.springframework.kafka.KafkaListenerEndpointContainer#1-0",result="success"} 0
+spring_kafka_listener_seconds_sum{application="ticketing",exception="none",name="org.springframework.kafka.KafkaListenerEndpointContainer#1-0",result="success"} 0.0
+# HELP spring_kafka_listener_seconds_max Kafka Listener Timer
+# TYPE spring_kafka_listener_seconds_max gauge
+spring_kafka_listener_seconds_max{application="ticketing",exception="none",name="org.springframework.kafka.KafkaListenerEndpointContainer#0-0",result="success"} 0.0
+spring_kafka_listener_seconds_max{application="ticketing",exception="none",name="org.springframework.kafka.KafkaListenerEndpointContainer#1-0",result="success"} 0.0
+# HELP spring_kafka_template_seconds KafkaTemplate Timer
+# TYPE spring_kafka_template_seconds summary
+spring_kafka_template_seconds_count{application="ticketing",exception="none",name="kafkaTemplate",result="success"} 1000
+spring_kafka_template_seconds_sum{application="ticketing",exception="none",name="kafkaTemplate",result="success"} 12.022869091
+# HELP spring_kafka_template_seconds_max KafkaTemplate Timer
+# TYPE spring_kafka_template_seconds_max gauge
+spring_kafka_template_seconds_max{application="ticketing",exception="none",name="kafkaTemplate",result="success"} 0.212892958
+# HELP system_cpu_count The number of processors available to the Java virtual machine
+# TYPE system_cpu_count gauge
+system_cpu_count{application="ticketing"} 8.0
+# HELP system_cpu_usage The "recent cpu usage" of the system the application is running in
+# TYPE system_cpu_usage gauge
+system_cpu_usage{application="ticketing"} 0.8888888888888888
+# HELP system_load_average_1m The sum of the number of runnable entities queued to available processors and the number of runnable entities running on the available processors averaged over a period of time
+# TYPE system_load_average_1m gauge
+system_load_average_1m{application="ticketing"} 9.994140625
+# HELP tasks_scheduled_execution_active_seconds  
+# TYPE tasks_scheduled_execution_active_seconds summary
+tasks_scheduled_execution_active_seconds_count{application="ticketing",code_function="expirePendingHolds",code_namespace="org.truve.platform.ticketing.service.ticketing.service.HoldPendingExpirationScheduler",exception="none",outcome="UNKNOWN"} 0
+tasks_scheduled_execution_active_seconds_sum{application="ticketing",code_function="expirePendingHolds",code_namespace="org.truve.platform.ticketing.service.ticketing.service.HoldPendingExpirationScheduler",exception="none",outcome="UNKNOWN"} 0.0
+tasks_scheduled_execution_active_seconds_count{application="ticketing",code_function="recoverExpiredClaims",code_namespace="org.truve.platform.ticketing.service.booking.outbox.service.TicketingOutboxRelayScheduler",exception="none",outcome="UNKNOWN"} 0
+tasks_scheduled_execution_active_seconds_sum{application="ticketing",code_function="recoverExpiredClaims",code_namespace="org.truve.platform.ticketing.service.booking.outbox.service.TicketingOutboxRelayScheduler",exception="none",outcome="UNKNOWN"} 0.0
+tasks_scheduled_execution_active_seconds_count{application="ticketing",code_function="relay",code_namespace="org.truve.platform.ticketing.service.booking.outbox.service.TicketingOutboxRelayScheduler",exception="none",outcome="UNKNOWN"} 0
+tasks_scheduled_execution_active_seconds_sum{application="ticketing",code_function="relay",code_namespace="org.truve.platform.ticketing.service.booking.outbox.service.TicketingOutboxRelayScheduler",exception="none",outcome="UNKNOWN"} 0.0
+# HELP tasks_scheduled_execution_active_seconds_max  
+# TYPE tasks_scheduled_execution_active_seconds_max gauge
+tasks_scheduled_execution_active_seconds_max{application="ticketing",code_function="expirePendingHolds",code_namespace="org.truve.platform.ticketing.service.ticketing.service.HoldPendingExpirationScheduler",exception="none",outcome="UNKNOWN"} 0.0
+tasks_scheduled_execution_active_seconds_max{application="ticketing",code_function="recoverExpiredClaims",code_namespace="org.truve.platform.ticketing.service.booking.outbox.service.TicketingOutboxRelayScheduler",exception="none",outcome="UNKNOWN"} 0.0
+tasks_scheduled_execution_active_seconds_max{application="ticketing",code_function="relay",code_namespace="org.truve.platform.ticketing.service.booking.outbox.service.TicketingOutboxRelayScheduler",exception="none",outcome="UNKNOWN"} 0.0
+# HELP tasks_scheduled_execution_seconds  
+# TYPE tasks_scheduled_execution_seconds summary
+tasks_scheduled_execution_seconds_count{application="ticketing",code_function="expirePendingHolds",code_namespace="org.truve.platform.ticketing.service.ticketing.service.HoldPendingExpirationScheduler",error="none",exception="none",outcome="SUCCESS"} 3
+tasks_scheduled_execution_seconds_sum{application="ticketing",code_function="expirePendingHolds",code_namespace="org.truve.platform.ticketing.service.ticketing.service.HoldPendingExpirationScheduler",error="none",exception="none",outcome="SUCCESS"} 0.028210292
+tasks_scheduled_execution_seconds_count{application="ticketing",code_function="recoverExpiredClaims",code_namespace="org.truve.platform.ticketing.service.booking.outbox.service.TicketingOutboxRelayScheduler",error="none",exception="none",outcome="SUCCESS"} 3
+tasks_scheduled_execution_seconds_sum{application="ticketing",code_function="recoverExpiredClaims",code_namespace="org.truve.platform.ticketing.service.booking.outbox.service.TicketingOutboxRelayScheduler",error="none",exception="none",outcome="SUCCESS"} 0.094663333
+tasks_scheduled_execution_seconds_count{application="ticketing",code_function="relay",code_namespace="org.truve.platform.ticketing.service.booking.outbox.service.TicketingOutboxRelayScheduler",error="none",exception="none",outcome="SUCCESS"} 20
+tasks_scheduled_execution_seconds_sum{application="ticketing",code_function="relay",code_namespace="org.truve.platform.ticketing.service.booking.outbox.service.TicketingOutboxRelayScheduler",error="none",exception="none",outcome="SUCCESS"} 4.287184877
+# HELP tasks_scheduled_execution_seconds_max  
+# TYPE tasks_scheduled_execution_seconds_max gauge
+tasks_scheduled_execution_seconds_max{application="ticketing",code_function="expirePendingHolds",code_namespace="org.truve.platform.ticketing.service.ticketing.service.HoldPendingExpirationScheduler",error="none",exception="none",outcome="SUCCESS"} 0.011352291
+tasks_scheduled_execution_seconds_max{application="ticketing",code_function="recoverExpiredClaims",code_namespace="org.truve.platform.ticketing.service.booking.outbox.service.TicketingOutboxRelayScheduler",error="none",exception="none",outcome="SUCCESS"} 0.078443583
+tasks_scheduled_execution_seconds_max{application="ticketing",code_function="relay",code_namespace="org.truve.platform.ticketing.service.booking.outbox.service.TicketingOutboxRelayScheduler",error="none",exception="none",outcome="SUCCESS"} 0.872555375
+# HELP ticketing_outbox_claims_recovered_total  
+# TYPE ticketing_outbox_claims_recovered_total counter
+ticketing_outbox_claims_recovered_total{application="ticketing"} 0.0
+# HELP ticketing_outbox_completion_total  
+# TYPE ticketing_outbox_completion_total counter
+ticketing_outbox_completion_total{application="ticketing",outcome="failed"} 0.0
+ticketing_outbox_completion_total{application="ticketing",outcome="published"} 1000.0
+ticketing_outbox_completion_total{application="ticketing",outcome="stale"} 0.0
+# HELP ticketing_outbox_relay_batch_seconds Relay cycle including claim, Kafka acknowledgement and completion; includes empty/failed cycles
+# TYPE ticketing_outbox_relay_batch_seconds summary
+ticketing_outbox_relay_batch_seconds_count{application="ticketing"} 20
+ticketing_outbox_relay_batch_seconds_sum{application="ticketing"} 4.282077622
+# HELP ticketing_outbox_relay_batch_seconds_max Relay cycle including claim, Kafka acknowledgement and completion; includes empty/failed cycles
+# TYPE ticketing_outbox_relay_batch_seconds_max gauge
+ticketing_outbox_relay_batch_seconds_max{application="ticketing"} 0.872404208
+# HELP tomcat_sessions_active_current_sessions  
+# TYPE tomcat_sessions_active_current_sessions gauge
+tomcat_sessions_active_current_sessions{application="ticketing"} 0.0
+# HELP tomcat_sessions_active_max_sessions  
+# TYPE tomcat_sessions_active_max_sessions gauge
+tomcat_sessions_active_max_sessions{application="ticketing"} 0.0
+# HELP tomcat_sessions_alive_max_seconds  
+# TYPE tomcat_sessions_alive_max_seconds gauge
+tomcat_sessions_alive_max_seconds{application="ticketing"} 0.0
+# HELP tomcat_sessions_created_sessions_total  
+# TYPE tomcat_sessions_created_sessions_total counter
+tomcat_sessions_created_sessions_total{application="ticketing"} 0.0
+# HELP tomcat_sessions_expired_sessions_total  
+# TYPE tomcat_sessions_expired_sessions_total counter
+tomcat_sessions_expired_sessions_total{application="ticketing"} 0.0
+# HELP tomcat_sessions_rejected_sessions_total  
+# TYPE tomcat_sessions_rejected_sessions_total counter
+tomcat_sessions_rejected_sessions_total{application="ticketing"} 0.0

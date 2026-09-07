@@ -35,21 +35,28 @@ public interface TicketingOutboxEventRepository extends OutboxEventRepository<Ti
 		@Param("batchSize") int batchSize
 	);
 
+	default int markPublishedIfOwned(Long id, UUID claimToken, OutboxStatus processing, OutboxStatus published) {
+		// Same application-local clock basis as JPA createdAt auditing.
+		return markPublishedAtIfOwned(id, claimToken, processing, published, LocalDateTime.now());
+	}
+
 	@Modifying
 	@Query("""
 		update TicketingOutboxEvent event
 		set event.status = :published,
+		    event.publishedAt = :publishedAt,
 		    event.claimToken = null,
 		    event.claimedAt = null
 		where event.id = :id
 		  and event.status = :processing
 		  and event.claimToken = :claimToken
 		""")
-	int markPublishedIfOwned(
+	int markPublishedAtIfOwned(
 		@Param("id") Long id,
 		@Param("claimToken") UUID claimToken,
 		@Param("processing") OutboxStatus processing,
-		@Param("published") OutboxStatus published
+		@Param("published") OutboxStatus published,
+		@Param("publishedAt") LocalDateTime publishedAt
 	);
 
 	@Modifying
