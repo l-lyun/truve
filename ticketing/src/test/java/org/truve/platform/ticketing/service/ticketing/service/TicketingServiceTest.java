@@ -68,6 +68,8 @@ class TicketingServiceTest {
 
 	@BeforeEach
 	void setUp() {
+		ReflectionTestUtils.setField(ticketingService, "ticketingQueryService",
+			new TicketingQueryService(showScheduledRepository, scheduledSeatRepository));
 		showScheduleId = 1L;
 		userId = UUID.fromString("11111111-1111-1111-1111-111111111111");
 		admissionToken = "admission-token";
@@ -76,6 +78,25 @@ class TicketingServiceTest {
 		lenient().when(ticketingProperties.getSessionTtlSec()).thenReturn(300L);
 		lenient().when(seatHoldLockService.acquire(userId, showScheduleId)).thenReturn(seatHoldLock);
 		lenient().when(seatHoldLockService.release(seatHoldLock)).thenReturn(true);
+	}
+
+	@Test
+	void 좌석조회는_잘못된_세션일_때_DB를_조회하지_않는다() {
+		given(ticketingRedisRepository.getSessionTokenValue(sessionToken)).willReturn(null);
+		assertThrows(CustomException.class,
+			() -> ticketingService.getSeats(showScheduleId, userId, sessionToken));
+		verifyNoInteractions(showScheduledRepository, scheduledSeatRepository);
+		verify(ticketingRedisRepository, never()).addActiveTicketingUser(anyLong(), anyString());
+	}
+
+	@Test
+	void 좌석조회는_다른_회차의_세션일_때_DB를_조회하지_않는다() {
+		given(ticketingRedisRepository.getSessionTokenValue(sessionToken))
+			.willReturn(SessionTicketValueDTO.of(userId, 99L));
+		CustomException exception = assertThrows(CustomException.class,
+			() -> ticketingService.getSeats(showScheduleId, userId, sessionToken));
+		assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.SESSION_TOKEN_MISMATCH);
+		verifyNoInteractions(showScheduledRepository, scheduledSeatRepository);
 	}
 
 	@Nested
@@ -620,6 +641,13 @@ class TicketingServiceTest {
 			TicketingResponse.Seats response = ticketingService.getSeats(showScheduleId, userId, sessionToken);
 
 			// then
+			var order = inOrder(ticketingRedisRepository, showScheduledRepository, scheduledSeatRepository);
+			order.verify(ticketingRedisRepository).getSessionTokenValue(sessionToken);
+			order.verify(ticketingRedisRepository).addActiveTicketingUser(showScheduleId, sessionToken);
+			order.verify(ticketingRedisRepository).removeInactiveTicketingUsers(eq(showScheduleId), anyLong());
+			order.verify(ticketingRedisRepository).refreshSessionTokenTtl(sessionToken, 300L);
+			order.verify(showScheduledRepository).findById(showScheduleId);
+			order.verify(scheduledSeatRepository).findSeatSectionByScheduledSeatId(showScheduleId);
 			assertAll(
 				() -> assertThat(response.getSections()).hasSize(1),
 				() -> assertThat(response.getSections().get(0).getRows()).hasSize(2),
