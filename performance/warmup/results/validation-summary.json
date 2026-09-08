@@ -1,0 +1,102 @@
+{
+  "scope": "Benchmark tooling and validation; no comparative performance claim",
+  "java_validation": {
+    "command": "./gradlew :ticketing:test :ticketing:bootJar --no-daemon --offline",
+    "tests": 255,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "bootJar": "passed"
+  },
+  "python_validation": {
+    "command": "python3 -m unittest discover -s performance/warmup -p 'test_*.py'",
+    "tests": 13,
+    "failures": 0
+  },
+  "attempts": [
+    {
+      "artifact_directory": "truve-warmup-smoke-20260909",
+      "purpose": "smoke",
+      "source_head": "f30bfccec2a88c29ad23463d8987cea7a3eadea0",
+      "jvm_processors": "host default",
+      "status": "aborted",
+      "type": "RuntimeError",
+      "reason": "Host load exceeds 2 x logical CPUs: {'load': [16.380859375, 11.32763671875, 8.84912109375], 'logical_cpus': 8}",
+      "completed_runs": 0,
+      "host": {
+        "load": [
+          16.380859375,
+          11.32763671875,
+          8.84912109375
+        ],
+        "logical_cpus": 8
+      }
+    },
+    {
+      "artifact_directory": "truve-warmup-smoke-20260909-02",
+      "purpose": "smoke",
+      "source_head": "216558fb8846b0482bf40690cf8239b6d9d4a3db",
+      "jvm_processors": "host default",
+      "status": "aborted",
+      "type": "RuntimeError",
+      "reason": "Host load exceeds 2 x logical CPUs: {'load': [17.50634765625, 13.236328125, 10.26513671875], 'logical_cpus': 8}",
+      "completed_runs": 0,
+      "host": {
+        "load": [
+          17.50634765625,
+          13.236328125,
+          10.26513671875
+        ],
+        "logical_cpus": 8
+      }
+    },
+    {
+      "artifact_directory": "truve-warmup-smoke-20260909-03",
+      "purpose": "smoke",
+      "source_head": "216558fb8846b0482bf40690cf8239b6d9d4a3db",
+      "jvm_processors": "host default",
+      "status": "aborted",
+      "type": "RuntimeError",
+      "reason": "Host load exceeds 2 x logical CPUs: {'load': [16.17138671875, 12.87841796875, 10.45556640625], 'logical_cpus': 8}",
+      "completed_runs": 0,
+      "host": {
+        "load": [
+          16.17138671875,
+          12.87841796875,
+          10.45556640625
+        ],
+        "logical_cpus": 8
+      }
+    },
+    {
+      "artifact_directory": "truve-warmup-smoke-20260909-cpu2",
+      "purpose": "smoke",
+      "source_head": "5bebe3b0283249d25cf84baaac0ce822c1dff3bf",
+      "jvm_processors": 2,
+      "status": "verified_smoke",
+      "verified_runs": 2,
+      "successful_http_requests": 60,
+      "side_effect_check_passed": true
+    },
+    {
+      "artifact_directory": "truve-warmup-comparison-20260909-cpu2",
+      "purpose": "comparison",
+      "source_head": "5bebe3b0283249d25cf84baaac0ce822c1dff3bf",
+      "jvm_processors": 2,
+      "status": "aborted",
+      "type": "RuntimeError",
+      "reason": "Host load exceeds 2 x logical CPUs: {'load': [18.77685546875, 13.30419921875, 11.01123046875], 'logical_cpus': 8}",
+      "completed_runs": 0,
+      "host": {
+        "load": [
+          18.77685546875,
+          13.30419921875,
+          11.01123046875
+        ],
+        "logical_cpus": 8
+      }
+    }
+  ],
+  "comparison_status": "blocked by host load before measured pairs; rerun in a stable environment",
+  "archive": "validation-20260909.tar.gz"
+}
