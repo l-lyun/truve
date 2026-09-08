@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.truve.platform.ticketing.service.ticketing.domain.entity.ScheduledSeat;
 import org.truve.platform.ticketing.service.ticketing.domain.entity.ShowScheduled;
 import org.truve.platform.ticketing.service.ticketing.dto.AdmissionTokenClaimsDTO;
-import org.truve.platform.ticketing.service.ticketing.dto.SeatSectionsDto;
 import org.truve.platform.ticketing.service.ticketing.dto.SessionTicketValueDTO;
 import org.truve.platform.ticketing.service.ticketing.dto.TicketingResponse;
 import org.truve.platform.ticketing.service.ticketing.config.TicketingProperties;
@@ -40,6 +39,7 @@ public class TicketingService {
 	private final ShowScheduledRepository showScheduledRepository;
 	private final TicketingSecurityService  ticketingSecurityService;
 	private final SeatHoldLockService seatHoldLockService;
+	private final TicketingQueryService ticketingQueryService;
 
 	public TicketingResponse.Enter enter(Long showScheduleId, UUID userId, String admissionToken) {
 		AdmissionTokenClaimsDTO claims = admissionTokenService.parseAdmissionToken(admissionToken, showScheduleId, userId);
@@ -161,14 +161,7 @@ public class TicketingService {
 
 	public TicketingResponse.Seats getSeats(Long showScheduleId, UUID userId, String sessionToken) {
 		heartbeat(showScheduleId, userId, sessionToken);
-
-		showScheduledRepository.findById(showScheduleId).orElseThrow(
-			() -> new CustomException(ErrorCode.INVALID_SHOW_SCHEDULE)
-		);
-
-		List<SeatSectionsDto> flatSeats = scheduledSeatRepository.findSeatSectionByScheduledSeatId(showScheduleId);
-
-		return TicketingResponse.Seats.from(flatSeats);
+		return ticketingQueryService.getSeats(showScheduleId);
 	}
 
 	public void exitTicketing(Long showScheduleId, UUID userId, String sessionToken) {
