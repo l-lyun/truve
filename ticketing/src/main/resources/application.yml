@@ -59,6 +59,16 @@ jwt:
   refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:43200000}
 
 ticketing:
+  warmup:
+    enabled: ${TICKETING_WARMUP_ENABLED:false}
+    show-schedule-id: ${TICKETING_WARMUP_SHOW_SCHEDULE_ID:}
+    iterations: ${TICKETING_WARMUP_ITERATIONS:100}
+    # 반복 전후 검사하는 실행 예산. JDBC 연결/socket timeout을 대체하지 않는다.
+    max-duration: ${TICKETING_WARMUP_MAX_DURATION:30s}
+    query-timeout-seconds: ${TICKETING_WARMUP_QUERY_TIMEOUT_SECONDS:5}
+  startup:
+    # 웜업 활성화 시 자동으로 적용된다. OFF/ON 비교 시에는 양쪽 모두 true로 설정한다.
+    gate-enabled: ${TICKETING_STARTUP_GATE_ENABLED:false}
   active-window-ms: ${TICKETING_ACTIVE_WINDOW_MS:30000}
   session-ttl-sec: ${TICKETING_SESSION_TTL_SEC:300}
   kafka:
