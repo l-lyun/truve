@@ -169,6 +169,8 @@ class Infrastructure:
 
 class Application:
     def __init__(self, args, infra, output, name, mode, *, bootstrap=False):
+        if digest(args.jar.read_bytes()) != args.jar_sha256:
+            raise RuntimeError('Executable JAR changed during the experiment')
         self.args, self.output, self.name = args, output, name
         self.samples = []
         self.done = threading.Event()
@@ -328,10 +330,12 @@ def run(args):
         raise ValueError('Build ticketing:bootJar first and pass the executable JAR')
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=False)
+    args.jar_sha256 = digest(args.jar.read_bytes())
     metadata = {'protocol': 1, 'purpose': args.purpose, 'pairs': args.pairs, 'rps': args.rps,
                 'initial_requests': args.initial_requests, 'steady_seconds': args.steady_seconds,
                 'iterations': args.iterations, 'order': order_for_pairs(args.pairs),
-                'jar_sha256': digest(args.jar.read_bytes()), 'source_head': command(['git', 'rev-parse', 'HEAD']),
+                'jar_sha256': args.jar_sha256, 'source_head': command(['git', 'rev-parse', 'HEAD']),
+                'jar_provenance': 'Supplied JAR hash; repository head recorded, JAR source is not inferred',
                 'source_diff_sha256': digest(command(['git', 'diff', 'HEAD', '--', 'ticketing', 'performance/warmup']).encode()),
                 'java': subprocess.run(
                     [args.java, '-version'], capture_output=True, text=True, check=True).stderr.strip(),

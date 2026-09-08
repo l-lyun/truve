@@ -22,6 +22,54 @@ def response_body():
     return json.dumps({'code': 'ok', 'data': {'sections': sections}}).encode()
 
 
+def refresh_manifest(root):
+    runner.write_json(root / 'manifest.json', {p.name: runner.digest(p.read_bytes()) for p in root.iterdir()
+                                              if p.name != 'manifest.json'})
+
+
+def evidence(root):
+    """Small complete dataset with independently specified 10/20ms observations."""
+    meta = {'protocol': 1, 'purpose': 'smoke', 'pairs': 1, 'rps': 2,
+            'initial_requests': 2, 'steady_seconds': 1, 'iterations': 100,
+            'order': [[1, 'off'], [1, 'on']]}
+    runner.write_json(root / 'metadata.json', meta)
+    db = {'scheduled_seat': {'count': 200, 'sha256': 'unchanged'}}
+    runner.write_json(root / 'side-effects.json', {
+        'passed': True, 'before': {'db': db, 'session': 'value', 'redis_keys': '1', 'pttl': 600000},
+        'after': {'db': db, 'session': 'value', 'redis_keys': '1', 'pttl': 590000},
+        'warmup': {'iterations': 100, 'duration_ms': 100}})
+    (root / 'side-effect-check.log').write_text('웜업 완료. iterations=100, durationMs=100\n')
+    summaries = []
+    for mode in ('off', 'on'):
+        name = f'pair-01-{mode}'
+        records = []
+        for phase, base in [('initial', 1000), ('steady', 2000)]:
+            for index, latency in enumerate([10, 20]):
+                scheduled = base + index * 500
+                records.append({'phase': phase, 'index': index, 'valid': True, 'status': 200,
+                                'body_sha256': runner.digest(response_body()), 'latency_ms': latency,
+                                'scheduled_ms': scheduled, 'started_ms': scheduled + 1,
+                                'finished_ms': scheduled + 1 + latency, 'start_lag_ms': 1,
+                                'schedule_to_finish_ms': latency + 1})
+        (root / f'{name}-requests.jsonl').write_text(''.join(json.dumps(r) + '\n' for r in records))
+        (root / f'{name}-response.json').write_bytes(response_body())
+        (root / f'{name}.log').write_text('웜업 완료. iterations=100, durationMs=100\n' if mode == 'on' else 'ready\n')
+        runner.write_json(root / f'{name}-readiness.json', [{'elapsed_ms': 900, 'status': 200}])
+        host = {'load': [1, 1, 1], 'logical_cpus': 8}
+        runner.write_json(root / f'{name}-resources.json', [{**host, 'rss_kib': 200000}])
+        metrics = {'count': 2, 'errors': 0, 'first_ms': 10, 'p50_ms': 10, 'p95_ms': 20, 'p99_ms': 20,
+                   'scheduled_p95_ms': 21, 'scheduled_p99_ms': 21, 'max_ms': 20,
+                   'max_start_lag_ms': 1, 'completed_rps': 2 / .521}
+        summary = {'name': name, 'pair': 1, 'mode': mode, 'readiness_ms': 900,
+                   'warmup': {'iterations': 100, 'duration_ms': 100} if mode == 'on' else None,
+                   'db_unchanged': True, 'db_after': db, 'initial': metrics, 'steady': metrics,
+                   'host_before': host, 'host_after': host}
+        runner.write_json(root / f'{name}-summary.json', summary)
+        summaries.append(summary)
+    runner.write_json(root / 'summary.json', {'status': 'completed', 'runs': summaries})
+    refresh_manifest(root)
+
+
 class BenchmarkTest(unittest.TestCase):
     def test_order_alternates_within_pairs(self):
         self.assertEqual(runner.order_for_pairs(3),
@@ -93,6 +141,36 @@ class BenchmarkTest(unittest.TestCase):
             (root / 'metadata.json').write_text('{}')
             runner.write_json(root / 'manifest.json', {'metadata.json': runner.digest(b'original')})
             with self.assertRaisesRegex(ValueError, 'Checksum mismatch'):
+                verifier.verify(root)
+
+    def test_complete_dataset_is_recomputed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            evidence(root)
+            result = verifier.verify(root)
+            self.assertEqual(result['verified_runs'], 2)
+            self.assertEqual(result['median_initial_p95_ms'], {'off': 20, 'on': 20})
+
+    def test_missing_raw_request_is_rejected_even_with_updated_checksums(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            evidence(root)
+            path = root / 'pair-01-off-requests.jsonl'
+            path.write_text('\n'.join(path.read_text().splitlines()[1:]) + '\n')
+            refresh_manifest(root)
+            with self.assertRaisesRegex(ValueError, 'Missing or reordered requests'):
+                verifier.verify(root)
+
+    def test_wrong_aggregate_is_rejected_even_if_both_summaries_agree(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            evidence(root)
+            summary = verifier.read(root / 'summary.json')
+            summary['runs'][0]['initial']['p95_ms'] = 1
+            runner.write_json(root / 'summary.json', summary)
+            runner.write_json(root / 'pair-01-off-summary.json', summary['runs'][0])
+            refresh_manifest(root)
+            with self.assertRaisesRegex(ValueError, 'Summary cannot be reproduced'):
                 verifier.verify(root)
 
 
