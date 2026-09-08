@@ -90,6 +90,24 @@ class TicketingRedisRepositoryIntegrationTest {
 	}
 
 	@Test
+	void Consumer_소유권_검증은_meta와_요청_좌석_전체가_정확히_일치할_때만_성공한다() {
+		assertThat(repository.holdSeats(
+			SHOW_SCHEDULE_ID, List.of(126L, 127L), SESSION_A, HOLD_A, 4
+		)).isEqualTo(SeatHoldResult.NEWLY_ACQUIRED);
+
+		assertThat(repository.ownsHeldSeats(
+			SHOW_SCHEDULE_ID, List.of(127L, 126L), SESSION_A, HOLD_A)).isTrue();
+		assertThat(repository.ownsHeldSeats(
+			SHOW_SCHEDULE_ID, List.of(126L), SESSION_A, HOLD_A)).isFalse();
+		assertThat(repository.ownsHeldSeats(
+			SHOW_SCHEDULE_ID, List.of(126L, 127L), SESSION_B, HOLD_A)).isFalse();
+
+		redisTemplate.delete(seatHoldKey(127L));
+		assertThat(repository.ownsHeldSeats(
+			SHOW_SCHEDULE_ID, List.of(126L, 127L), SESSION_A, HOLD_A)).isFalse();
+	}
+
+	@Test
 	void 같은_holdId의_멱등_재시도는_좌석과_meta_TTL을_연장하지_않는다() {
 		assertThat(repository.holdSeats(SHOW_SCHEDULE_ID, List.of(103L), SESSION_A, HOLD_A, 4))
 			.isEqualTo(SeatHoldResult.NEWLY_ACQUIRED);

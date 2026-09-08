@@ -1,0 +1,34 @@
+{
+  "prefix": "c1-3000ms-1relay-warmup1",
+  "topic": "truve.outbox.matrix.1a1c4bf619a04d8ab38c693a531416e4",
+  "events": 300,
+  "observed_drain_seconds": 11.512,
+  "observed_events_per_second": 26.061,
+  "publication_record_lag_p50_ms": 7083.267,
+  "publication_record_lag_p99_ms": 11308.888,
+  "publication_record_lag_max_ms": 11324.377,
+  "kafka_records": 300,
+  "kafka_unique_keys": 300,
+  "missing": 0,
+  "unexpected": 0,
+  "duplicates": 0,
+  "completion_counters": {
+    "published": 300.0,
+    "failed": 0.0,
+    "stale": 0.0
+  },
+  "per_relay_published": [
+    300.0
+  ],
+  "recovered": 0.0,
+  "retries": 0,
+  "jvm_cpu_seconds": 3.632548,
+  "db_cost": {
+    "window_seconds": 11.773,
+    "claim_queries": 6,
+    "claim_queries_per_second": 0.5096,
+    "claim_statement_seconds": 0.015918126,
+    "mysql_cpu_seconds": 1.486276,
+    "mysql_cpu_percent_one_core": 12.624
+  }
+}

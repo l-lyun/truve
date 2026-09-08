@@ -1,0 +1,328 @@
+#!/usr/bin/env python3
+"""Bounded polling/scaling experiment on the dedicated truve-pr12 infrastructure.
+
+No production settings changed. Requires MYSQL_PWD; refuses occupied app ports
+or pre-existing unfinished events. All launched JVMs are owned and cleaned up.
+"""
+import datetime
+import hashlib
+import json
+import os
+from pathlib import Path
+import random
+import socket
+import statistics
+import subprocess
+import tempfile
+import time
+import urllib.request
+import uuid
+import zipfile
+
+from run_baseline import percentile, sql
+
+ROOT = Path(__file__).resolve().parents[2]
+CONFIGS = [(3000, 1, 3), (1000, 1, 3), (300, 1, 3),
+           (1000, 2, 3), (300, 2, 3), (3000, 1, 1)]
+
+
+def host_snapshot():
+    return {'utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            'load_averages': list(os.getloadavg()), 'logical_cpus': os.cpu_count() or 1}
+
+
+def ensure_host_headroom():
+    snapshot = host_snapshot()
+    # Conservative abort heuristic, not proof that an otherwise shared host is isolated.
+    if snapshot['load_averages'][0] > snapshot['logical_cpus'] * 2:
+        raise RuntimeError(f'Host overloaded; defer performance comparison: {snapshot}')
+    return snapshot
+
+
+def metric(data, name, label=None):
+    values = [float(line.split('}')[1].strip().split()[0])
+              for line in data.splitlines() if line.startswith(name + '{')
+              and (label is None or label in line)]
+    if len(values) != 1:
+        raise RuntimeError(f'Expected one {name}/{label} series: {values}')
+    return values[0]
+
+
+def http(port, endpoint):
+    with urllib.request.urlopen(f'http://localhost:{port}/actuator/{endpoint}', timeout=10) as response:
+        return response.read().decode()
+
+
+def ready(process, port):
+    deadline = time.monotonic() + 240
+    while time.monotonic() < deadline:
+        if process.poll() is not None:
+            raise RuntimeError(f'JVM {port} exited {process.returncode}')
+        try:
+            if json.loads(http(port, 'health/readiness'))['status'] == 'UP':
+                return
+        except (OSError, ValueError):
+            pass
+        time.sleep(1)
+    raise RuntimeError(f'JVM {port} readiness deadline')
+
+
+def db_snapshot():
+    # Do not reset global counters. This exact digest filter excludes our observer SELECTs.
+    raw = sql("""SELECT DIGEST, COUNT_STAR, SUM_TIMER_WAIT
+        FROM performance_schema.events_statements_summary_by_digest
+        WHERE SCHEMA_NAME='ticketing_db'
+          AND DIGEST_TEXT LIKE 'SELECT EVENT . * FROM `ticketing_outbox_events`%'
+          AND DIGEST_TEXT LIKE '%FOR UPDATE SKIP LOCKED'""")
+    rows = [line.split('\t') for line in raw.splitlines()]
+    if len(rows) != 1:
+        raise RuntimeError(f'Expected one claim digest, found {rows}')
+    cpu = subprocess.check_output(['docker', 'exec', 'truve-pr12-mysql', 'cat',
+                                   '/sys/fs/cgroup/cpu.stat'], text=True)
+    usage = int(dict(line.split() for line in cpu.splitlines())['usage_usec'])
+    return {'digest': rows[0][0], 'claim_queries': int(rows[0][1]),
+            'claim_wait_ps': int(rows[0][2]), 'mysql_cpu_usec': usage,
+            'monotonic': time.monotonic()}
+
+
+def db_delta(before, after):
+    if before['digest'] != after['digest']:
+        raise RuntimeError('Claim digest changed')
+    duration = after['monotonic'] - before['monotonic']
+    queries = after['claim_queries'] - before['claim_queries']
+    cpu = (after['mysql_cpu_usec'] - before['mysql_cpu_usec']) / 1e6
+    if queries < 0 or cpu < 0 or after['claim_wait_ps'] < before['claim_wait_ps']:
+        raise RuntimeError('DB counters reset during test')
+    return {'window_seconds': round(duration, 3), 'claim_queries': queries,
+            'claim_queries_per_second': round(queries / duration, 4),
+            'claim_statement_seconds': (after['claim_wait_ps'] - before['claim_wait_ps']) / 1e12,
+            'mysql_cpu_seconds': round(cpu, 6),
+            'mysql_cpu_percent_one_core': round(cpu / duration * 100, 3)}
+
+
+def stop(children):
+    for child in children:
+        if child.poll() is None:
+            child.terminate()
+    for child in children:
+        try:
+            child.wait(timeout=30)
+        except subprocess.TimeoutExpired:
+            child.kill()
+            child.wait(timeout=10)
+
+
+def main():
+    if not os.environ.get('MYSQL_PWD'):
+        raise RuntimeError('MYSQL_PWD is required')
+    initial_host = ensure_host_headroom()
+    os.chdir(ROOT)
+    for port in (18084, 18085):
+        with socket.socket() as check:
+            if check.connect_ex(('127.0.0.1', port)) == 0:
+                raise RuntimeError(f'Port {port} occupied: stop identified Truve JVM first')
+    if sql("SELECT COUNT(*) FROM ticketing_outbox_events WHERE status <> 'PUBLISHED'") != '0':
+        raise RuntimeError('Existing unfinished events; refusing mixed workload')
+    jars = [p for p in (ROOT / 'ticketing/build/libs').glob('*.jar') if not p.name.endswith('-plain.jar')]
+    if len(jars) != 1:
+        raise RuntimeError('Exactly one bootJar required')
+    jar = jars[0]
+    stamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+    folder = ROOT / 'performance/outbox/results' / ('matrix-' + stamp + '-' + uuid.uuid4().hex[:6])
+    folder.mkdir(parents=True)
+
+    def save(path, obj):
+        (folder / path).write_text(json.dumps(obj, indent=2, ensure_ascii=False))
+
+    metadata = {
+        'sha': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+        'initial_host': initial_host,
+        'host_guard': 'abort before each run when 1-minute load > 2x logical CPUs; heuristic only',
+        'jar_sha256': hashlib.sha256(jar.read_bytes()).hexdigest(),
+        'configs': CONFIGS, 'events_per_measured_run': 1000, 'warmup_events_per_attempt': 300,
+        'warmup_max_attempts': 3, 'warmup_gate': 'each Relay must publish at least one event',
+        'idle_window_seconds': 30, 'batch_size': 100,
+        'key_distribution': 'unique keys; payload {}; no same-key ordering or business Consumer',
+        'clock': 'JVM Asia/Seoul and MySQL session +09:00; publication-record timestamp, not consumer latency',
+        'resources': 'shared local host and Docker, unconstrained CPU; JVM Xms256m Xmx512m each',
+        'cost_scope': 'MySQL claim SELECT count, cgroup CPU time incl monitoring, JVM CPU time; NOT money',
+        'controls': 'precreated topics, 300 warmup events per config, 3 repetitions; final 3s reference for drift',
+        'limitations': 'sequential config order; table grows; shared-host noise; final reference is diagnostic not correction',
+        'polling_observer_seconds': 0.5,
+        'initial_table_rows': sql('SELECT COUNT(*) FROM ticketing_outbox_events'),
+        'container_images': subprocess.check_output(['docker', 'inspect', 'truve-pr12-mysql', 'truve-pr12-kafka',
+                                                     '--format', '{{.Name}} {{.Image}}'], text=True).splitlines(),
+        'java': subprocess.run(['java', '-version'], capture_output=True, text=True).stderr,
+    }
+    save('metadata.json', metadata)
+    (folder / 'source.diff').write_bytes(subprocess.check_output(['git', 'diff', '--', 'ticketing/src/main']))
+    (folder / 'harness.py.txt').write_text(Path(__file__).read_text())
+    (folder / 'KafkaProbe.java.txt').write_text((ROOT / 'performance/outbox/KafkaProbe.java').read_text())
+    summary = []
+    children = []
+    env = os.environ.copy()
+    env.update({'TICKETING_MYSQL_URL': 'jdbc:mysql://localhost:23306/ticketing_db?allowPublicKeyRetrieval=true&useSSL=false',
+                'TICKETING_MYSQL_USERNAME': 'root', 'TICKETING_MYSQL_PASSWORD': os.environ['MYSQL_PWD'],
+                'USER_REDIS_HOST': 'localhost', 'USER_REDIS_PORT': '26379', 'KAFKA_SERVERS': 'localhost:29094',
+                'SPRING_JPA_SHOW_SQL': 'false', 'TICKETING_OUTBOX_CLAIM_ENABLED': 'true'})
+    try:
+        with tempfile.TemporaryDirectory(prefix='truve-matrix-probe-') as probe_dir:
+            libraries = []
+            with zipfile.ZipFile(jar) as archive:
+                for entry in archive.namelist():
+                    if entry.startswith('BOOT-INF/lib/') and Path(entry).name.startswith(
+                            ('kafka-clients-', 'slf4j-api-', 'lz4-java-', 'snappy-java-', 'zstd-jni-')):
+                        path = Path(probe_dir) / Path(entry).name
+                        path.write_bytes(archive.read(entry))
+                        libraries.append(str(path))
+            classpath = os.pathsep.join([probe_dir] + libraries)
+            subprocess.run(['javac', '-cp', classpath, '-d', probe_dir,
+                            str(ROOT / 'performance/outbox/KafkaProbe.java')], check=True)
+
+            def probe(mode, topic, prefix):
+                result = subprocess.run(['java', '-cp', classpath, 'KafkaProbe', mode, topic],
+                                        capture_output=True, text=True, timeout=60)
+                (folder / f'{prefix}-kafka-{mode}.tsv').write_text(result.stdout)
+                (folder / f'{prefix}-kafka-{mode}.stderr.txt').write_text(result.stderr)
+                result.check_returncode()
+                return result.stdout.strip()
+
+            def app_snapshot(prefix, ports):
+                snapshots = []
+                for port in ports:
+                    data = http(port, 'prometheus')
+                    (folder / f'{prefix}-{port}.prom').write_text(data)
+                    snapshots.append(data)
+                return snapshots
+
+            def run(prefix, ports, events):
+                before_host = ensure_host_headroom()
+                topic = 'truve.outbox.matrix.' + uuid.uuid4().hex
+                save(prefix + '-context.json', {'topic': topic, 'events': events, 'host': before_host})
+                probe('prepare', topic, prefix)
+                before_app = app_snapshot(prefix + '-before', ports)
+                before_db = db_snapshot()
+                start = time.monotonic()
+                sql(f"""SET SESSION cte_max_recursion_depth=10001;
+                    INSERT INTO ticketing_outbox_events
+                    (created_at,updated_at,event_type,message_key,payload,retry_count,status,topic)
+                    WITH RECURSIVE seq(n) AS (SELECT 1 UNION ALL SELECT n+1 FROM seq WHERE n<{events})
+                    SELECT NOW(6),NOW(6),'MATRIX',CONCAT('event-',n),'{{}}',0,'PENDING','{topic}' FROM seq""")
+                timeline = []
+                while True:
+                    states = dict((s, int(n)) for s, n in (line.split('\t') for line in sql(
+                        f"SELECT status,COUNT(*) FROM ticketing_outbox_events WHERE topic='{topic}' GROUP BY status").splitlines()))
+                    elapsed = time.monotonic() - start
+                    timeline.append({'elapsed': elapsed, 'states': states})
+                    if states.get('PUBLISHED') == events:
+                        break
+                    if elapsed > 180 or any(child.poll() is not None for child in children):
+                        save(prefix + '-timeline.json', timeline)
+                        raise RuntimeError(f'{prefix} timed out or JVM exited: {states}')
+                    time.sleep(.5)
+                after_db = db_snapshot()
+                after_app = app_snapshot(prefix + '-after', ports)
+                raw = sql(f"""SELECT id,message_key,status,retry_count,
+                    TIMESTAMPDIFF(MICROSECOND,created_at,published_at)/1000.0,
+                    HEX(claim_token),claimed_at FROM ticketing_outbox_events WHERE topic='{topic}' ORDER BY id""")
+                (folder / f'{prefix}-events.tsv').write_text(raw)
+                rows = [line.split('\t') for line in raw.splitlines()]
+                lags = [float(row[4]) for row in rows]
+                if len(rows) != events or min(lags) < 0 or any(row[2] != 'PUBLISHED' or row[5:] != ['NULL', 'NULL'] for row in rows):
+                    raise RuntimeError('DB completion invariant failed')
+                records = probe('read', topic, prefix).splitlines()
+                keys = [line.split('\t')[1] for line in records]
+                expected = {row[1] for row in rows}
+                missing, unexpected = len(expected - set(keys)), len(set(keys) - expected)
+                duplicates = len(keys) - len(set(keys))
+                counters = {}
+                per_relay_published = []
+                for outcome in ('published', 'failed', 'stale'):
+                    deltas = [metric(a, 'ticketing_outbox_completion_total', f'outcome="{outcome}"') -
+                              metric(b, 'ticketing_outbox_completion_total', f'outcome="{outcome}"')
+                              for b, a in zip(before_app, after_app)]
+                    counters[outcome] = sum(deltas)
+                    if outcome == 'published':
+                        per_relay_published = deltas
+                recovered = sum(metric(a, 'ticketing_outbox_claims_recovered_total') -
+                                metric(b, 'ticketing_outbox_claims_recovered_total') for b, a in zip(before_app, after_app))
+                cpu = sum(metric(a, 'process_cpu_time_ns_total') - metric(b, 'process_cpu_time_ns_total')
+                          for b, a in zip(before_app, after_app)) / 1e9
+                result = {'prefix': prefix, 'topic': topic, 'events': events,
+                          'host_before': before_host, 'host_after': host_snapshot(),
+                          'observed_drain_seconds': round(elapsed, 3),
+                          'observed_events_per_second': round(events / elapsed, 3),
+                          'publication_record_lag_p50_ms': percentile(lags, 50),
+                          'publication_record_lag_p99_ms': percentile(lags, 99),
+                          'publication_record_lag_max_ms': max(lags),
+                          'kafka_records': len(keys), 'kafka_unique_keys': len(set(keys)),
+                          'missing': missing, 'unexpected': unexpected, 'duplicates': duplicates,
+                          'completion_counters': counters, 'per_relay_published': per_relay_published,
+                          'recovered': recovered, 'retries': sum(int(row[3]) for row in rows),
+                          'jvm_cpu_seconds': round(cpu, 6), 'db_cost': db_delta(before_db, after_db)}
+                save(prefix + '-timeline.json', timeline)
+                save(prefix + '-db-snapshots.json', {'before': before_db, 'after': after_db})
+                save(prefix + '-summary.json', result)
+                if (missing or unexpected or duplicates or counters != {'published': events, 'failed': 0, 'stale': 0}
+                        or result['retries'] or recovered):
+                    raise RuntimeError(f'Delivery validation failed: {result}')
+                print(json.dumps(result), flush=True)
+                return result
+
+            for index, (delay, instances, repeats) in enumerate(CONFIGS):
+                label = f'c{index + 1}-{delay}ms-{instances}relay'
+                ports = [18084 + i for i in range(instances)]
+                for port in ports:
+                    with (folder / f'{label}-{port}.log').open('w') as log:
+                        child = subprocess.Popen(['java', '-Xms256m', '-Xmx512m', '-Duser.timezone=Asia/Seoul',
+                            '-jar', str(jar), '--spring.profiles.active=local', f'--server.port={port}',
+                            f'--ticketing.outbox.relay.fixed-delay-ms={delay}',
+                            '--ticketing.outbox.cleanup.cron=-', '--spring.kafka.listener.auto-startup=false'],
+                            env=env, stdout=log, stderr=subprocess.STDOUT)
+                        children.append(child)
+                for child, port in zip(children, ports):
+                    ready(child, port)
+                print(f'READY {label} pids={[p.pid for p in children]}', flush=True)
+                warmed = [0] * instances
+                for attempt in range(3):
+                    warm = run(label + f'-warmup{attempt + 1}', ports, 300)
+                    warmed = [a + b for a, b in zip(warmed, warm['per_relay_published'])]
+                    if all(count > 0 for count in warmed):
+                        break
+                if not all(count > 0 for count in warmed):
+                    raise RuntimeError(f'Not every Relay exercised publishing during warmup: {warmed}')
+                idle_before_app = app_snapshot(label + '-idle-before', ports)
+                idle_before = db_snapshot()
+                time.sleep(30)
+                idle_after = db_snapshot()
+                idle_after_app = app_snapshot(label + '-idle-after', ports)
+                idle = db_delta(idle_before, idle_after)
+                idle['jvm_cpu_seconds'] = sum(metric(a, 'process_cpu_time_ns_total') - metric(b, 'process_cpu_time_ns_total')
+                    for b, a in zip(idle_before_app, idle_after_app)) / 1e9
+                save(label + '-idle.json', {'before': idle_before, 'after': idle_after, 'delta': idle})
+                runs = []
+                for repeat in range(repeats):
+                    # Reproducible randomized pause, NOT control of scheduler/seed phase.
+                    time.sleep(random.Random(repeat).random() * delay / 1000)
+                    runs.append(run(label + f'-r{repeat + 1}', ports, 1000))
+                block = {'label': label, 'poll_ms': delay, 'relays': instances, 'idle': idle, 'runs': runs,
+                         'median_drain_seconds': statistics.median(r['observed_drain_seconds'] for r in runs),
+                         'median_p99_ms': statistics.median(r['publication_record_lag_p99_ms'] for r in runs),
+                         'median_events_per_second': statistics.median(r['observed_events_per_second'] for r in runs),
+                         'median_mysql_cpu_seconds': statistics.median(r['db_cost']['mysql_cpu_seconds'] for r in runs),
+                         'median_jvm_cpu_seconds': statistics.median(r['jvm_cpu_seconds'] for r in runs)}
+                summary.append(block)
+                save('summary.json', summary)
+                stop(children)
+                children = []
+                print(f'BLOCK COMPLETE {label}', flush=True)
+    except BaseException as error:
+        save('failure.json', {'error': repr(error), 'completed_blocks': len(summary)})
+        raise
+    finally:
+        stop(children)
+        print(f'Results: {folder}', flush=True)
+
+
+if __name__ == '__main__':
+    main()

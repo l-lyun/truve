@@ -61,6 +61,13 @@ jwt:
 ticketing:
   active-window-ms: ${TICKETING_ACTIVE_WINDOW_MS:30000}
   session-ttl-sec: ${TICKETING_SESSION_TTL_SEC:300}
+  kafka:
+    booking-consumer:
+      dlt-topic: ${BOOKING_TICKETING_DLT_TOPIC:booking.ticketing.dlt}
+      retry-interval: ${BOOKING_TICKETING_RETRY_INTERVAL:1s}
+      max-attempts: ${BOOKING_TICKETING_RETRY_MAX_ATTEMPTS:3}
+  hold:
+    expiration-scan-delay: ${TICKETING_HOLD_EXPIRATION_SCAN_DELAY:30s}
   outbox:
     # 구 Relay가 모두 제거된 뒤에만 claim 기반 Relay를 활성화한다.
     claim-enabled: ${TICKETING_OUTBOX_CLAIM_ENABLED:false}

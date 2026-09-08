@@ -90,6 +90,29 @@ public class ReservationTest {
 	}
 
 	@Test
+	void 좌석_HOLD가_완료되면_PAYMENT_READY로_전이한다() {
+		Reservation reservation = createHoldPendingReservation();
+
+		reservation.completeHold();
+
+		assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.PAYMENT_READY);
+	}
+
+	@Test
+	void 좌석_HOLD가_실패하거나_만료되면_활성_주문_제약을_해제한다() {
+		Reservation failed = createHoldPendingReservation();
+		Reservation expired = createHoldPendingReservation();
+
+		failed.failHold();
+		expired.expireHold();
+
+		assertThat(failed.getStatus()).isEqualTo(ReservationStatus.HOLD_FAILED);
+		assertThat(failed.getBlockBooking()).isNull();
+		assertThat(expired.getStatus()).isEqualTo(ReservationStatus.EXPIRED);
+		assertThat(expired.getBlockBooking()).isNull();
+	}
+
+	@Test
 	@DisplayName("결제 생성 이벤트 재발행을 위해 PENDING_PAYMENT 상태에서 재시도할 수 있다.")
 	void 결제_대기_상태에서_결제_준비를_재시도할_수_있다() {
 		Reservation reservation = createReservation();
@@ -407,6 +430,12 @@ public class ReservationTest {
 			"VIP석 2인",
 			createShowInfo()
 		);
+	}
+
+	private Reservation createHoldPendingReservation() {
+		return Reservation.createHoldPending(
+			UUID.randomUUID(), "R-HOLD-001", "VIP석 1인", createShowInfo(),
+			"H-001", "seat-fingerprint", LocalDateTime.now().plusMinutes(10));
 	}
 
 	private ShowInfo createShowInfo() {

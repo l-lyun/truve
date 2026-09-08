@@ -1,0 +1,25 @@
+{
+  "before": {
+    "digest": "6b311e1b61ad76479135764483277626090dbfac7bcab378bcf69ce6a164a872",
+    "claim_queries": 2416,
+    "claim_wait_ps": 60225124203000,
+    "mysql_cpu_usec": 114325646,
+    "monotonic": 8563.553656291
+  },
+  "after": {
+    "digest": "6b311e1b61ad76479135764483277626090dbfac7bcab378bcf69ce6a164a872",
+    "claim_queries": 2464,
+    "claim_wait_ps": 61168720162000,
+    "mysql_cpu_usec": 117411445,
+    "monotonic": 8606.81731025
+  },
+  "delta": {
+    "window_seconds": 43.264,
+    "claim_queries": 48,
+    "claim_queries_per_second": 1.1095,
+    "claim_statement_seconds": 0.943595959,
+    "mysql_cpu_seconds": 3.085799,
+    "mysql_cpu_percent_one_core": 7.133,
+    "jvm_cpu_seconds": 0.663254
+  }
+}

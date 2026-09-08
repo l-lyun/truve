@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "events": 20,
+  "a_returncode": -9,
+  "b_alive": true,
+  "published": 20,
+  "kafka_records": 20,
+  "kafka_unique_keys": 20,
+  "missing": 0,
+  "b_recovered_counter_delta": 20.0,
+  "b_published_counter_delta": 20.0,
+  "kill_to_all_published_observed_seconds": 35.23,
+  "claim_marker_to_all_published_observed_seconds": 70.196,
+  "claim_timeout_ms": 60000,
+  "b_pid": 43354
+}

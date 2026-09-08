@@ -178,6 +178,23 @@ public class Reservation extends BaseEntity {
 		this.totalAmount = calculateTicketAmount() + this.serviceFee;
 	}
 
+	public void completeHold() {
+		Preconditions.validate(status == ReservationStatus.HOLD_PENDING, ErrorCode.INVALID_RESERVATION_STATUS);
+		this.status = ReservationStatus.PAYMENT_READY;
+	}
+
+	public void failHold() {
+		Preconditions.validate(status == ReservationStatus.HOLD_PENDING, ErrorCode.INVALID_RESERVATION_STATUS);
+		this.status = ReservationStatus.HOLD_FAILED;
+		this.blockBooking = null;
+	}
+
+	public void expireHold() {
+		Preconditions.validate(status == ReservationStatus.HOLD_PENDING, ErrorCode.INVALID_RESERVATION_STATUS);
+		this.status = ReservationStatus.EXPIRED;
+		this.blockBooking = null;
+	}
+
 	public Long calculateTicketAmount() {
 		return tickets.stream().mapToLong(Ticket::getPriceSnapshot).sum();
 	}

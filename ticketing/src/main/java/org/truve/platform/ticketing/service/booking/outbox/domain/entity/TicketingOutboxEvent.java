@@ -32,6 +32,10 @@ public class TicketingOutboxEvent extends OutboxEvent {
 	@Column(name = "claimed_at")
 	private LocalDateTime claimedAt;
 
+	// Application time immediately before the ownership-guarded update; not exact commit or consumer time.
+	@Column(name = "published_at")
+	private LocalDateTime publishedAt;
+
 	private TicketingOutboxEvent(String topic, String messageKey, String payload, String eventType) {
 		super(topic, messageKey, payload, eventType);
 	}

@@ -96,6 +96,26 @@ class TicketingRedisRepositoryTest {
 	}
 
 	@Test
+	void Consumer_소유권_검증은_meta와_전체_좌석을_Lua에_전달한다() {
+		List<String> keys = List.of(
+			"seat:holds:100:session-token",
+			"seat:hold:meta:hold-id",
+			"seat:hold:100:10",
+			"seat:hold:100:11"
+		);
+		given(redisSupport.ownsHeldSeatLeases(
+			keys, List.of(10L, 11L), "session-token", "hold-id", "10,11"
+		)).willReturn(true);
+
+		boolean owned = ticketingRedisRepository.ownsHeldSeats(
+			100L, List.of(10L, 11L), "session-token", "hold-id");
+
+		assertThat(owned).isTrue();
+		verify(redisSupport).ownsHeldSeatLeases(
+			keys, List.of(10L, 11L), "session-token", "hold-id", "10,11");
+	}
+
+	@Test
 	void 좌석_claim은_모든_키가_세션_소유일_때만_전환한다() {
 		List<String> keys = List.of(
 			"seat:holds:100:session-token",

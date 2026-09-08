@@ -1,0 +1,16 @@
+{
+  "before": {
+    "digest": "6b311e1b61ad76479135764483277626090dbfac7bcab378bcf69ce6a164a872",
+    "claim_queries": 2306,
+    "claim_wait_ps": 59767200832000,
+    "mysql_cpu_usec": 96218690,
+    "monotonic": 8325.344091541
+  },
+  "after": {
+    "digest": "6b311e1b61ad76479135764483277626090dbfac7bcab378bcf69ce6a164a872",
+    "claim_queries": 2312,
+    "claim_wait_ps": 59783118958000,
+    "mysql_cpu_usec": 97704966,
+    "monotonic": 8337.1172865
+  }
+}
