@@ -48,6 +48,24 @@ class TicketingOutboxRelaySchedulerTest {
 	}
 
 	@Test
+	void 장애_게이트는_claim_반환_후_발행_전에_실행되고_중단하면_발행하지_않는다() {
+		OutboxClaimFaultGate gate = org.mockito.Mockito.mock(OutboxClaimFaultGate.class);
+		scheduler.configureFaultGate(gate);
+		List<ClaimedOutboxEvent> events = List.of(claimedEvent());
+		given(claimService.claimBatch(100)).willReturn(events);
+		org.mockito.Mockito.doThrow(new IllegalStateException("interrupted"))
+			.when(gate).afterClaimCommitted(events);
+
+		scheduler.relay();
+
+		org.mockito.InOrder order = org.mockito.Mockito.inOrder(claimService, gate);
+		order.verify(claimService).claimBatch(100);
+		order.verify(gate).afterClaimCommitted(events);
+		verify(messageRelay, never()).relay(org.mockito.ArgumentMatchers.anyList());
+		verify(claimService, never()).complete(org.mockito.ArgumentMatchers.anyList());
+	}
+
+	@Test
 	void claim할_Outbox가_없으면_Kafka와_결과반영을_호출하지_않는다() {
 		given(claimService.claimBatch(100)).willReturn(List.of());
 
