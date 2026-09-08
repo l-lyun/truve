@@ -1,0 +1,27 @@
+diff --git a/ticketing/src/main/java/org/truve/platform/ticketing/service/booking/outbox/service/TicketingOutboxRelayScheduler.java b/ticketing/src/main/java/org/truve/platform/ticketing/service/booking/outbox/service/TicketingOutboxRelayScheduler.java
+index ef92f35..eda4d1f 100644
+--- a/ticketing/src/main/java/org/truve/platform/ticketing/service/booking/outbox/service/TicketingOutboxRelayScheduler.java
++++ b/ticketing/src/main/java/org/truve/platform/ticketing/service/booking/outbox/service/TicketingOutboxRelayScheduler.java
+@@ -31,6 +31,12 @@ public class TicketingOutboxRelayScheduler {
+ 	private final TicketingOutboxClaimService claimService;
+ 	private final TicketingOutboxMessageRelay messageRelay;
+ 	private Timer batchTimer;
++	private OutboxClaimFaultGate faultGate;
++
++	@Autowired(required = false)
++	void configureFaultGate(OutboxClaimFaultGate faultGate) {
++		this.faultGate = faultGate;
++	}
+ 
+ 	@Autowired(required = false)
+ 	void configureMetrics(MeterRegistry registry) {
+@@ -48,6 +54,9 @@ public class TicketingOutboxRelayScheduler {
+ 		try {
+ 			List<ClaimedOutboxEvent> claimedEvents = claimService.claimBatch(RELAY_BATCH_SIZE);
+ 			if (!claimedEvents.isEmpty()) {
++				if (faultGate != null) {
++					faultGate.afterClaimCommitted(claimedEvents);
++				}
+ 				List<OutboxRelayResult> results = messageRelay.relay(claimedEvents);
+ 				claimService.complete(results);
+ 			}

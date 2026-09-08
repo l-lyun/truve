@@ -1,0 +1,367 @@
+[
+  {
+    "elapsed": 0.20519245799914643,
+    "states": {
+      "PENDING": 1000
+    }
+  },
+  {
+    "elapsed": 0.787387291999039,
+    "states": {
+      "PUBLISHED": 100,
+      "PENDING": 900
+    }
+  },
+  {
+    "elapsed": 1.387288042000364,
+    "states": {
+      "PUBLISHED": 100,
+      "PENDING": 900
+    }
+  },
+  {
+    "elapsed": 1.9684174169997277,
+    "states": {
+      "PUBLISHED": 100,
+      "PENDING": 900
+    }
+  },
+  {
+    "elapsed": 2.647551416999704,
+    "states": {
+      "PUBLISHED": 100,
+      "PENDING": 900
+    }
+  },
+  {
+    "elapsed": 3.3277147080007126,
+    "states": {
+      "PUBLISHED": 100,
+      "PENDING": 900
+    }
+  },
+  {
+    "elapsed": 3.9964535420003813,
+    "states": {
+      "PUBLISHED": 100,
+      "PENDING": 800,
+      "PROCESSING": 100
+    }
+  },
+  {
+    "elapsed": 4.74592470800053,
+    "states": {
+      "PUBLISHED": 200,
+      "PENDING": 800
+    }
+  },
+  {
+    "elapsed": 5.327904125000714,
+    "states": {
+      "PUBLISHED": 200,
+      "PENDING": 800
+    }
+  },
+  {
+    "elapsed": 6.256734917000358,
+    "states": {
+      "PUBLISHED": 200,
+      "PENDING": 800
+    }
+  },
+  {
+    "elapsed": 6.858559250000326,
+    "states": {
+      "PUBLISHED": 200,
+      "PENDING": 800
+    }
+  },
+  {
+    "elapsed": 7.477419832999658,
+    "states": {
+      "PUBLISHED": 200,
+      "PENDING": 800
+    }
+  },
+  {
+    "elapsed": 8.063344042000608,
+    "states": {
+      "PUBLISHED": 300,
+      "PENDING": 700
+    }
+  },
+  {
+    "elapsed": 8.656017499999507,
+    "states": {
+      "PUBLISHED": 300,
+      "PENDING": 700
+    }
+  },
+  {
+    "elapsed": 9.260815792000358,
+    "states": {
+      "PUBLISHED": 300,
+      "PENDING": 700
+    }
+  },
+  {
+    "elapsed": 9.850101707999784,
+    "states": {
+      "PUBLISHED": 300,
+      "PENDING": 700
+    }
+  },
+  {
+    "elapsed": 10.451623582999673,
+    "states": {
+      "PUBLISHED": 300,
+      "PENDING": 700
+    }
+  },
+  {
+    "elapsed": 11.047369750000144,
+    "states": {
+      "PUBLISHED": 300,
+      "PENDING": 600,
+      "PROCESSING": 100
+    }
+  },
+  {
+    "elapsed": 11.635713042000134,
+    "states": {
+      "PUBLISHED": 400,
+      "PENDING": 600
+    }
+  },
+  {
+    "elapsed": 12.222465458000443,
+    "states": {
+      "PUBLISHED": 400,
+      "PENDING": 600
+    }
+  },
+  {
+    "elapsed": 12.8091846669995,
+    "states": {
+      "PUBLISHED": 400,
+      "PENDING": 600
+    }
+  },
+  {
+    "elapsed": 13.448949542000264,
+    "states": {
+      "PUBLISHED": 400,
+      "PENDING": 600
+    }
+  },
+  {
+    "elapsed": 14.045101542000339,
+    "states": {
+      "PUBLISHED": 400,
+      "PENDING": 600
+    }
+  },
+  {
+    "elapsed": 14.71599066700037,
+    "states": {
+      "PUBLISHED": 500,
+      "PENDING": 500
+    }
+  },
+  {
+    "elapsed": 15.297612083000786,
+    "states": {
+      "PUBLISHED": 500,
+      "PENDING": 500
+    }
+  },
+  {
+    "elapsed": 15.902465582999866,
+    "states": {
+      "PUBLISHED": 500,
+      "PENDING": 500
+    }
+  },
+  {
+    "elapsed": 16.491942124999696,
+    "states": {
+      "PUBLISHED": 500,
+      "PENDING": 500
+    }
+  },
+  {
+    "elapsed": 17.093118832999608,
+    "states": {
+      "PUBLISHED": 500,
+      "PENDING": 500
+    }
+  },
+  {
+    "elapsed": 17.696290457999567,
+    "states": {
+      "PUBLISHED": 500,
+      "PENDING": 500
+    }
+  },
+  {
+    "elapsed": 18.280717583000296,
+    "states": {
+      "PUBLISHED": 600,
+      "PENDING": 400
+    }
+  },
+  {
+    "elapsed": 18.874932541999442,
+    "states": {
+      "PUBLISHED": 600,
+      "PENDING": 400
+    }
+  },
+  {
+    "elapsed": 19.45731162499942,
+    "states": {
+      "PUBLISHED": 600,
+      "PENDING": 400
+    }
+  },
+  {
+    "elapsed": 20.0419239999992,
+    "states": {
+      "PUBLISHED": 600,
+      "PENDING": 400
+    }
+  },
+  {
+    "elapsed": 20.620584333000807,
+    "states": {
+      "PUBLISHED": 600,
+      "PENDING": 400
+    }
+  },
+  {
+    "elapsed": 21.194801792000362,
+    "states": {
+      "PUBLISHED": 700,
+      "PENDING": 300
+    }
+  },
+  {
+    "elapsed": 21.76855062499999,
+    "states": {
+      "PUBLISHED": 700,
+      "PENDING": 300
+    }
+  },
+  {
+    "elapsed": 22.355778957999064,
+    "states": {
+      "PUBLISHED": 700,
+      "PENDING": 300
+    }
+  },
+  {
+    "elapsed": 22.942335042000195,
+    "states": {
+      "PUBLISHED": 700,
+      "PENDING": 300
+    }
+  },
+  {
+    "elapsed": 23.574192874999426,
+    "states": {
+      "PUBLISHED": 700,
+      "PENDING": 300
+    }
+  },
+  {
+    "elapsed": 24.166267667000284,
+    "states": {
+      "PUBLISHED": 700,
+      "PENDING": 300
+    }
+  },
+  {
+    "elapsed": 24.803799125000296,
+    "states": {
+      "PUBLISHED": 800,
+      "PENDING": 200
+    }
+  },
+  {
+    "elapsed": 25.394542542000636,
+    "states": {
+      "PUBLISHED": 800,
+      "PENDING": 200
+    }
+  },
+  {
+    "elapsed": 25.9773557919998,
+    "states": {
+      "PUBLISHED": 800,
+      "PENDING": 200
+    }
+  },
+  {
+    "elapsed": 26.565400707999288,
+    "states": {
+      "PUBLISHED": 800,
+      "PENDING": 200
+    }
+  },
+  {
+    "elapsed": 27.163017499999114,
+    "states": {
+      "PUBLISHED": 800,
+      "PENDING": 200
+    }
+  },
+  {
+    "elapsed": 27.759563666999384,
+    "states": {
+      "PUBLISHED": 800,
+      "PENDING": 100,
+      "PROCESSING": 100
+    }
+  },
+  {
+    "elapsed": 28.343066542000088,
+    "states": {
+      "PUBLISHED": 900,
+      "PENDING": 100
+    }
+  },
+  {
+    "elapsed": 28.92255862499951,
+    "states": {
+      "PUBLISHED": 900,
+      "PENDING": 100
+    }
+  },
+  {
+    "elapsed": 29.520389541999975,
+    "states": {
+      "PUBLISHED": 900,
+      "PENDING": 100
+    }
+  },
+  {
+    "elapsed": 30.106179874999725,
+    "states": {
+      "PUBLISHED": 900,
+      "PENDING": 100
+    }
+  },
+  {
+    "elapsed": 30.6839674999992,
+    "states": {
+      "PUBLISHED": 900,
+      "PENDING": 100
+    }
+  },
+  {
+    "elapsed": 31.2651505419999,
+    "states": {
+      "PUBLISHED": 1000
+    }
+  }
+]

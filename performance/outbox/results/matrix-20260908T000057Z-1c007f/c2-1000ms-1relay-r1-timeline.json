@@ -1,0 +1,184 @@
+[
+  {
+    "elapsed": 51.28067841700067,
+    "states": {
+      "PENDING": 1000
+    }
+  },
+  {
+    "elapsed": 52.35011529199983,
+    "states": {
+      "PENDING": 1000
+    }
+  },
+  {
+    "elapsed": 53.242840875000184,
+    "states": {
+      "PROCESSING": 100,
+      "PENDING": 900
+    }
+  },
+  {
+    "elapsed": 53.9300436249996,
+    "states": {
+      "PUBLISHED": 100,
+      "PENDING": 900
+    }
+  },
+  {
+    "elapsed": 54.551975709000544,
+    "states": {
+      "PUBLISHED": 100,
+      "PENDING": 900
+    }
+  },
+  {
+    "elapsed": 55.29059958400103,
+    "states": {
+      "PUBLISHED": 100,
+      "PENDING": 800,
+      "PROCESSING": 100
+    }
+  },
+  {
+    "elapsed": 55.889259625000705,
+    "states": {
+      "PUBLISHED": 200,
+      "PENDING": 800
+    }
+  },
+  {
+    "elapsed": 56.514326667000205,
+    "states": {
+      "PUBLISHED": 200,
+      "PENDING": 800
+    }
+  },
+  {
+    "elapsed": 57.10292720899997,
+    "states": {
+      "PUBLISHED": 300,
+      "PENDING": 700
+    }
+  },
+  {
+    "elapsed": 57.7655247090006,
+    "states": {
+      "PUBLISHED": 300,
+      "PENDING": 700
+    }
+  },
+  {
+    "elapsed": 58.42731312500109,
+    "states": {
+      "PUBLISHED": 300,
+      "PENDING": 600,
+      "PROCESSING": 100
+    }
+  },
+  {
+    "elapsed": 59.04390133400011,
+    "states": {
+      "PUBLISHED": 400,
+      "PENDING": 600
+    }
+  },
+  {
+    "elapsed": 59.674315166999804,
+    "states": {
+      "PUBLISHED": 400,
+      "PENDING": 600
+    }
+  },
+  {
+    "elapsed": 60.341943792000166,
+    "states": {
+      "PUBLISHED": 400,
+      "PENDING": 500,
+      "PROCESSING": 100
+    }
+  },
+  {
+    "elapsed": 61.05746354199982,
+    "states": {
+      "PUBLISHED": 500,
+      "PENDING": 500
+    }
+  },
+  {
+    "elapsed": 61.68901145900054,
+    "states": {
+      "PUBLISHED": 500,
+      "PENDING": 500
+    }
+  },
+  {
+    "elapsed": 62.417637167000066,
+    "states": {
+      "PUBLISHED": 600,
+      "PENDING": 400
+    }
+  },
+  {
+    "elapsed": 63.32488404200012,
+    "states": {
+      "PUBLISHED": 600,
+      "PENDING": 400
+    }
+  },
+  {
+    "elapsed": 63.906470042000365,
+    "states": {
+      "PUBLISHED": 700,
+      "PENDING": 300
+    }
+  },
+  {
+    "elapsed": 64.52474445900043,
+    "states": {
+      "PUBLISHED": 700,
+      "PENDING": 300
+    }
+  },
+  {
+    "elapsed": 65.10071716700077,
+    "states": {
+      "PUBLISHED": 800,
+      "PENDING": 200
+    }
+  },
+  {
+    "elapsed": 65.70451083400076,
+    "states": {
+      "PUBLISHED": 800,
+      "PENDING": 200
+    }
+  },
+  {
+    "elapsed": 66.29108420900047,
+    "states": {
+      "PUBLISHED": 900,
+      "PENDING": 100
+    }
+  },
+  {
+    "elapsed": 66.8688792920002,
+    "states": {
+      "PUBLISHED": 900,
+      "PENDING": 100
+    }
+  },
+  {
+    "elapsed": 67.45967433400074,
+    "states": {
+      "PUBLISHED": 900,
+      "PROCESSING": 100
+    }
+  },
+  {
+    "elapsed": 68.03664291700079,
+    "states": {
+      "PUBLISHED": 1000
+    }
+  }
+]

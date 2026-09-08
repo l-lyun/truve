@@ -1,2 +1,5 @@
 __pycache__/
-/results/
+# Keep experiment artifacts available when the branch is checked out elsewhere.
+!/results/
+!/results/**/
+!/results/**

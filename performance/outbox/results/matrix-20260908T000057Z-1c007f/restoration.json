@@ -1,0 +1,15 @@
+{
+  "source": "post-restoration live HTTP and MySQL read-only checks",
+  "readiness": "UP",
+  "relay_polling": "default 3000ms",
+  "fault_profile_enabled": false,
+  "event_counts": {
+    "SMOKE_PUBLISHED": 1000,
+    "BASELINE_PUBLISHED": 3000,
+    "CRASH_PUBLISHED": 20,
+    "MATRIX_PUBLISHED": 6600
+  },
+  "all_unfinished": 0,
+  "strictly_verified_completed_matrix_events": 5000,
+  "excluded_from_comparison": "600 warmup events and 1000 interrupted-run events"
+}

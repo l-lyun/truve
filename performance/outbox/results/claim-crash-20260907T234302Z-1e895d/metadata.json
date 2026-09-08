@@ -1,0 +1,13 @@
+{
+  "sha": "4f4f741636ba42a109c5d3847986324634f2a40a",
+  "jar_sha256": "311a9a3387582fc1c972c9ab4967414c222249da86d92bab7761213372268a0b",
+  "topic": "truve.outbox.claimcrash.866c3360a60f4ef396a2ec933d50db2a",
+  "events": 20,
+  "claim_timeout_ms": 60000,
+  "recovery_scan_ms": 1000,
+  "relay_fixed_delay_ms": 1000,
+  "time_basis": "JVM Asia/Seoul, seed MySQL +09:00",
+  "kill_point": "after claim transaction commit, before Kafka send",
+  "scope": "local JVM process SIGKILL, real DB and Kafka, independent keys, no business Consumer",
+  "test_overrides": "claim timeout 60s vs default 300s, scan 1s vs 30s, poll 1s vs 3s"
+}

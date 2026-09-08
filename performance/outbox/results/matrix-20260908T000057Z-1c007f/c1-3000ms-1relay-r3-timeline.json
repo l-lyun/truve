@@ -1,0 +1,364 @@
+[
+  {
+    "elapsed": 0.17111074999957054,
+    "states": {
+      "PENDING": 1000
+    }
+  },
+  {
+    "elapsed": 0.7790252920003695,
+    "states": {
+      "PENDING": 1000
+    }
+  },
+  {
+    "elapsed": 1.3564457499996934,
+    "states": {
+      "PUBLISHED": 100,
+      "PENDING": 900
+    }
+  },
+  {
+    "elapsed": 1.9608757500009233,
+    "states": {
+      "PUBLISHED": 100,
+      "PENDING": 900
+    }
+  },
+  {
+    "elapsed": 2.547963000000891,
+    "states": {
+      "PUBLISHED": 100,
+      "PENDING": 900
+    }
+  },
+  {
+    "elapsed": 3.1419658750000963,
+    "states": {
+      "PUBLISHED": 100,
+      "PENDING": 900
+    }
+  },
+  {
+    "elapsed": 3.744481125000675,
+    "states": {
+      "PUBLISHED": 100,
+      "PENDING": 900
+    }
+  },
+  {
+    "elapsed": 4.34918079199997,
+    "states": {
+      "PUBLISHED": 100,
+      "PENDING": 900
+    }
+  },
+  {
+    "elapsed": 4.942664083000636,
+    "states": {
+      "PUBLISHED": 200,
+      "PENDING": 800
+    }
+  },
+  {
+    "elapsed": 5.532895667000048,
+    "states": {
+      "PUBLISHED": 200,
+      "PENDING": 800
+    }
+  },
+  {
+    "elapsed": 6.176926457999798,
+    "states": {
+      "PUBLISHED": 200,
+      "PENDING": 800
+    }
+  },
+  {
+    "elapsed": 6.760939666999548,
+    "states": {
+      "PUBLISHED": 200,
+      "PENDING": 800
+    }
+  },
+  {
+    "elapsed": 7.353755500000261,
+    "states": {
+      "PUBLISHED": 200,
+      "PENDING": 800
+    }
+  },
+  {
+    "elapsed": 7.935893916999703,
+    "states": {
+      "PUBLISHED": 300,
+      "PENDING": 700
+    }
+  },
+  {
+    "elapsed": 8.5360083329997,
+    "states": {
+      "PUBLISHED": 300,
+      "PENDING": 700
+    }
+  },
+  {
+    "elapsed": 9.116815167000823,
+    "states": {
+      "PUBLISHED": 300,
+      "PENDING": 700
+    }
+  },
+  {
+    "elapsed": 9.704002917000253,
+    "states": {
+      "PUBLISHED": 300,
+      "PENDING": 700
+    }
+  },
+  {
+    "elapsed": 10.295675542000026,
+    "states": {
+      "PUBLISHED": 300,
+      "PENDING": 700
+    }
+  },
+  {
+    "elapsed": 10.881061500000214,
+    "states": {
+      "PUBLISHED": 300,
+      "PENDING": 700
+    }
+  },
+  {
+    "elapsed": 11.476950166999814,
+    "states": {
+      "PUBLISHED": 400,
+      "PENDING": 600
+    }
+  },
+  {
+    "elapsed": 12.05296479199933,
+    "states": {
+      "PUBLISHED": 400,
+      "PENDING": 600
+    }
+  },
+  {
+    "elapsed": 12.640353708000475,
+    "states": {
+      "PUBLISHED": 400,
+      "PENDING": 600
+    }
+  },
+  {
+    "elapsed": 13.230344166999203,
+    "states": {
+      "PUBLISHED": 400,
+      "PENDING": 600
+    }
+  },
+  {
+    "elapsed": 13.840689582999403,
+    "states": {
+      "PUBLISHED": 400,
+      "PENDING": 600
+    }
+  },
+  {
+    "elapsed": 14.43864104199929,
+    "states": {
+      "PUBLISHED": 500,
+      "PENDING": 500
+    }
+  },
+  {
+    "elapsed": 15.039984625000216,
+    "states": {
+      "PUBLISHED": 500,
+      "PENDING": 500
+    }
+  },
+  {
+    "elapsed": 15.637229666999701,
+    "states": {
+      "PUBLISHED": 500,
+      "PENDING": 500
+    }
+  },
+  {
+    "elapsed": 16.2708902079994,
+    "states": {
+      "PUBLISHED": 500,
+      "PENDING": 500
+    }
+  },
+  {
+    "elapsed": 16.881963333000385,
+    "states": {
+      "PUBLISHED": 500,
+      "PENDING": 500
+    }
+  },
+  {
+    "elapsed": 17.478421874999185,
+    "states": {
+      "PUBLISHED": 500,
+      "PENDING": 400,
+      "PROCESSING": 100
+    }
+  },
+  {
+    "elapsed": 18.138365167000302,
+    "states": {
+      "PUBLISHED": 600,
+      "PENDING": 400
+    }
+  },
+  {
+    "elapsed": 18.730345916999795,
+    "states": {
+      "PUBLISHED": 600,
+      "PENDING": 400
+    }
+  },
+  {
+    "elapsed": 19.314366541999334,
+    "states": {
+      "PUBLISHED": 600,
+      "PENDING": 400
+    }
+  },
+  {
+    "elapsed": 19.907696958000088,
+    "states": {
+      "PUBLISHED": 600,
+      "PENDING": 400
+    }
+  },
+  {
+    "elapsed": 20.49351554200075,
+    "states": {
+      "PUBLISHED": 600,
+      "PENDING": 400
+    }
+  },
+  {
+    "elapsed": 21.09684712499984,
+    "states": {
+      "PUBLISHED": 700,
+      "PENDING": 300
+    }
+  },
+  {
+    "elapsed": 21.695186749999266,
+    "states": {
+      "PUBLISHED": 700,
+      "PENDING": 300
+    }
+  },
+  {
+    "elapsed": 22.28062612500071,
+    "states": {
+      "PUBLISHED": 700,
+      "PENDING": 300
+    }
+  },
+  {
+    "elapsed": 22.91632666700025,
+    "states": {
+      "PUBLISHED": 700,
+      "PENDING": 300
+    }
+  },
+  {
+    "elapsed": 23.501594291999936,
+    "states": {
+      "PUBLISHED": 700,
+      "PENDING": 300
+    }
+  },
+  {
+    "elapsed": 24.08101041699956,
+    "states": {
+      "PUBLISHED": 800,
+      "PENDING": 200
+    }
+  },
+  {
+    "elapsed": 24.668205292000494,
+    "states": {
+      "PUBLISHED": 800,
+      "PENDING": 200
+    }
+  },
+  {
+    "elapsed": 25.24981916700017,
+    "states": {
+      "PUBLISHED": 800,
+      "PENDING": 200
+    }
+  },
+  {
+    "elapsed": 25.857503458000792,
+    "states": {
+      "PUBLISHED": 800,
+      "PENDING": 200
+    }
+  },
+  {
+    "elapsed": 26.44387616700078,
+    "states": {
+      "PUBLISHED": 800,
+      "PENDING": 200
+    }
+  },
+  {
+    "elapsed": 27.04038579200096,
+    "states": {
+      "PUBLISHED": 800,
+      "PENDING": 200
+    }
+  },
+  {
+    "elapsed": 27.631210333000126,
+    "states": {
+      "PUBLISHED": 900,
+      "PENDING": 100
+    }
+  },
+  {
+    "elapsed": 28.22575633300039,
+    "states": {
+      "PUBLISHED": 900,
+      "PENDING": 100
+    }
+  },
+  {
+    "elapsed": 28.84071720800057,
+    "states": {
+      "PUBLISHED": 900,
+      "PENDING": 100
+    }
+  },
+  {
+    "elapsed": 29.499342125000112,
+    "states": {
+      "PUBLISHED": 900,
+      "PENDING": 100
+    }
+  },
+  {
+    "elapsed": 30.09124004200021,
+    "states": {
+      "PUBLISHED": 900,
+      "PENDING": 100
+    }
+  },
+  {
+    "elapsed": 30.679274207999697,
+    "states": {
+      "PUBLISHED": 1000
+    }
+  }
+]

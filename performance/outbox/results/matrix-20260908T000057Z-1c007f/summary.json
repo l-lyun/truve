@@ -1,0 +1,125 @@
+[
+  {
+    "label": "c1-3000ms-1relay",
+    "poll_ms": 3000,
+    "relays": 1,
+    "idle": {
+      "window_seconds": 30.209,
+      "claim_queries": 20,
+      "claim_queries_per_second": 0.6621,
+      "claim_statement_seconds": 0.058660791,
+      "mysql_cpu_seconds": 0.486583,
+      "mysql_cpu_percent_one_core": 1.611,
+      "jvm_cpu_seconds": 0.360436
+    },
+    "runs": [
+      {
+        "prefix": "c1-3000ms-1relay-r1",
+        "topic": "truve.outbox.matrix.e40a9fa679a14d74a93484b91863c9af",
+        "events": 1000,
+        "observed_drain_seconds": 31.265,
+        "observed_events_per_second": 31.984,
+        "publication_record_lag_p50_ms": 14412.85,
+        "publication_record_lag_p99_ms": 30980.37,
+        "publication_record_lag_max_ms": 30987.828,
+        "kafka_records": 1000,
+        "kafka_unique_keys": 1000,
+        "missing": 0,
+        "unexpected": 0,
+        "duplicates": 0,
+        "completion_counters": {
+          "published": 1000.0,
+          "failed": 0.0,
+          "stale": 0.0
+        },
+        "per_relay_published": [
+          1000.0
+        ],
+        "recovered": 0.0,
+        "retries": 0,
+        "jvm_cpu_seconds": 3.458436,
+        "db_cost": {
+          "window_seconds": 31.412,
+          "claim_queries": 20,
+          "claim_queries_per_second": 0.6367,
+          "claim_statement_seconds": 0.026724666,
+          "mysql_cpu_seconds": 2.285292,
+          "mysql_cpu_percent_one_core": 7.275
+        }
+      },
+      {
+        "prefix": "c1-3000ms-1relay-r2",
+        "topic": "truve.outbox.matrix.30e5412360b7469d9539ab270db51c58",
+        "events": 1000,
+        "observed_drain_seconds": 30.263,
+        "observed_events_per_second": 33.044,
+        "publication_record_lag_p50_ms": 13686.677,
+        "publication_record_lag_p99_ms": 30095.665,
+        "publication_record_lag_max_ms": 30102.492,
+        "kafka_records": 1000,
+        "kafka_unique_keys": 1000,
+        "missing": 0,
+        "unexpected": 0,
+        "duplicates": 0,
+        "completion_counters": {
+          "published": 1000.0,
+          "failed": 0.0,
+          "stale": 0.0
+        },
+        "per_relay_published": [
+          1000.0
+        ],
+        "recovered": 0.0,
+        "retries": 0,
+        "jvm_cpu_seconds": 1.809176,
+        "db_cost": {
+          "window_seconds": 30.418,
+          "claim_queries": 20,
+          "claim_queries_per_second": 0.6575,
+          "claim_statement_seconds": 0.025155458,
+          "mysql_cpu_seconds": 2.006087,
+          "mysql_cpu_percent_one_core": 6.595
+        }
+      },
+      {
+        "prefix": "c1-3000ms-1relay-r3",
+        "topic": "truve.outbox.matrix.ad8a15ae8bdc415d940057f5f76d962d",
+        "events": 1000,
+        "observed_drain_seconds": 30.679,
+        "observed_events_per_second": 32.595,
+        "publication_record_lag_p50_ms": 14231.009,
+        "publication_record_lag_p99_ms": 30401.34,
+        "publication_record_lag_max_ms": 30409.108,
+        "kafka_records": 1000,
+        "kafka_unique_keys": 1000,
+        "missing": 0,
+        "unexpected": 0,
+        "duplicates": 0,
+        "completion_counters": {
+          "published": 1000.0,
+          "failed": 0.0,
+          "stale": 0.0
+        },
+        "per_relay_published": [
+          1000.0
+        ],
+        "recovered": 0.0,
+        "retries": 0,
+        "jvm_cpu_seconds": 2.125558,
+        "db_cost": {
+          "window_seconds": 30.85,
+          "claim_queries": 20,
+          "claim_queries_per_second": 0.6483,
+          "claim_statement_seconds": 0.03548254,
+          "mysql_cpu_seconds": 1.978088,
+          "mysql_cpu_percent_one_core": 6.412
+        }
+      }
+    ],
+    "median_drain_seconds": 30.679,
+    "median_p99_ms": 30401.34,
+    "median_events_per_second": 32.595,
+    "median_mysql_cpu_seconds": 2.006087,
+    "median_jvm_cpu_seconds": 2.125558
+  }
+]

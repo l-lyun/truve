@@ -1,0 +1,156 @@
+[
+  {
+    "elapsed": 0.15963895799905004,
+    "states": {
+      "PENDING": 1000
+    }
+  },
+  {
+    "elapsed": 0.7532340419984394,
+    "states": {
+      "PUBLISHED": 100,
+      "PENDING": 900
+    }
+  },
+  {
+    "elapsed": 1.343474833000073,
+    "states": {
+      "PUBLISHED": 100,
+      "PENDING": 900
+    }
+  },
+  {
+    "elapsed": 1.9823063329986326,
+    "states": {
+      "PUBLISHED": 200,
+      "PENDING": 800
+    }
+  },
+  {
+    "elapsed": 2.618004874999315,
+    "states": {
+      "PUBLISHED": 200,
+      "PENDING": 800
+    }
+  },
+  {
+    "elapsed": 3.2205191670000204,
+    "states": {
+      "PUBLISHED": 300,
+      "PENDING": 700
+    }
+  },
+  {
+    "elapsed": 3.824464999999691,
+    "states": {
+      "PUBLISHED": 300,
+      "PENDING": 700
+    }
+  },
+  {
+    "elapsed": 4.422132957999565,
+    "states": {
+      "PUBLISHED": 300,
+      "PENDING": 600,
+      "PROCESSING": 100
+    }
+  },
+  {
+    "elapsed": 5.029919457998403,
+    "states": {
+      "PUBLISHED": 400,
+      "PENDING": 600
+    }
+  },
+  {
+    "elapsed": 5.636001791999661,
+    "states": {
+      "PUBLISHED": 400,
+      "PENDING": 500,
+      "PROCESSING": 100
+    }
+  },
+  {
+    "elapsed": 6.272669666999718,
+    "states": {
+      "PUBLISHED": 500,
+      "PENDING": 500
+    }
+  },
+  {
+    "elapsed": 6.88586120799846,
+    "states": {
+      "PUBLISHED": 500,
+      "PENDING": 500
+    }
+  },
+  {
+    "elapsed": 7.507886374998634,
+    "states": {
+      "PUBLISHED": 600,
+      "PENDING": 400
+    }
+  },
+  {
+    "elapsed": 8.100441916998534,
+    "states": {
+      "PUBLISHED": 600,
+      "PENDING": 400
+    }
+  },
+  {
+    "elapsed": 8.687199124999097,
+    "states": {
+      "PUBLISHED": 700,
+      "PENDING": 300
+    }
+  },
+  {
+    "elapsed": 9.281294957998398,
+    "states": {
+      "PUBLISHED": 700,
+      "PENDING": 300
+    }
+  },
+  {
+    "elapsed": 9.876340416998573,
+    "states": {
+      "PUBLISHED": 800,
+      "PENDING": 200
+    }
+  },
+  {
+    "elapsed": 10.500955083000008,
+    "states": {
+      "PUBLISHED": 800,
+      "PENDING": 200
+    }
+  },
+  {
+    "elapsed": 11.126213749999806,
+    "states": {
+      "PUBLISHED": 900,
+      "PENDING": 100
+    }
+  },
+  {
+    "elapsed": 11.73313083299945,
+    "states": {
+      "PUBLISHED": 900,
+      "PENDING": 100
+    }
+  },
+  {
+    "elapsed": 12.35946070799946,
+    "states": {
+      "PUBLISHED": 900,
+      "PROCESSING": 100
+    }
+  },
+  {
+    "elapsed": 12.934162249999645,
+    "states": {
+      "PUBLISHED": 1000
+    }
+  }
+]

@@ -1,0 +1,189 @@
+[
+  {
+    "event": "a_ready",
+    "elapsed_seconds": 78.003,
+    "utc": "2026-09-07T23:44:26.655542+00:00",
+    "pid": 40624
+  },
+  {
+    "event": "a_claim_committed_and_paused",
+    "elapsed_seconds": 80.252,
+    "utc": "2026-09-07T23:44:28.888577+00:00",
+    "rows": 20
+  },
+  {
+    "event": "b_ready_before_a_kill",
+    "elapsed_seconds": 114.871,
+    "utc": "2026-09-07T23:45:03.508105+00:00",
+    "pid": 43354
+  },
+  {
+    "event": "a_sigkill",
+    "elapsed_seconds": 114.944,
+    "utc": "2026-09-07T23:45:03.580767+00:00",
+    "returncode": -9
+  },
+  {
+    "event": "recovery_poll",
+    "elapsed_seconds": 115.147,
+    "utc": "2026-09-07T23:45:03.783312+00:00",
+    "published": 0
+  },
+  {
+    "event": "recovery_poll",
+    "elapsed_seconds": 116.28,
+    "utc": "2026-09-07T23:45:04.916219+00:00",
+    "published": 0
+  },
+  {
+    "event": "recovery_poll",
+    "elapsed_seconds": 117.399,
+    "utc": "2026-09-07T23:45:06.035774+00:00",
+    "published": 0
+  },
+  {
+    "event": "recovery_poll",
+    "elapsed_seconds": 118.583,
+    "utc": "2026-09-07T23:45:07.219230+00:00",
+    "published": 0
+  },
+  {
+    "event": "recovery_poll",
+    "elapsed_seconds": 119.821,
+    "utc": "2026-09-07T23:45:08.457731+00:00",
+    "published": 0
+  },
+  {
+    "event": "recovery_poll",
+    "elapsed_seconds": 120.949,
+    "utc": "2026-09-07T23:45:09.585306+00:00",
+    "published": 0
+  },
+  {
+    "event": "recovery_poll",
+    "elapsed_seconds": 122.11,
+    "utc": "2026-09-07T23:45:10.746251+00:00",
+    "published": 0
+  },
+  {
+    "event": "recovery_poll",
+    "elapsed_seconds": 123.308,
+    "utc": "2026-09-07T23:45:11.944902+00:00",
+    "published": 0
+  },
+  {
+    "event": "recovery_poll",
+    "elapsed_seconds": 125.62,
+    "utc": "2026-09-07T23:45:14.256085+00:00",
+    "published": 0
+  },
+  {
+    "event": "recovery_poll",
+    "elapsed_seconds": 126.767,
+    "utc": "2026-09-07T23:45:15.403094+00:00",
+    "published": 0
+  },
+  {
+    "event": "recovery_poll",
+    "elapsed_seconds": 127.875,
+    "utc": "2026-09-07T23:45:16.511532+00:00",
+    "published": 0
+  },
+  {
+    "event": "recovery_poll",
+    "elapsed_seconds": 129.259,
+    "utc": "2026-09-07T23:45:17.895869+00:00",
+    "published": 0
+  },
+  {
+    "event": "recovery_poll",
+    "elapsed_seconds": 130.502,
+    "utc": "2026-09-07T23:45:19.139007+00:00",
+    "published": 0
+  },
+  {
+    "event": "recovery_poll",
+    "elapsed_seconds": 131.809,
+    "utc": "2026-09-07T23:45:20.445928+00:00",
+    "published": 0
+  },
+  {
+    "event": "recovery_poll",
+    "elapsed_seconds": 133.057,
+    "utc": "2026-09-07T23:45:21.693447+00:00",
+    "published": 0
+  },
+  {
+    "event": "recovery_poll",
+    "elapsed_seconds": 134.74,
+    "utc": "2026-09-07T23:45:23.376660+00:00",
+    "published": 0
+  },
+  {
+    "event": "recovery_poll",
+    "elapsed_seconds": 136.712,
+    "utc": "2026-09-07T23:45:25.348855+00:00",
+    "published": 0
+  },
+  {
+    "event": "recovery_poll",
+    "elapsed_seconds": 138.618,
+    "utc": "2026-09-07T23:45:27.254562+00:00",
+    "published": 0
+  },
+  {
+    "event": "recovery_poll",
+    "elapsed_seconds": 140.035,
+    "utc": "2026-09-07T23:45:28.670988+00:00",
+    "published": 0
+  },
+  {
+    "event": "recovery_poll",
+    "elapsed_seconds": 141.626,
+    "utc": "2026-09-07T23:45:30.262290+00:00",
+    "published": 0
+  },
+  {
+    "event": "recovery_poll",
+    "elapsed_seconds": 143.028,
+    "utc": "2026-09-07T23:45:31.664540+00:00",
+    "published": 0
+  },
+  {
+    "event": "recovery_poll",
+    "elapsed_seconds": 144.791,
+    "utc": "2026-09-07T23:45:33.427656+00:00",
+    "published": 0
+  },
+  {
+    "event": "recovery_poll",
+    "elapsed_seconds": 147.336,
+    "utc": "2026-09-07T23:45:35.972851+00:00",
+    "published": 0
+  },
+  {
+    "event": "recovery_poll",
+    "elapsed_seconds": 150.1,
+    "utc": "2026-09-07T23:45:38.736079+00:00",
+    "published": 20
+  },
+  {
+    "event": "complete",
+    "elapsed_seconds": 166.389,
+    "utc": "2026-09-07T23:45:55.025424+00:00",
+    "status": "PASS",
+    "events": 20,
+    "a_returncode": -9,
+    "b_alive": true,
+    "published": 20,
+    "kafka_records": 20,
+    "kafka_unique_keys": 20,
+    "missing": 0,
+    "b_recovered_counter_delta": 20.0,
+    "b_published_counter_delta": 20.0,
+    "kill_to_all_published_observed_seconds": 35.23,
+    "claim_marker_to_all_published_observed_seconds": 70.196,
+    "claim_timeout_ms": 60000,
+    "b_pid": 43354
+  }
+]
