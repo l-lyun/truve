@@ -3,6 +3,7 @@ package org.truve.platform.ticketing.service.ticketing.service;
 import java.time.Clock;
 import java.time.LocalDateTime;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Component
+@ConditionalOnProperty(prefix = "ticketing.hold", name = "expiration-enabled", havingValue = "true",
+	matchIfMissing = true)
 @RequiredArgsConstructor
 @Slf4j
 public class HoldPendingExpirationScheduler {

@@ -1,0 +1,31 @@
+server:
+  address: 127.0.0.1
+
+spring:
+  datasource:
+    hikari:
+      connection-timeout: 5000
+      data-source-properties:
+        connectTimeout: 5000
+        socketTimeout: 5000
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  data:
+    redis:
+      connect-timeout: 5s
+      timeout: 5s
+  kafka:
+    listener:
+      auto-startup: false
+    admin:
+      auto-create: false
+
+ticketing:
+  startup:
+    gate-enabled: true
+  hold:
+    expiration-enabled: false
+  outbox:
+    claim-enabled: false
