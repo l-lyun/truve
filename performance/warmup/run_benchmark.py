@@ -185,7 +185,7 @@ class Application:
                     '?allowPublicKeyRetrieval=true&useSSL=false&connectTimeout=5000&socketTimeout=5000',
                     'TICKETING_MYSQL_USERNAME': 'root', 'TICKETING_MYSQL_PASSWORD': '',
                     'USER_REDIS_HOST': '127.0.0.1', 'USER_REDIS_PORT': str(infra.redis_port)})
-        cmd = [args.java, '-Xms256m', '-Xmx512m', '-jar', str(args.jar),
+        cmd = [args.java, '-Xms256m', '-Xmx512m', f'-XX:ActiveProcessorCount={args.jvm_processors}', '-jar', str(args.jar),
                '--spring.profiles.active=warmup-benchmark', f'--server.port={self.port}',
                '--spring.jpa.hibernate.ddl-auto=' + ('create' if bootstrap else 'validate'),
                f'--ticketing.warmup.enabled={str(mode == "on").lower()}',
@@ -341,10 +341,12 @@ def run(args):
                     [args.java, '-version'], capture_output=True, text=True, check=True).stderr.strip(),
                 'platform': platform.platform(), 'python': platform.python_version(), 'host': host_snapshot(),
                 'heap': '-Xms256m -Xmx512m', 'readiness_poll_ms': 50, 'request_timeout_seconds': 5,
+                'jvm_processors': args.jvm_processors,
                 'profile': 'warmup-benchmark', 'resource_sample_seconds': 1,
                 'client': 'single-flight paced client; late requests catch up sequentially, never concurrent',
                 'max_start_lag_ms': 1000,
                 'limitations': ['Shared host; host-load guard is heuristic, not isolation proof',
+                                'ActiveProcessorCount bounds JVM-visible processors, not an OS CPU quota',
                                 'Fresh JVM, persistent dependency/OS caches; not cold DB',
                                 'Direct Ticketing HTTP; excludes gateway JWT and Kafka workflows',
                                 'Initial p99 uses only 100 requests; do not claim C2 or pure JIT causation',
@@ -417,9 +419,12 @@ def parse_args():
     parser.add_argument('--initial-requests', type=int, default=100)
     parser.add_argument('--steady-seconds', type=int, default=60)
     parser.add_argument('--iterations', type=int, default=100)
+    parser.add_argument('--jvm-processors', type=int, default=2,
+                        help='JVM-visible processor count, identical in OFF/ON; not an OS CPU quota (default: 2)')
     args = parser.parse_args()
     if not (1 <= args.pairs <= 10 and 1 <= args.rps <= 100 and 1 <= args.initial_requests <= 1000
-            and 1 <= args.steady_seconds <= 120 and 1 <= args.iterations <= 1000):
+            and 1 <= args.steady_seconds <= 120 and 1 <= args.iterations <= 1000
+            and 1 <= args.jvm_processors <= (os.cpu_count() or 1)):
         parser.error('Counts and rates must be positive and within the documented local bounds')
     if args.purpose == 'comparison' and (args.pairs < 5 or args.initial_requests != 100 or args.steady_seconds != 60):
         parser.error('Comparison requires at least 5 pairs, 100 initial requests and 60 steady seconds')
