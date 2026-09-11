@@ -1,214 +1,133 @@
-# TRUVE Backend
+# Truve | 예매 백엔드 개인 개선 프로젝트
 
-> 뮤지컬 예매 서비스의 인증, 대기열, 티켓팅, 결제, 공연 정보 조회를 담당하는 백엔드 레포지토리입니다.
-> <br>
-> 프론트, 보안, AI, 인프라 다양한 파트원들과 원활한 협업 아래 요구사항을 만족시키려 노력중입니다😃
+> 팀 프로젝트로 개발한 뮤지컬 예매 서비스를 바탕으로, 좌석 선점의 실패 처리와 이벤트 발행 복구, 초기 요청 지연을 개선하고 있습니다.
 
-<br>
+**개인 작업 · Saga · Transactional Outbox · JVM Warm-up · Redis 대기열**
 
-## 👩‍💻 Developers
+[원본 팀 저장소](https://github.com/pain22value/back) · [개인 저장소](https://github.com/l-lyun/truve) · [기술 문서](https://github.com/l-lyun/truve/blob/278590dd1aec4ed75ef4dfcceac9039ce15ed498/docs/README.md)
 
-|     김도현 <br> [@l-lyun](https://github.com/l-lyun)     |     김예은 <br> [@YeKim1](https://github.com/YeKim1)     |    양승희 <br> [@seungh22](https://github.com/seungh22)    |
-| :------------------------------------------------------: | :------------------------------------------------------: | :--------------------------------------------------------: |
-| <img height="280" src="https://github.com/l-lyun.png" /> | <img height="280" src="https://github.com/YeKim1.png" /> | <img height="280" src="https://github.com/seungh22.png" /> |
+## 프로젝트 소개
 
-<br>
+Truve는 뮤지컬 팬덤을 위한 예매 서비스입니다. 대기열 입장부터 좌석 선택, 예약, 결제로 이어지는 흐름을 서비스별로 나누어 구성했습니다.
 
-## 🛠️ 서비스 구조
+이 저장소는 팀 프로젝트에서 출발한 **김도현의 개인 확장·개선 작업 공간**입니다. 팀에서 만든 서비스 구조를 기반으로, 예매 과정에서 일부 처리가 실패하거나 요청이 재전달되어도 상태가 어긋나지 않도록 처리 흐름을 보완하고 있습니다. 팀 프로젝트의 전체 기능과 협업 기록은 위 원본 저장소에서 확인할 수 있습니다.
 
-`truve-backend`는 Spring Boot 기반 MSA 프로젝트입니다.  
-인증, 공연 정보, 대기열, 티켓팅, 결제를 서비스 단위로 분리해 예매 트래픽이 몰리는 구간을 독립적으로 제어할 수 있도록 구성했습니다.
+## 서비스 구조
 
-```text
-back
-├── api-gateway   # 외부 요청 진입점, 서비스 라우팅, JWT 필터 처리
-├── auth          # 회원가입, 로그인, 토큰 재발급, 이메일 인증, OAuth
-├── common        # 공통 응답 포맷, 예외 처리, 공통 설정, 이벤트 유틸
-├── musical       # 공연 상세, 캐스팅 일정, 아티스트 좋아요, 공연 정보 조회
-├── payment       # 결제 승인, 결제 조회, 결제 취소, 웹훅 처리
-├── queue         # 대기열 진입, 순번 조회, 입장 가능 상태 관리
-├── ticketing     # 티켓팅 입장, 세션 유지, 좌석 조회, 좌석 선점, 예약 생성
-├── docker-compose.yml
-└── docker-compose.infra.yml
+![Truve 서비스 구조와 개인 작업 영역](docs/images/readme/architecture.png)
+
+그림의 ①~④는 아래 개인 핵심 작업에 대응합니다. Kafka 흐름은 좌석 선점과 Outbox를 중심으로 표시했습니다.
+
+| 모듈 | 역할 |
+| --- | --- |
+| `api-gateway` | 요청 라우팅, JWT 인증 필터 |
+| `auth-server` | 회원·인증·토큰 관리 |
+| `queue` | 대기 순번, 입장 토큰, 입장 대상 선정 |
+| `ticketing` | 티켓팅 세션, 좌석 선점, 예약 상태, Outbox 발행 |
+| `payment` | 결제 승인·취소, 결제 이벤트 처리 |
+| `musical` | 공연·캐스팅·아티스트 정보 |
+| `common` / `common-observability` | 공통 코드, 로깅·메트릭 설정 |
+
+**주요 기술:** Java 21, Spring Boot, Spring Cloud Gateway, Spring Data JPA, MySQL, Redis, Apache Kafka, Docker Compose
+
+## 개인 핵심 작업
+
+### ① Saga 기반 좌석 선점과 보상
+
+Redis에서 좌석을 선점한 뒤 DB 예약 저장이 실패하면 예약 없이 좌석만 점유될 수 있습니다. 반대로 커밋 여부가 불확실한 상황에서 즉시 선점을 해제하면, 이미 저장된 예약의 좌석을 다른 요청이 가져갈 수 있습니다.
+
+이를 다루기 위해 **예약 접수와 후속 반영을 분리하고, 실패가 확인된 요청에 한해 소유권을 검증하여 보상**하도록 구성했습니다.
+
+![좌석 선점 Saga와 실패 시 보상 흐름](docs/images/readme/seat-hold-saga.png)
+
+1. Redis에 선점 요청 ID와 TTL을 기록하고, DB에는 예약과 `HOLD_REQUESTED` Outbox 이벤트를 같은 트랜잭션으로 저장합니다.
+2. Consumer는 선점 소유권을 확인한 뒤 좌석 HOLD, 티켓 생성, 결제 준비 상태와 결제 요청 Outbox를 반영합니다.
+3. 접수 중 예외가 발생하면 DB를 재조회해 저장 여부를 확인합니다. 미저장이 확인된 신규 선점만 해제하며, 커밋 여부를 확인할 수 없으면 선점을 유지하고 재시도·TTL로 처리합니다.
+4. 후속 처리의 실패가 확정되면 예약 실패를 기록하고 해당 요청 소유의 선점을 해제합니다. Lua에서 요청 ID를 대조해 다른 요청의 좌석을 해제하지 않도록 합니다.
+
+같은 요청의 재전달은 `Idempotency-Key`로 식별하며, 같은 키로 좌석 구성을 바꾸는 요청은 충돌로 처리합니다.
+
+**코드:** [좌석 선점 Saga](https://github.com/l-lyun/truve/blob/278590dd1aec4ed75ef4dfcceac9039ce15ed498/ticketing/src/main/java/org/truve/platform/ticketing/service/ticketing/service/SeatHoldSagaService.java) · [후속 이벤트 처리](https://github.com/l-lyun/truve/blob/278590dd1aec4ed75ef4dfcceac9039ce15ed498/ticketing/src/main/java/org/truve/platform/ticketing/service/ticketing/service/HoldRequestedEventHandler.java)
+
+### ② Outbox Relay의 이벤트 발행과 장애 복구
+
+예약 변경과 Kafka 발행을 별도로 수행하면 DB에만 변경이 남거나, 롤백된 작업의 이벤트가 전달될 수 있습니다. 또한 Kafka 응답 대기를 DB 트랜잭션 안에 넣으면 네트워크 지연 동안 DB 락을 점유하게 됩니다.
+
+**업무 상태와 이벤트를 함께 저장하고, Relay가 DB 트랜잭션 밖에서 Kafka에 발행**하도록 분리했습니다.
+
+```mermaid
+flowchart LR
+    A["예약 상태 + Outbox 저장"] --> B["DB 커밋"]
+    B --> C["Relay: 이벤트 선점·소유권 기록"]
+    C --> D["선점 커밋·DB 락 해제"]
+    D --> E["Kafka 발행·ACK 확인"]
+    E --> F["소유권 일치 시 발행 완료 기록"]
+    D -. "발행 전 Relay 중단" .-> G["점유 시간 만료"]
+    G --> H["다른 Relay가 회수·재선점"]
+    H --> D
 ```
 
-<div align="center">
-  <img width="900" alt="image" src="https://github.com/user-attachments/assets/a54f9340-26b2-408e-94a2-175b11268042" />
-</div>
-<br>
-Truve 백엔드는 api-gateway를 사용하여 인증, 공연 정보, 대기열, 티켓팅, 결제 요청을 각 서비스에 라우팅합니다.<br>
-  특히 대기열 진입, 티켓팅 입장, 좌석 선점, 결제까지 이어지는 흐름을 단계별로 분리해, 과부하를 안정적으로 제어합니다.
-<br><br>
+- **짧은 선점 트랜잭션:** `FOR UPDATE SKIP LOCKED`로 다른 Relay가 잠근 작업을 건너뛰고, 선점 정보를 저장한 뒤 락을 해제합니다.
+- **조건부 완료 처리:** `claimToken`이 일치하는 작업만 완료 처리해 이전 Relay의 늦은 응답이 재선점된 작업을 덮어쓰지 않도록 합니다.
+- **중단 작업 복구:** 점유 시간이 만료된 작업은 회수하여 다시 발행할 수 있게 합니다.
+- **재전달 대응:** 발행 성공 후 완료 기록 전에 중단될 수 있으므로 중복 전송을 전제로 소비 측 상태 검사와 멱등 처리를 함께 둡니다.
+
+#### 로컬 검증 기록
+
+| 시나리오 | 확인한 결과 |
+| --- | --- |
+| 3초 폴링·Relay 1개, 1,000건씩 3회 발행 | 각 실행에서 DB 발행 완료와 Kafka 레코드 1,000건 일치, 누락·중복·예상 밖 키 0건 |
+| Relay A를 선점 커밋 후 발행 전에 강제 종료 | Relay B가 만료 작업 20건을 회수하고, 20건 모두 발행 완료 |
+
+이 결과는 로컬 환경의 이벤트 전달·회수 검증입니다. 예매 API 처리량이나 모든 장애 상황의 exactly-once 보장을 의미하지 않습니다.
+
+### ③ JVM 웜업으로 초기 요청 지연 완화
+
+애플리케이션 기동이 끝나더라도 실제 요청 경로의 클래스 로딩과 JIT 컴파일 등이 충분히 진행되지 않으면 첫 응답이 늦어질 수 있습니다. 포트폴리오의 로컬 실험에서는 실제 HTTP API를 반복 호출하고, 호출 횟수별 컴파일 기록·첫 응답·준비 시간을 비교했습니다.
+
+![HTTP 호출 횟수별 컴파일 기록, 첫 응답과 준비 시간 비교](docs/images/readme/jvm-warmup-comparison.png)
+
+**해당 실험에서 500회 호출 후 첫 응답은 57.04ms에서 9.48ms로 약 83.4% 감소했습니다.** 2,000회에서는 첫 응답이 9.56ms로 비슷한 반면 준비 시간은 5.40초에서 16.05초로 늘어, 준비 비용까지 고려해 500회를 선택했습니다.
+
+> 수치는 제공된 포트폴리오의 localhost HTTP 호출 실험 기록입니다. C1·C2는 측정 요청 시작 전 JVM 전체의 컴파일 결과 생성 건수(`nmethod`)이며, 고유 메서드 수나 API 호출 수가 아닙니다. 반복 표본과 환경별 원시 로그가 이 README에 포함된 결과는 아니므로 일반적인 성능 개선율로 해석하지 않습니다.
+
+별도 기동 웜업 구현에서는 **좌석 조회와 실제 MVC 응답 변환기를 통한 JSON 직렬화 경로**를 재사용하고, 준비가 끝나기 전 HTTP 요청을 차단하도록 구성했습니다. 이 경로는 세션 heartbeat를 포함하는 위 HTTP 반복 호출 실험과 범위가 다릅니다.
+
+**관련 작업:** [기동 웜업 구현 PR #14](https://github.com/l-lyun/truve/pull/14) · [ON/OFF 비교 도구 PR #15](https://github.com/l-lyun/truve/pull/15)
+
+### ④ Redis 대기열과 진입 제어
+
+대기 중인 사용자와 티켓팅에 입장한 사용자를 나누어 관리하고, 활성 사용자 수에 따라 입장 대상을 선정하도록 구성했습니다.
+
+- **Redis ZSET:** 공연별 대기 순서와 현재 순번을 관리합니다.
+- **입장 대상 선정:** 활성 사용자 수와 설정된 한도를 비교해 대기 사용자를 꺼내고, 유효시간이 있는 입장 토큰을 발급합니다.
+- **순번별 폴링:** 입장에 가까운 사용자와 뒤쪽 대기자의 조회 주기를 달리하도록 응답에 폴링 간격을 제공합니다.
+
+**코드:** [대기열 처리](https://github.com/l-lyun/truve/blob/278590dd1aec4ed75ef4dfcceac9039ce15ed498/queue/src/main/java/org/truve/platform/queue/service/queue/service/QueueService.java) · [폴링 정책](https://github.com/l-lyun/truve/blob/278590dd1aec4ed75ef4dfcceac9039ce15ed498/queue/src/main/java/org/truve/platform/queue/service/queue/service/QueuePollingPolicy.java)
+
+## 코드와 문서 살펴보기
+
+- [아키텍처 개요](https://github.com/l-lyun/truve/blob/278590dd1aec4ed75ef4dfcceac9039ce15ed498/docs/architecture/overview.md)
+- [기술 설계 문서](https://github.com/l-lyun/truve/blob/278590dd1aec4ed75ef4dfcceac9039ce15ed498/docs/trd/README.md)
+- [Outbox 측정·재현 안내](https://github.com/l-lyun/truve/blob/278590dd1aec4ed75ef4dfcceac9039ce15ed498/performance/outbox/README.md)
+- [원본 팀 프로젝트](https://github.com/pain22value/back)
 
 <details>
-<summary><strong>📌 기술 스택 상세 보기</strong></summary>
+<summary>로컬 실행과 테스트</summary>
 
-  ### 💻 Language & Framework
+Java 21과 Docker Compose가 필요합니다. 실행 전 Compose 파일과 각 모듈의 `application*.yml`에서 필요한 환경변수·프로필을 설정합니다.
 
-<div align="left">
-  <img src="https://img.shields.io/badge/Java-007396?style=for-the-badge&logo=openjdk&logoColor=white"/>
-  <img src="https://img.shields.io/badge/Spring Boot-6DB33F?style=for-the-badge&logo=Spring-Boot&logoColor=white"/>
-  <img src="https://img.shields.io/badge/Spring Cloud Gateway-0A3D62?style=for-the-badge&logo=spring&logoColor=white"/>
-  <img src="https://img.shields.io/badge/Spring Data JPA-59666C?style=for-the-badge&logo=spring&logoColor=white"/>
-</div>
+```bash
+# 로컬 인프라
+docker compose -f docker-compose.infra.yml up -d
 
-### 🗄️ Database & Messaging
+# 전체 서비스
+docker compose up -d --build
 
-<div align="left">
-  <img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white"/>
-  <img src="https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white"/>
-  <img src="https://img.shields.io/badge/Apache Kafka-231F20?style=for-the-badge&logo=apachekafka&logoColor=white"/>
-</div>
+# 모듈별 테스트
+./gradlew :ticketing:test :queue:test
+```
 
-### ☁️ Infra & DevOps
-
-<div align="left">
-  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white"/>
-  <img src="https://img.shields.io/badge/Docker Compose-000000?style=for-the-badge&logo=docker&logoColor=white"/>
-  <img src="https://img.shields.io/badge/AWS EC2-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white"/>
-  <img src="https://img.shields.io/badge/AWS RDS-527FFF?style=for-the-badge&logo=amazonaws&logoColor=white"/>
-  <img src="https://img.shields.io/badge/AWS S3-569A31?style=for-the-badge&logo=amazonaws&logoColor=white"/>
-  <img src="https://img.shields.io/badge/LocalStack-6B7280?style=for-the-badge&logoColor=white"/>
-</div>
+Gateway 기본 포트는 `8080`이며, 실행 후 [로컬 Swagger UI](http://localhost:8080/swagger-ui/index.html)에서 API를 확인할 수 있습니다. 상세 설정은 [전체 서비스 Compose](https://github.com/l-lyun/truve/blob/278590dd1aec4ed75ef4dfcceac9039ce15ed498/docker-compose.yml)와 [인프라 Compose](https://github.com/l-lyun/truve/blob/278590dd1aec4ed75ef4dfcceac9039ce15ed498/docker-compose.infra.yml)를 참고하세요.
 
 </details>
-
-<br>
-
-## 🧱 Database
-
-### [ERD](https://www.erdcloud.com/d/67pFvAE2MChLb8Yqu)
-
-- 사용자, 공연, 티켓팅, 결제 도메인을 기준으로 DB를 분리했습니다.
-- 서비스 간 직접 결합을 줄이고, 각 도메인의 책임을 명확히 나누는 방향으로 설계했습니다.
-- 예매 시점의 읽기/쓰기 부하를 분산할 수 있도록 대기열과 세션 상태는 Redis로 분리했습니다.
-
-
-## 🔄 핵심 비즈니스 로직
-
-### 1. 티켓팅 트래픽 관리
-
-[대기열 -> 티켓팅 설계 문서](https://www.notion.so/3109e3e335cc80088bc1d9632261e29c?source=copy_link)
-
-### 2. 결제 후 예매 상태
-<img width="963" height="571" alt="image" src="https://github.com/user-attachments/assets/580e58a2-3e84-430c-a201-f5a6c177606b" />
-
-<br>
-
-## 📋 주요 기능
-
-### 1. 인증 / 사용자
-
-- 이메일 인증 코드 발송 및 검증
-- 자체 회원가입 / 로그인 / 로그아웃
-- Access Token / Refresh Token 재발급
-- 카카오, 네이버 OAuth 로그인
-
-### 2. 공연 정보
-
-- 공연 상세 조회
-- 공연별 캐스팅 일정 조회
-- 아티스트 좋아요 등록 / 해제
-
-### 3. 대기열
-
-- 공연별 대기열 진입
-- 현재 대기 순번 및 입장 가능 상태 조회
-- 활성 티켓팅 인원 기준 입장 대상 선별
-
-### 4. 티켓팅
-
-- 입장 토큰 기반 티켓팅 세션 생성
-- heartbeat 기반 세션 유지
-- 좌석 조회 및 좌석 임시 선점
-- 예약 생성 및 결제 준비 상태 전환
-
-### 5. 결제
-
-- 결제 승인
-- 주문 기준 결제 정보 조회
-- 결제 취소
-- 가상계좌 / 입금 웹훅 처리
-
-<br>
-
-## 📋 Swagger
-
-API-Gateway 기준 Swagger UI:
-
-- [개발 서버](http://api.truve.site/swagger-ui/index.html?urls.primaryName=01-Auth+Service)
-- [로컬 실행 시](http://localhost:8080/swagger-ui/index.html)
-
-<br>
-
-## 🚀 실행 방법
-
-### 인프라 컨테이너 실행
-
-```bash
-docker compose -f docker-compose.infra.yml up -d
-```
-
-### 전체 서비스 실행
-
-```bash
-docker compose up -d --build
-```
-
-```
-
-### 기본 포트
-
-- Gateway: `8080`
-- Auth: `8081`
-- Payment: `8082`
-- Queue: `8083`
-- Ticketing: `8084`
-- Musical: `8085`
-- MySQL: `3306`
-- Redis: `6379`
-- Kafka: `29092`
-- LocalStack: `4566`
-
-```
-
-<br>
-
-## 🌿 브랜치 전략
-
-### 1. Git Flow
-
-- `main`: 현재 배포 버전
-- `dev`: 다음 배포 버전 개발 브랜치
-- `feat`: 기능 개발 브랜치
-- `hotfix`: 운영 버그 수정 브랜치
-
-모든 작업 브랜치는 최신 `dev` 브랜치에서 생성하고, 작업 완료 후 `dev`로 병합합니다.
-
-### 2. 브랜치 네이밍 규칙
-
-Notion 티켓 ID를 기준으로 아래 형식을 사용합니다.
-
-```text
-TYPE/#ID-작업내용
-```
-
-예시:
-
-```text
-feat/#123-queue-enter-api
-fix/#148-ticketing-session-expire
-hotfix/#201-payment-cancel-bug
-```
-
-### 3. 협업 규칙
-
-- 기능 브랜치 간 직접 merge / rebase는 지양합니다.
-- 다른 기능이 필요하면 해당 작업을 먼저 `dev`에 반영한 뒤 가져옵니다.
-- PR에는 변경 목적, 영향 범위, 테스트 결과를 함께 기록합니다.
-
-<br>
-
-## 📌 참고 사항
-
-- 인프라와 애플리케이션 설정은 `docker-compose.yml`, `docker-compose.infra.yml`, <br>각 모듈의 `application.yml`을 기준으로 관리합니다.
