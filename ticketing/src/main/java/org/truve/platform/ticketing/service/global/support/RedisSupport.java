@@ -163,6 +163,145 @@ public class RedisSupport {
 		return result == null ? 0L : result;
 	}
 
+	public long holdSeatLeasesWithLimit(
+		List<String> keys,
+		List<Long> scheduledSeatIds,
+		String sessionToken,
+		String holdId,
+		String holdRequestFingerprint,
+		String seatKeyPrefix,
+		String holdMetaKeyPrefix,
+		Duration seatTtl,
+		Duration sessionSetTtl,
+		int maxSeatCount
+	) {
+		String script = """
+			local sessionSetKey = KEYS[1]
+			local holdMetaKey = KEYS[2]
+			local sessionToken = ARGV[1]
+			local holdId = ARGV[2]
+			local holdRequestFingerprint = ARGV[3]
+			local seatTtlMillis = ARGV[4]
+			local sessionSetTtlMillis = ARGV[5]
+			local maxSeatCount = tonumber(ARGV[6])
+			local seatKeyPrefix = ARGV[7]
+			local holdMetaKeyPrefix = ARGV[8]
+
+			local members = redis.call('SMEMBERS', sessionSetKey)
+			for _, scheduledSeatId in ipairs(members) do
+				local ownerHoldId = redis.call('GET', seatKeyPrefix .. scheduledSeatId)
+				local ownerSessionToken = false
+				if ownerHoldId then
+					ownerSessionToken = redis.call('HGET', holdMetaKeyPrefix .. ownerHoldId, 'sessionToken')
+				end
+				if not ownerHoldId or ownerSessionToken ~= sessionToken then
+					redis.call('SREM', sessionSetKey, scheduledSeatId)
+				end
+			end
+
+			local sameOwnerCount = 0
+			local missingCount = 0
+			for i = 3, #KEYS do
+				local current = redis.call('GET', KEYS[i])
+				if current == holdId then
+					sameOwnerCount = sameOwnerCount + 1
+				elseif current then
+					return 0
+				else
+					missingCount = missingCount + 1
+				end
+			end
+
+			local holdSessionToken = redis.call('HGET', holdMetaKey, 'sessionToken')
+			local storedFingerprint = redis.call('HGET', holdMetaKey, 'fingerprint')
+			if sameOwnerCount > 0 and missingCount > 0 then
+				return 0
+			end
+			if sameOwnerCount > 0 then
+				if holdSessionToken == sessionToken and storedFingerprint == holdRequestFingerprint then
+					return 2
+				end
+				return 0
+			end
+			if redis.call('EXISTS', holdMetaKey) == 1 then
+				return 0
+			end
+
+			if redis.call('SCARD', sessionSetKey) + missingCount > maxSeatCount then
+				return -1
+			end
+
+			for i = 3, #KEYS do
+				redis.call('SET', KEYS[i], holdId, 'PX', seatTtlMillis, 'NX')
+				redis.call('SADD', sessionSetKey, ARGV[i + 6])
+			end
+			redis.call('HSET', holdMetaKey, 'sessionToken', sessionToken, 'fingerprint', holdRequestFingerprint)
+			redis.call('PEXPIRE', holdMetaKey, seatTtlMillis)
+			redis.call('PEXPIRE', sessionSetKey, sessionSetTtlMillis)
+			return 1
+			""";
+
+		List<String> arguments = new ArrayList<>();
+		arguments.add(sessionToken);
+		arguments.add(holdId);
+		arguments.add(holdRequestFingerprint);
+		arguments.add(String.valueOf(seatTtl.toMillis()));
+		arguments.add(String.valueOf(sessionSetTtl.toMillis()));
+		arguments.add(String.valueOf(maxSeatCount));
+		arguments.add(seatKeyPrefix);
+		arguments.add(holdMetaKeyPrefix);
+		arguments.addAll(scheduledSeatIds.stream().map(String::valueOf).toList());
+
+		Long result = redisTemplate.execute(
+			new DefaultRedisScript<>(script, Long.class),
+			keys,
+			arguments.toArray()
+		);
+		return result == null ? 0L : result;
+	}
+
+	public boolean compensateNewlyHeldSeatLeases(
+		List<String> keys,
+		List<Long> scheduledSeatIds,
+		String sessionToken,
+		String holdId,
+		String holdRequestFingerprint
+	) {
+		String script = """
+			if redis.call('HGET', KEYS[2], 'sessionToken') ~= ARGV[1]
+				or redis.call('HGET', KEYS[2], 'fingerprint') ~= ARGV[2] then
+				return 0
+			end
+
+			local deleted = 0
+			for i = 3, #KEYS do
+				if redis.call('GET', KEYS[i]) == ARGV[3] then
+					redis.call('DEL', KEYS[i])
+					redis.call('SREM', KEYS[1], ARGV[i + 1])
+					deleted = deleted + 1
+				end
+			end
+			redis.call('DEL', KEYS[2])
+			if redis.call('SCARD', KEYS[1]) == 0 then
+				redis.call('DEL', KEYS[1])
+			end
+			return deleted
+			""";
+
+		List<String> arguments = new ArrayList<>();
+		arguments.add(sessionToken);
+		arguments.add(holdRequestFingerprint);
+		arguments.add(holdId);
+		arguments.addAll(scheduledSeatIds.stream().map(String::valueOf).toList());
+
+		Long result = redisTemplate.execute(
+			new DefaultRedisScript<>(script, Long.class),
+			keys,
+			arguments.toArray()
+		);
+		return result != null && result > 0;
+	}
+
 	public boolean releaseHeldSeats(
 		List<String> keys,
 		List<Long> scheduledSeatIds,

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.truve.platform.ticketing.service.ticketing.dto.TicketingRequest;
 import org.truve.platform.ticketing.service.ticketing.dto.TicketingResponse;
 import org.truve.platform.ticketing.service.ticketing.service.TicketingService;
+import org.truve.platform.ticketing.service.ticketing.service.SeatHoldSagaService;
 
 import java.util.UUID;
 
@@ -31,8 +32,10 @@ public class TicketingController {
 	private static final String USER_ID_HEADER = "X-User-Id";
 	private static final String ADMISSION_HEADER = "X-Admission-Token";
 	private static final String SESSION_HEADER = "X-Session-Ticket";
+	private static final String IDEMPOTENCY_HEADER = "Idempotency-Key";
 
 	private final TicketingService ticketingService;
+	private final SeatHoldSagaService seatHoldSagaService;
 
 	@Operation(
 		summary = "티켓팅 입장",
@@ -108,19 +111,26 @@ public class TicketingController {
 				name = SESSION_HEADER,
 				description = "티켓팅 입장 후 발급된 세션 토큰",
 				required = true
+			),
+			@Parameter(
+				name = IDEMPOTENCY_HEADER,
+				description = "같은 좌석 선점 요청을 재시도할 때 재사용하는 멱등 키",
+				required = true
 			)
 		}
 	)
 	@PostMapping("/{showScheduleId}/hold/seat")
-	public ApiResult<Void> holdSeat(
+	public ApiResult<TicketingResponse.HoldAccepted> holdSeat(
 		@PathVariable Long showScheduleId,
 		@Parameter(hidden = true)
 		@RequestHeader(value = USER_ID_HEADER) UUID userId,
 		@RequestHeader(value = SESSION_HEADER) String sessionToken,
+		@RequestHeader(value = IDEMPOTENCY_HEADER) String idempotencyKey,
 		@RequestBody @Valid TicketingRequest.HoldSeat request
 	) {
-		ticketingService.holdSeat(showScheduleId, userId, sessionToken, request.getScheduledSeatIds());
-		return ApiResult.ok();
+		var response = seatHoldSagaService.hold(
+			showScheduleId, userId, sessionToken, idempotencyKey, request.getScheduledSeatIds());
+		return ApiResult.ok(response);
 	}
 
 	@Operation(

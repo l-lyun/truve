@@ -1,7 +1,7 @@
 # Redis 좌석 선점과 비동기 주문 생성 Saga
 
-- 상태: Proposed
-- 구현 여부: PR 1 기반 모델·이벤트 계약 구현, Saga 실행 경로는 후속 PR 예정
+- 상태: In Progress
+- 구현 여부: PR 1 기반 모델·이벤트 계약, PR 2 Redis lease·주문 접수 Saga 구현. Consumer와 결제 전환은 후속 PR 예정
 - 선행 문서: `seat-hold-concurrency.md`
 - 영향 범위: `ticketing`, Redis, Kafka, Ticketing DB, 결제 진입 UX
 
@@ -43,7 +43,7 @@
 
 ```text
 Client hold 요청
-  -> holdId 생성 또는 idempotency key로 복원
+  -> Idempotency-Key로 holdId 생성, 좌석 fingerprint 계산
   -> 사용자·회차 Redis 요청 락 획득
   -> Redis Lua 좌석 선점
   -> [짧은 Ticketing DB 트랜잭션]
@@ -78,13 +78,15 @@ Payment
 seat:hold:lock:{showScheduleId}:{userId} -> requestToken
 seat:hold:{showScheduleId}:{scheduledSeatId} -> holdId
 seat:holds:{showScheduleId}:{sessionToken} -> Set<scheduledSeatId>
-seat:hold:meta:{holdId} -> userId, sessionToken, showScheduleId, expiresAt
+seat:hold:meta:{holdId} -> Hash(sessionToken, seatFingerprint)
 ```
 
 - 요청 락은 같은 사용자·회차의 동시에 실행되는 `hold()`를 빠르게 거절하는 완충 장치다.
 - 좌석 키의 값은 `sessionToken` 대신 Saga 전체의 소유권 식별자인 `holdId`를 사용한다.
 - 세션 Set은 여러 요청을 합산한 최대 4석 제한과 퇴장·만료 정리를 지원한다.
 - `holdId`는 Redis 선점, Reservation, 로그·추적 식별자와 보상 조건에 동일하게 사용한다.
+- `holdId`는 `userId + showScheduleId + Idempotency-Key`로 결정해 요청 본문이 달라도 같은 키가 같은 작업을 가리키게 한다.
+- 정렬한 좌석 ID의 fingerprint를 Reservation에 저장하고, 같은 멱등 키로 다른 좌석을 요청하면 충돌로 거절한다.
 - 해제와 보상은 현재 값이 자신의 `requestToken` 또는 `holdId`와 일치할 때만 수행한다.
 
 최초 선점 Lua는 stale Set 멤버를 좌석 소유권 키와 대조해 제거하고, 기존 좌석과 신규 좌석의 합집합이 4개 이하인지 검사한다. 요청 좌석 중 하나라도 다른 `holdId` 소유라면 어떤 좌석도 새로 만들지 않는다.
@@ -125,6 +127,7 @@ DB 커밋 예외를 오케스트레이터가 감지할 수 있도록 T2는 별�
 ```text
 Reservation
   holdId         UNIQUE
+  holdRequestFingerprint
   number         UNIQUE
   userId
   showScheduleId
@@ -141,6 +144,9 @@ Outbox
 ```
 
 성공 응답은 이 DB 트랜잭션이 커밋된 뒤에만 반환한다. 응답이 유실되어 같은 idempotency key로 재시도되면 기존 `holdId`, Reservation, Outbox를 조회해 같은 예약 번호를 반환한다.
+같은 키를 다른 좌석 목록과 함께 재사용하면 저장된 `holdRequestFingerprint`가 일치하지 않으므로 `INVALID_BOOKING_SEAT_HOLD`로 거절한다. Redis만 성공하고 DB 저장 전 종료된 경우에도 고정된 `holdId` 때문에 다른 좌석 목록을 추가로 선점할 수 없다.
+
+`ALREADY_OWNED` 재시도에서 주문이 아직 없다면 새 10분을 부여하지 않고 Redis meta key의 남은 TTL로 `expiresAt`을 정한다. DB 커밋 결과 재조회까지 실패해 커밋 여부가 불확실하면 Redis lease를 지우지 않고 TTL에 맡긴다.
 
 기존 Ticketing Outbox의 claim, retry, `PROCESSING`, `claimToken`, `claimedAt` 원칙을 재사용한다. Kafka messageKey는 모든 예약 생명주기 이벤트에서 `reservationNumber`로 고정해 같은 주문의 순서를 유지한다. `holdId`는 payload에 포함해 Redis 보상과 멱등성 확인에 사용한다.
 
@@ -230,16 +236,12 @@ expiresAt 경과
 | 만료 뒤 늦은 이벤트 | Redis 소유권 없음 또는 expiresAt 경과 | DB 좌석을 `HOLD`로 되살리지 않고 EXPIRED/HOLD_FAILED 처리 |
 | DB HOLD 성공 후 Redis 정리 실패 | DB가 좌석 소유권 기준 | TTL과 정합성 점검 작업으로 Redis stale 상태 제거 |
 
-## 구현 전 결정할 사항
+## 후속 구현과 통합 조건
 
-- 기존 Ticketing Outbox 테이블에 `HOLD_REQUESTED`를 추가할지 별도 Outbox를 둘지 결정한다.
-- Kafka topic, schema version, messageKey와 Consumer group을 확정한다.
-- `HOLD_REQUESTED` Consumer를 producer보다 먼저 배포하거나 feature flag로 발행을 차단한다. 현재 Consumer가 알 수 없는 event type을 성공 처리하므로 Consumer 활성화 전에 producer가 발행되면 이벤트가 유실된다.
-- `holdId`와 API idempotency key의 생성 주체 및 재사용 규칙을 확정한다.
-- `HOLD_PENDING` 생성 시 가격·등급·공연 스냅샷을 확정할지 Consumer에서 확정할지 결정한다.
-- 비동기 처리 전 요청 좌석 목록을 Reservation 연관 또는 별도 HoldRequest 테이블 중 어디에 영속화할지 결정한다.
-- `ReservationStatus`에 `HOLD_PENDING`, `PAYMENT_READY`, `HOLD_FAILED`, `EXPIRED`를 추가하고 기존 `CREATED`, `PENDING_PAYMENT`와의 전환·호환 규칙을 확정한다.
-- 결제 기한 기본값과 Redis TTL·Reservation `expiresAt`의 기준 시각을 확정한다.
+- PR 2는 `HOLD_REQUESTED` Producer까지만 포함한다. 현재 `BookingConsumer`가 이 이벤트를 정상 ack하고 버리므로 PR 3 Consumer가 완성될 때까지 해당 실행 경로를 배포하거나 실제로 실행하지 않는다. 배포가 필요해지면 Consumer를 먼저 배포하거나 feature flag로 Producer를 차단한다.
+- 새 흐름은 hold 응답의 `reservationNumber` 자체를 주문으로 사용한다. 기존 `POST /api/bookings`를 이어서 호출하면 활성 `HOLD_PENDING` 주문 제약으로 실패하므로 클라이언트 전환은 PR 3 통합 완료와 함께 진행한다.
+- 기존 좌석 반납 API는 sessionToken 소유권 모델이어서 holdId lease를 해제하지 못한다. Reservation 상태와 Outbox, Redis compare-and-delete를 조율하는 취소 Saga가 완성되기 전에는 새 흐름의 취소 API로 사용하지 않는다.
+- `HOLD_PENDING` 생성 시 가격·등급·공연 스냅샷 중 공연·등급 요약은 동기 접수에서 저장하고, 좌석별 가격과 Ticket은 Consumer에서 확정한다.
 - 주문 상태 조회를 polling, SSE 또는 WebSocket 중 어떤 방식으로 제공할지 결정한다.
 - 결제 시도 엔티티와 실패 후 `PAYMENT_READY` 복귀 규칙을 설계한다.
 - 만료 Scheduler의 다중 인스턴스 claim과 결제 승인 경쟁 정책을 설계한다.

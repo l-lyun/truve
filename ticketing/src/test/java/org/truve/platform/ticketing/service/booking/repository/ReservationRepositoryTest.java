@@ -64,7 +64,8 @@ class ReservationRepositoryTest {
 		LocalDateTime expiresAt
 	) {
 		return Reservation.createHoldPending(
-			userId, reservationNumber, "VIP석 1인", createShowInfo(showScheduleId), holdId, expiresAt);
+			userId, reservationNumber, "VIP석 1인", createShowInfo(showScheduleId), holdId,
+			"seat-fingerprint", expiresAt);
 	}
 
 	private ShowInfo createShowInfo(Long showScheduleId) {

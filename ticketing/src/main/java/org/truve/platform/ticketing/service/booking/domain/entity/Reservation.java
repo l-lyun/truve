@@ -59,6 +59,9 @@ public class Reservation extends BaseEntity {
 	@Column(name = "hold_id", unique = true)
 	private String holdId;
 
+	@Column(name = "hold_request_fingerprint")
+	private String holdRequestFingerprint;
+
 	@Column(name = "expires_at")
 	private LocalDateTime expiresAt;
 
@@ -110,7 +113,8 @@ public class Reservation extends BaseEntity {
 
 	@Builder(access = AccessLevel.PRIVATE)
 	private Reservation(UUID userId, String number, String gradeSummary,
-		ShowInfo showInfo, String holdId, LocalDateTime expiresAt, ReservationStatus status) {
+		ShowInfo showInfo, String holdId, String holdRequestFingerprint,
+		LocalDateTime expiresAt, ReservationStatus status) {
 
 		this.userId = userId;
 		this.number = number;
@@ -120,6 +124,7 @@ public class Reservation extends BaseEntity {
 		this.gradeSummary = gradeSummary;
 		this.showInfo = showInfo;
 		this.holdId = holdId;
+		this.holdRequestFingerprint = holdRequestFingerprint;
 		this.expiresAt = expiresAt;
 		this.status = status;
 		this.blockBooking = true;
@@ -146,10 +151,13 @@ public class Reservation extends BaseEntity {
 		String gradeSummary,
 		ShowInfo showInfo,
 		String holdId,
+		String holdRequestFingerprint,
 		LocalDateTime expiresAt
 	) {
 		Preconditions.validate(
-			holdId != null && !holdId.isBlank() && expiresAt != null,
+			holdId != null && !holdId.isBlank()
+				&& holdRequestFingerprint != null && !holdRequestFingerprint.isBlank()
+				&& expiresAt != null,
 			ErrorCode.INVALID_BOOKING_SEAT_HOLD
 		);
 		return Reservation.builder()
@@ -158,6 +166,7 @@ public class Reservation extends BaseEntity {
 			.gradeSummary(gradeSummary)
 			.showInfo(showInfo)
 			.holdId(holdId)
+			.holdRequestFingerprint(holdRequestFingerprint)
 			.expiresAt(expiresAt)
 			.status(ReservationStatus.HOLD_PENDING)
 			.build();

@@ -15,6 +15,15 @@ import org.truve.platform.ticketing.service.ticketing.dto.TicketingInternalRespo
 import jakarta.persistence.LockModeType;
 
 public interface ScheduledSeatRepository extends JpaRepository<ScheduledSeat, Long> {
+	@Query("""
+		select ss
+		from ScheduledSeat ss
+		join fetch ss.seat s
+		join fetch s.seatSection sc
+		where ss.id in :ids
+		order by ss.id asc
+		""")
+	List<ScheduledSeat> findAllByIdWithSeat(@Param("ids") List<Long> ids);
 
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("""
