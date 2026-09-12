@@ -1,0 +1,74 @@
+name: Learning Gate
+
+on:
+  pull_request:
+    branches:
+      - dev
+    types:
+      - opened
+      - reopened
+      - ready_for_review
+      - synchronize
+      - labeled
+      - unlabeled
+
+permissions:
+  contents: read
+
+jobs:
+  learning-gate:
+    name: learning-gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify learning review status
+        env:
+          EVENT_ACTION: ${{ github.event.action }}
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+        run: |
+          if [[ "${EVENT_ACTION}" == "synchronize" ]]; then
+            {
+              echo "## Learning gate: 재확인 필요"
+              echo
+              echo "새 커밋이 추가되어 기존 학습 완료 상태를 다시 확인해야 합니다."
+              echo "학습 리뷰 후 완료 라벨을 제거했다가 다시 지정해 주세요."
+            } >> "${GITHUB_STEP_SUMMARY}"
+            echo "::error::새 커밋 이후 학습 리뷰를 다시 확인해야 합니다."
+            exit 1
+          fi
+
+          has_complete=false
+          has_required=false
+          has_not_required=false
+          if [[ ",${PR_LABELS}," == *",learning-complete,"* ]]; then
+            has_complete=true
+          fi
+          if [[ ",${PR_LABELS}," == *",learning-not-required,"* ]]; then
+            has_not_required=true
+          fi
+          if [[ ",${PR_LABELS}," == *",learning-required,"* ]]; then
+            has_required=true
+          fi
+
+          if [[ "${has_not_required}" == "true" && ( "${has_required}" == "true" || "${has_complete}" == "true" ) ]]; then
+            echo "::error::learning-not-required는 다른 학습 상태 라벨과 동시에 사용할 수 없습니다."
+            exit 1
+          fi
+
+          if [[ "${has_required}" == "true" && "${has_complete}" == "true" ]]; then
+            echo "## Learning gate: 학습 리뷰 완료" >> "${GITHUB_STEP_SUMMARY}"
+            exit 0
+          fi
+
+          if [[ "${has_not_required}" == "true" ]]; then
+            echo "## Learning gate: 학습 리뷰 불필요" >> "${GITHUB_STEP_SUMMARY}"
+            exit 0
+          fi
+
+          {
+            echo "## Learning gate: 머지 보류"
+            echo
+            echo "필수 문제와 피드백을 완료한 뒤 learning-complete 라벨을 지정하거나,"
+            echo "학습 문제가 필요 없는 PR이라면 learning-not-required 라벨을 지정해 주세요."
+          } >> "${GITHUB_STEP_SUMMARY}"
+          echo "::error::학습 리뷰 완료 상태가 확인되지 않았습니다."
+          exit 1
